@@ -1,8 +1,9 @@
-import { Shirt, Cpu, Sparkles, TrendingUp, Upload, Eye, Layers, Users, Calendar } from "lucide-react";
+import { Shirt, Cpu, Sparkles, Upload, Eye, Layers, Users, Calendar } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { useAuthContext } from "../../../app/providers/AuthProvider";
 
 const stats = [
   { label: "Tổng Trang Phục", value: "247", change: "+12 tuần này", icon: Shirt, color: "#4F46E5", bg: "#EEF2FF" },
@@ -52,13 +53,23 @@ const recommendations = [
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+
+  const displayName = user?.name ?? user?.email?.split("@")[0] ?? "bạn";
+
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Chào buổi sáng";
+    if (h < 18) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Greeting */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
         <div>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A" }}>Chào buổi sáng, Jamie! 👋</h2>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A" }}>{getGreeting()}, {displayName}! 👋</h2>
           <p style={{ color: "#64748B", marginTop: 4, fontSize: "0.9rem" }}>Đây là những gì đang diễn ra với tủ đồ của bạn hôm nay.</p>
         </div>
         <button

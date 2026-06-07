@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { RootLayout } from "../components/layout/RootLayout";
 import { UserLayout } from "../components/layout/UserLayout";
 import { AdminLayout } from "../components/layout/AdminLayout";
 import { RequireUser, RequireAdmin } from "../components/layout/ProtectedRoute";
@@ -35,54 +36,60 @@ import { RecommendationLogs } from "../pages/admin/recommendation-logs/Recommend
 import { SystemSettings } from "../pages/admin/system-settings/SystemSettings";
 
 export const router = createBrowserRouter([
-  // Public routes
-  { path: "/", Component: Landing },
-  { path: "/login", Component: Login },
-  { path: "/register", Component: Register },
-  { path: "/forgot-password", Component: ForgotPassword },
-
-  // End user routes (role: USER)
   {
-    path: "/app",
-    Component: RequireUser,
+    // Root layout provides AuthProvider to all routes
+    Component: RootLayout,
     children: [
+      // Public routes
+      { path: "/", Component: Landing },
+      { path: "/login", Component: Login },
+      { path: "/register", Component: Register },
+      { path: "/forgot-password", Component: ForgotPassword },
+
+      // End user routes (role: USER)
       {
-        Component: UserLayout,
+        path: "/app",
+        Component: RequireUser,
         children: [
-          { path: "dashboard", Component: Dashboard },
-          { path: "wardrobe", Component: WardrobeOverview },
-          { path: "wardrobe/add", Component: AddClothing },
-          { path: "wardrobe/zones", Component: WardrobeZones },
-          { path: "wardrobe/:id", Component: ClothingDetail },
-          { path: "friend-groups", Component: FriendGroups },
-          { path: "friend-groups/:id", Component: FriendGroupDetails },
-          { path: "ai-detection", Component: AIDetection },
-          { path: "ai-analysis", Component: AIAnalysisDashboard },
-          { path: "recommendations", Component: OutfitRecommendation },
-          { path: "recommendations/:id", Component: RecommendationDetails },
-          { path: "event-outfits", Component: EventRecommendation },
-          { path: "image-library", Component: ImageLibrary },
-          { path: "profile", Component: UserProfile },
-          { path: "preferences", Component: PreferenceSettings },
+          {
+            Component: UserLayout,
+            children: [
+              { path: "dashboard", Component: Dashboard },
+              { path: "wardrobe", Component: WardrobeOverview },
+              { path: "wardrobe/add", Component: AddClothing },
+              { path: "wardrobe/zones", Component: WardrobeZones },
+              { path: "wardrobe/:id", Component: ClothingDetail },
+              { path: "friend-groups", Component: FriendGroups },
+              { path: "friend-groups/:id", Component: FriendGroupDetails },
+              { path: "ai-detection", Component: AIDetection },
+              { path: "ai-analysis", Component: AIAnalysisDashboard },
+              { path: "recommendations", Component: OutfitRecommendation },
+              { path: "recommendations/:id", Component: RecommendationDetails },
+              { path: "event-outfits", Component: EventRecommendation },
+              { path: "image-library", Component: ImageLibrary },
+              { path: "profile", Component: UserProfile },
+              { path: "preferences", Component: PreferenceSettings },
+            ],
+          },
         ],
       },
-    ],
-  },
 
-  // Admin routes (role: ADMIN)
-  {
-    path: "/admin",
-    Component: RequireAdmin,
-    children: [
+      // Admin routes (role: ADMIN)
       {
-        Component: AdminLayout,
+        path: "/admin",
+        Component: RequireAdmin,
         children: [
-          { path: "dashboard", Component: SystemAnalytics },
-          { path: "users", Component: UsersManagement },
-          { path: "categories", Component: CategoriesManagement },
-          { path: "ai-requests", Component: AIRequestsLog },
-          { path: "recommendation-logs", Component: RecommendationLogs },
-          { path: "system-settings", Component: SystemSettings },
+          {
+            Component: AdminLayout,
+            children: [
+              { path: "dashboard", Component: SystemAnalytics },
+              { path: "users", Component: UsersManagement },
+              { path: "categories", Component: CategoriesManagement },
+              { path: "ai-requests", Component: AIRequestsLog },
+              { path: "recommendation-logs", Component: RecommendationLogs },
+              { path: "system-settings", Component: SystemSettings },
+            ],
+          },
         ],
       },
     ],
