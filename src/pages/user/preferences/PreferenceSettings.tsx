@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Save, Palette, Shirt, Heart, Star } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { Save, Palette, Shirt, Heart, Star, Loader2 } from "lucide-react";
+import { useUser } from "../../../hooks/useUser";
 
 const colorSwatches = [
   { name: "Đen", hex: "#000000" },
@@ -46,10 +46,21 @@ const clothingInterests = [
 ];
 
 export function PreferenceSettings() {
+  const { preferences, isPreferencesLoading, updatePreferences, isUpdatingPreferences } = useUser();
+
   const [selectedColors, setSelectedColors] = useState<string[]>(["#000000", "#4F46E5", "#FFFFFF"]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["minimal", "business"]);
   const [selectedLifestyles, setSelectedLifestyles] = useState<string[]>(["office", "social"]);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(["Blazers", "Denim", "Footwear"]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(["Áo Vest", "Đồ Denim", "Giày Dép"]);
+
+  // Populate from API when loaded
+  useEffect(() => {
+    if (!preferences) return;
+    setSelectedColors(preferences.favoriteColors ?? []);
+    setSelectedStyles(preferences.preferredStyles ?? []);
+    setSelectedLifestyles(preferences.lifestyles ?? []);
+    setSelectedInterests(preferences.clothingInterests ?? []);
+  }, [preferences]);
 
   const toggleColor = (hex: string) => {
     setSelectedColors((prev) => prev.includes(hex) ? prev.filter((c) => c !== hex) : [...prev, hex]);
@@ -65,8 +76,23 @@ export function PreferenceSettings() {
   };
 
   const handleSave = () => {
-    toast.success("Đã lưu sở thích! AI sẽ cá nhân hóa gợi ý theo sở thích của bạn.");
+    updatePreferences({
+      favoriteColors: selectedColors,
+      preferredStyles: selectedStyles,
+      lifestyles: selectedLifestyles,
+      clothingInterests: selectedInterests,
+    });
   };
+
+  if (isPreferencesLoading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#64748B", gap: 10 }}>
+        <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        Đang tải sở thích...
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 860, display: "flex", flexDirection: "column", gap: 24 }}>
@@ -216,17 +242,37 @@ export function PreferenceSettings() {
 
       {/* Save */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-        <button style={{ padding: "11px 24px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#0F172A", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>
+        <button
+          onClick={() => {
+            if (preferences) {
+              setSelectedColors(preferences.favoriteColors ?? []);
+              setSelectedStyles(preferences.preferredStyles ?? []);
+              setSelectedLifestyles(preferences.lifestyles ?? []);
+              setSelectedInterests(preferences.clothingInterests ?? []);
+            }
+          }}
+          style={{ padding: "11px 24px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#0F172A", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+        >
           Đặt Lại
         </button>
         <button
           onClick={handleSave}
-          style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 24px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}
+          disabled={isUpdatingPreferences}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "11px 24px", borderRadius: 12,
+            background: isUpdatingPreferences ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+            color: "white", border: "none", fontWeight: 700,
+            cursor: isUpdatingPreferences ? "default" : "pointer", fontSize: "0.9rem",
+          }}
         >
-          <Save size={15} />
-          Lưu Sở Thích
+          {isUpdatingPreferences
+            ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Đang lưu...</>
+            : <><Save size={15} /> Lưu Sở Thích</>
+          }
         </button>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
