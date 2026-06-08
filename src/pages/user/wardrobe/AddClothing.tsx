@@ -28,6 +28,8 @@ export function AddClothing() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [aiDetecting, setAiDetecting] = useState(false);
   const [aiResult, setAiResult] = useState<{ categoryName: string; confidence: number; color: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -64,6 +66,7 @@ export function AddClothing() {
   const handleFile = async (file: File) => {
     const url = URL.createObjectURL(file);
     setPreview(url);
+    setSelectedFile(file);
     setAiDetecting(true);
     setAiResult(null);
     // Simulate AI detection (would hook into ai-detection-service in the future)
@@ -165,7 +168,7 @@ export function AddClothing() {
                     <img src={preview} alt="Preview" style={{ width: "100%", height: 300, objectFit: "cover", borderRadius: 14 }} />
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); setPreview(null); setAiResult(null); }}
+                      onClick={(e) => { e.stopPropagation(); setPreview(null); setAiResult(null); setSelectedFile(null); }}
                       style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: "50%", background: "rgba(15,23,42,0.8)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <X size={14} color="white" />

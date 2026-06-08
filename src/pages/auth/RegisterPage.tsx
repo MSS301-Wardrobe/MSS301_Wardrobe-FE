@@ -1,34 +1,64 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { AuthLayout } from "../../components/layout/AuthLayout";
+
+import {authService} from "../../services/authService"
 
 export function Register() {
   const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({
+  email: "",
+  password: "",
+  confirm: "",
+});
   const [agreed, setAgreed] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form.password !== form.confirm) {
-      toast.error("Mật khẩu không khớp");
-      return;
-    }
-    if (!agreed) {
-      toast.error("Vui lòng chấp nhận điều khoản và điều kiện");
-      return;
-    }
+  e.preventDefault();
+
+  if (form.password !== form.confirm) {
+    toast.error("Mật khẩu không khớp");
+    return;
+  }
+
+  if (!agreed) {
+    toast.error("Vui lòng chấp nhận điều khoản và điều kiện");
+    return;
+  }
+
+  try {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
+
+    await authService.register({
+      email: form.email.trim(),
+      password: form.password,
+    });
+
+    toast.success(
+      "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP."
+    );
+
+    navigate("/verify-otp", {
+      state: {
+        email: form.email.trim(),
+      },
+    });
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Đăng ký thất bại";
+
+    toast.error(message);
+  } finally {
     setLoading(false);
-    localStorage.setItem("role", "USER");
-    toast.success("Tạo tài khoản thành công! Chào mừng đến với StyleAI!");
-    setTimeout(() => navigate("/app/dashboard"), 500);
-  };
+  }
+};
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -62,14 +92,6 @@ export function Register() {
       </div>
 
       <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {/* Full name */}
-        <div>
-          <label htmlFor="reg-name" style={labelStyle}>Họ và Tên</label>
-          <div style={{ position: "relative" }}>
-            <User size={16} color="#94A3B8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-            <input id="reg-name" type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="Nguyễn Thị Lan" required style={inputStyle} />
-          </div>
-        </div>
 
         {/* Email */}
         <div>

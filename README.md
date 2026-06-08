@@ -1,5 +1,4 @@
-
-  # AI-Powered Wardrobe Management UI
+# AI-Powered Wardrobe Management UI
 
   This is a code bundle for AI-Powered Wardrobe Management UI. The original project is available at https://www.figma.com/design/CKGX3OuFKnzguKCiqdzQrZ/AI-Powered-Wardrobe-Management-UI.
 

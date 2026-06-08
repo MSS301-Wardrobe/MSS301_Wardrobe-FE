@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { AuthLayout } from "../../components/layout/AuthLayout";
+import {authService} from "../../services/authService"
 
 export function Login() {
   const navigate = useNavigate();
@@ -13,18 +14,35 @@ export function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    // Placeholder role assignment (ready for future API integration).
-    const isAdmin =
-      email.trim().toLowerCase() === "admin@gmail.com" && password === "Admin@123";
-    localStorage.setItem("role", isAdmin ? "ADMIN" : "USER");
-    toast.success("Chào mừng trở lại! Đang chuyển hướng...");
-    setTimeout(() => navigate(isAdmin ? "/admin/dashboard" : "/app/dashboard"), 500);
-  };
+  e.preventDefault();
 
+  try {
+    setLoading(true);
+
+    const user = await authService.login(email.trim(), password);
+
+    toast.success("Đăng nhập thành công!");
+
+    const role =
+      user.roles?.[0]?.roleName ||
+      user.role ||
+      "USER";
+
+    localStorage.setItem("role", role);
+
+    setTimeout(() => {
+      if (role === "ROLE_ADMIN" || role === "ADMIN") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/app/dashboard");
+      }
+    }, 500);
+  } catch (err: any) {
+    toast.error(err.message || "Đăng nhập thất bại");
+  } finally {
+    setLoading(false);
+  }
+};
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px 12px 42px",

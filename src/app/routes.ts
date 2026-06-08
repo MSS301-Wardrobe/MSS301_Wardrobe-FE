@@ -8,6 +8,7 @@ import { Landing } from "../pages/landing/Landing";
 import { Login } from "../pages/auth/LoginPage";
 import { Register } from "../pages/auth/RegisterPage";
 import { ForgotPassword } from "../pages/auth/ForgotPasswordPage";
+import { VerifyOtp } from "../pages/auth/VerifyOtp";
 
 // End user pages
 import { Dashboard } from "../pages/user/dashboard/Dashboard";
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
   { path: "/login", Component: Login },
   { path: "/register", Component: Register },
   { path: "/forgot-password", Component: ForgotPassword },
+  {path: "/verify-otp", Component: VerifyOtp},
 
   // End user routes (role: USER)
   {
