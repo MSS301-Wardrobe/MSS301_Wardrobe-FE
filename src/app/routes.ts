@@ -16,6 +16,7 @@ import { WardrobeOverview } from "../pages/user/wardrobe/WardrobeOverview";
 import { ClothingDetail } from "../pages/user/wardrobe/ClothingDetail";
 import { AddClothing } from "../pages/user/wardrobe/AddClothing";
 import { WardrobeZones } from "../pages/user/wardrobe/WardrobeZones";
+import { WardrobeManagement } from "../pages/user/wardrobe/WardrobeManagement";
 import { FriendGroups } from "../pages/user/friend-groups/FriendGroups";
 import { FriendGroupDetails } from "../pages/user/friend-groups/FriendGroupDetails";
 import { AIDetection } from "../pages/user/ai-detection/AIDetection";
@@ -52,7 +53,8 @@ export const router = createBrowserRouter([
         Component: UserLayout,
         children: [
           { path: "dashboard", Component: Dashboard },
-          { path: "wardrobe", Component: WardrobeOverview },
+          { path: "wardrobe", Component: WardrobeManagement },
+          { path: "wardrobe/items", Component: WardrobeOverview },
           { path: "wardrobe/add", Component: AddClothing },
           { path: "wardrobe/zones", Component: WardrobeZones },
           { path: "wardrobe/:id", Component: ClothingDetail },
