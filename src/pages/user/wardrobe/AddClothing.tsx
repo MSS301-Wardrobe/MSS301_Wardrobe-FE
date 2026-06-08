@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Upload, X, Tag, Cpu, Check } from "lucide-react";
 import { toast } from "sonner";
+import { storageService } from "../../../services/storageService";
 
 const categories = ["Áo", "Quần", "Váy", "Áo Khoác", "Giày Dép", "Phụ Kiện", "Đồ Thể Thao"];
 const colors = ["Đen", "Trắng", "Xanh Đậm", "Chàm", "Tím", "Đỏ", "Hồng", "Cam", "Vàng", "Xanh Lá", "Xanh Mòng Két", "Xám", "Nâu", "Be", "Nhiều Màu"];
@@ -24,6 +25,8 @@ export function AddClothing() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [aiDetecting, setAiDetecting] = useState(false);
   const [aiResult, setAiResult] = useState<{ category: string; confidence: number; color: string } | null>(null);
   const [form, setForm] = useState({
@@ -42,6 +45,7 @@ export function AddClothing() {
   const handleFile = async (file: File) => {
     const url = URL.createObjectURL(file);
     setPreview(url);
+    setSelectedFile(file);
     setAiDetecting(true);
     setAiResult(null);
     await new Promise((r) => setTimeout(r, 1800));
@@ -80,12 +84,20 @@ export function AddClothing() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!preview) { toast.error("Vui lòng tải lên hình ảnh trang phục"); return; }
+    if (!preview || !selectedFile) { toast.error("Vui lòng tải lên hình ảnh trang phục"); return; }
     if (!form.name || !form.category) { toast.error("Tên và danh mục là bắt buộc"); return; }
-    toast.success("Đã thêm vật phẩm vào tủ đồ của bạn!");
-    setTimeout(() => navigate("/app/wardrobe"), 600);
+
+    setUploading(true);
+    try {
+      await storageService.upload(selectedFile);
+      toast.success("Đã thêm vật phẩm vào tủ đồ của bạn!");
+      setTimeout(() => navigate("/app/wardrobe"), 600);
+    } catch (error) {
+      toast.error("Tải ảnh lên thất bại. Vui lòng thử lại.");
+      setUploading(false);
+    }
   };
 
   return (
@@ -124,7 +136,7 @@ export function AddClothing() {
                     <img src={preview} alt="Preview" style={{ width: "100%", height: 300, objectFit: "cover", borderRadius: 14 }} />
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); setPreview(null); setAiResult(null); }}
+                      onClick={(e) => { e.stopPropagation(); setPreview(null); setAiResult(null); setSelectedFile(null); }}
                       style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: "50%", background: "rgba(15,23,42,0.8)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       <X size={14} color="white" />
@@ -312,8 +324,8 @@ export function AddClothing() {
                 <button type="button" onClick={() => navigate("/app/wardrobe")} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#0F172A", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>
                   Hủy
                 </button>
-                <button type="submit" style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
-                  Thêm Vào Tủ Đồ
+                <button type="submit" disabled={uploading} style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: uploading ? "not-allowed" : "pointer", fontSize: "0.9rem", opacity: uploading ? 0.7 : 1 }}>
+                  {uploading ? "Đang xử lý..." : "Thêm Vào Tủ Đồ"}
                 </button>
               </div>
             </div>
