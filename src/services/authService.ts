@@ -1,25 +1,50 @@
 import { apiClient } from "./apiClient";
-import type { LoginPayload, RegisterPayload, AuthResponse } from "../types/user";
 
-// Placeholder auth service. Wire these to the real backend later.
 export const authService = {
-  async login(payload: LoginPayload): Promise<AuthResponse | void> {
-    // const { data } = await apiClient.post<AuthResponse>("/auth/login", payload);
-    // return data;
-    return Promise.resolve();
+  async login(email: string, password: string) {
+    await apiClient.post("/auth/login", {
+      email,
+      password,
+    });
+
+    const { data } = await apiClient.get("/users/me");
+
+    localStorage.setItem("user", JSON.stringify(data));
+
+    const role = data.roles?.[0]?.roleName ?? data.role ?? "USER";
+    localStorage.setItem("role", role);
+
+    return data;
   },
-  async register(payload: RegisterPayload): Promise<AuthResponse | void> {
-    // const { data } = await apiClient.post<AuthResponse>("/auth/register", payload);
-    // return data;
-    return Promise.resolve();
+
+  async register(payload: {
+    email: string;
+    password: string;
+  }) {
+    const { data } = await apiClient.post("/auth/register", payload);
+    return data;
   },
-  async forgotPassword(email: string): Promise<void> {
-    // await apiClient.post("/auth/forgot-password", { email });
-    return Promise.resolve();
+
+  async confirmRegister(payload: {
+    email: string;
+    otp: string;
+  }) {
+    const { data } = await apiClient.post("/auth/confirm-register", payload);
+    return data;
   },
-  async logout(): Promise<void> {
-    // await apiClient.post("/auth/logout");
-    return Promise.resolve();
+
+  async resendCode(email: string) {
+    const { data } = await apiClient.post("/auth/resend-code", {
+      email,
+    });
+    return data;
+  },
+
+  async logout() {
+    await apiClient.post("/auth/logout");
+
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
   },
 };
 
