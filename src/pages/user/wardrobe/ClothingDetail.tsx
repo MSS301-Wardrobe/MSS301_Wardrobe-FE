@@ -1,51 +1,95 @@
-import { useNavigate } from "react-router";
-import { ArrowLeft, Heart, Edit2, Trash2, Share2, Tag, Info, Cpu } from "lucide-react";
-import { useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import { ArrowLeft, Heart, Trash2, Info, Cpu, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-
-const item = {
-  id: "1",
-  name: "Áo Sơ Mi Oxford Trắng",
-  category: "Áo",
-  subcategory: "Sơ Mi",
-  color: "Trắng",
-  material: "100% Cotton",
-  brand: "Uniqlo",
-  size: "M",
-  purchaseDate: "2024-03-15",
-  purchasePrice: "1.200.000đ",
-  condition: "Xuất Sắc",
-  wearCount: 24,
-  lastWorn: "3 ngày trước",
-  img: "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=600&h=700&fit=crop",
-  tags: ["trang trọng", "văn phòng", "công sở", "tối giản", "trắng"],
-  aiConfidence: 97.3,
-  aiAttributes: [
-    { label: "Danh Mục", value: "Áo / Sơ Mi", confidence: 97 },
-    { label: "Màu Sắc", value: "Trắng / Trắng Kem", confidence: 99 },
-    { label: "Họa Tiết", value: "Trơn", confidence: 98 },
-    { label: "Chất Liệu", value: "Cotton (ước tính)", confidence: 89 },
-    { label: "Phong Cách", value: "Trang Trọng / Công Sở", confidence: 94 },
-    { label: "Dịp Mặc", value: "Làm Việc, Văn Phòng, Thanh Lịch", confidence: 96 },
-  ],
-  notes: "Áo sơ mi văn phòng yêu thích của tôi. Phù hợp với quần tối màu và áo vest.",
-};
-
-const similarItems = [
-  { id: "3", name: "Áo Thun Nữ Casual", img: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=100&h=100&fit=crop" },
-  { id: "9", name: "Áo Trắng Tối Giản", img: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=100&h=100&fit=crop" },
-  { id: "12", name: "Áo Vest Trắng Công Sở", img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=100&h=100&fit=crop" },
-  { id: "4", name: "Giày Thể Thao Trắng", img: "https://images.unsplash.com/photo-1544441893-675973e31985?w=100&h=100&fit=crop" },
-];
+import { clothingItemApi, categoryApi, wardrobeZoneApi } from "../../../services/wardrobeService";
+import type { ClothingItem, Category, WardrobeZone } from "../../../types/wardrobe";
 
 export function ClothingDetail() {
   const navigate = useNavigate();
-  const [favorite, setFavorite] = useState(true);
-  const [activeTab, setActiveTab] = useState<"info" | "ai" | "notes">("info");
+  const { id } = useParams<{ id: string }>();
+  const [item, setItem] = useState<ClothingItem | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [zone, setZone] = useState<WardrobeZone | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [favorite, setFavorite] = useState(false);
+  const [activeTab, setActiveTab] = useState<"info" | "ai">("info");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  const handleDelete = () => {
-    toast.success("Đã xóa vật phẩm khỏi tủ đồ");
-    navigate("/app/wardrobe");
+  useEffect(() => {
+    if (!id) return;
+    const fetchItem = async () => {
+      setLoading(true);
+      try {
+        const fetched = await clothingItemApi.getById(id);
+        setItem(fetched);
+
+        // Fetch related data in parallel
+        const promises: Promise<any>[] = [];
+        if (fetched.categoryId) promises.push(categoryApi.getById(fetched.categoryId));
+        else promises.push(Promise.resolve(null));
+        if (fetched.zoneId) promises.push(wardrobeZoneApi.getById(fetched.zoneId));
+        else promises.push(Promise.resolve(null));
+
+        const [cat, zn] = await Promise.all(promises);
+        setCategory(cat);
+        setZone(zn);
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          toast.error("Không thể tải thông tin vật phẩm");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItem();
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await clothingItemApi.delete(id);
+      toast.success("Đã xóa vật phẩm khỏi tủ đồ");
+      navigate("/app/wardrobe");
+    } catch {
+      toast.error("Xóa thất bại, vui lòng thử lại");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 24px" }}>
+        <Loader2 size={36} color="#4F46E5" style={{ animation: "spin 1s linear infinite" }} />
+        <span style={{ marginLeft: 14, color: "#64748B", fontSize: "1rem" }}>Đang tải thông tin...</span>
+      </div>
+    );
+  }
+
+  if (notFound || !item) {
+    return (
+      <div style={{ textAlign: "center", padding: "80px 24px" }}>
+        <div style={{ fontSize: "3rem", marginBottom: 16 }}>🔍</div>
+        <h2 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Không tìm thấy vật phẩm</h2>
+        <p style={{ color: "#64748B", marginBottom: 24 }}>Vật phẩm này không tồn tại hoặc đã bị xóa.</p>
+        <button
+          onClick={() => navigate("/app/wardrobe")}
+          style={{ padding: "10px 20px", borderRadius: 12, background: "#4F46E5", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}
+        >
+          Quay Lại Tủ Đồ
+        </button>
+      </div>
+    );
+  }
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" });
+    } catch {
+      return dateStr;
+    }
   };
 
   return (
@@ -60,10 +104,10 @@ export function ClothingDetail() {
       </button>
 
       <div style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: 24, alignItems: "start" }}>
-        {/* Left: Image */}
+        {/* Left: Image placeholder */}
         <div>
-          <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-            <img src={item.img} alt={item.name} style={{ width: "100%", height: 440, objectFit: "cover" }} />
+          <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", background: "linear-gradient(135deg, #EEF2FF, #E0E7FF)", height: 440, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: "8rem" }}>👕</span>
           </div>
 
           {/* Action buttons */}
@@ -75,14 +119,10 @@ export function ClothingDetail() {
               <Heart size={16} fill={favorite ? "#EF4444" : "none"} color={favorite ? "#EF4444" : "#64748B"} />
               {favorite ? "Đã Lưu" : "Lưu"}
             </button>
-            <button style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", cursor: "pointer", fontSize: "0.85rem", color: "#64748B" }}>
-              <Share2 size={16} />
-              Chia Sẻ
-            </button>
-            <button style={{ padding: "10px 14px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", cursor: "pointer" }}>
-              <Edit2 size={16} color="#64748B" />
-            </button>
-            <button onClick={handleDelete} style={{ padding: "10px 14px", borderRadius: 12, border: "1.5px solid #FEE2E2", background: "#FEF2F2", cursor: "pointer" }}>
+            <button
+              onClick={() => setDeleteConfirm(true)}
+              style={{ padding: "10px 14px", borderRadius: 12, border: "1.5px solid #FEE2E2", background: "#FEF2F2", cursor: "pointer" }}
+            >
               <Trash2 size={16} color="#EF4444" />
             </button>
           </div>
@@ -90,25 +130,35 @@ export function ClothingDetail() {
 
         {/* Right: Details */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {/* Title */}
+          {/* Title card */}
           <div style={{ background: "white", borderRadius: 20, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <span style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "3px 12px", fontSize: "0.75rem", fontWeight: 600 }}>{item.category}</span>
-                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A", marginTop: 10, marginBottom: 4 }}>{item.name}</h2>
-                <p style={{ color: "#64748B", fontSize: "0.85rem" }}>{item.brand} · {item.size} · {item.material}</p>
+                {category && (
+                  <span style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "3px 12px", fontSize: "0.75rem", fontWeight: 600 }}>
+                    {category.categoryName}
+                  </span>
+                )}
+                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A", marginTop: 10, marginBottom: 4 }}>{item.itemName}</h2>
+                <p style={{ color: "#64748B", fontSize: "0.85rem" }}>
+                  {zone ? `Khu vực: ${zone.zoneName}` : "Chưa phân khu vực"}
+                  {item.dominantColor ? ` · ${item.dominantColor}` : ""}
+                </p>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: "0.75rem", color: "#64748B" }}>Giá Mua</p>
-                <p style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.1rem" }}>{item.purchasePrice}</p>
-              </div>
+              {item.confidenceScore && (
+                <div style={{ textAlign: "right" }}>
+                  <p style={{ fontSize: "0.75rem", color: "#64748B" }}>Điểm AI</p>
+                  <p style={{ fontWeight: 800, color: "#10B981", fontSize: "1.3rem" }}>
+                    {(item.confidenceScore * 100).toFixed(1)}%
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 20 }}>
               {[
-                { label: "Số Lần Mặc", value: item.wearCount },
-                { label: "Lần Cuối Mặc", value: item.lastWorn },
-                { label: "Tình Trạng", value: item.condition },
+                { label: "Ngày Thêm", value: formatDate(item.createdAt) },
+                { label: "Phong Cách", value: item.style ?? "—" },
               ].map(({ label, value }) => (
                 <div key={label} style={{ background: "#F8FAFC", borderRadius: 12, padding: "12px 14px" }}>
                   <p style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 500 }}>{label}</p>
@@ -122,13 +172,12 @@ export function ClothingDetail() {
           <div style={{ background: "white", borderRadius: 20, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", borderBottom: "1px solid #E2E8F0" }}>
               {[
-                { id: "info", label: "Chi Tiết", icon: Info },
-                { id: "ai", label: "Phân Tích AI", icon: Cpu },
-                { id: "notes", label: "Thẻ & Ghi Chú", icon: Tag },
+                { id: "info" as const, label: "Chi Tiết", icon: Info },
+                { id: "ai" as const, label: "Phân Tích AI", icon: Cpu },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id as any)}
+                  onClick={() => setActiveTab(id)}
                   style={{
                     flex: 1, padding: "12px 16px", border: "none", cursor: "pointer",
                     background: activeTab === id ? "#EEF2FF" : "white",
@@ -149,18 +198,16 @@ export function ClothingDetail() {
               {activeTab === "info" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   {[
-                    { label: "Danh Mục", value: item.category },
-                    { label: "Danh Mục Con", value: item.subcategory },
-                    { label: "Màu Sắc", value: item.color },
-                    { label: "Chất Liệu", value: item.material },
-                    { label: "Thương Hiệu", value: item.brand },
-                    { label: "Kích Thước", value: item.size },
-                    { label: "Ngày Mua", value: item.purchaseDate },
-                    { label: "Tình Trạng", value: item.condition },
+                    { label: "Item ID", value: item.itemId },
+                    { label: "Danh Mục", value: category?.categoryName ?? "—" },
+                    { label: "Khu Vực", value: zone?.zoneName ?? "—" },
+                    { label: "Màu Chủ Đạo", value: item.dominantColor ?? "—" },
+                    { label: "Phong Cách", value: item.style ?? "—" },
+                    { label: "Ngày Tạo", value: formatDate(item.createdAt) },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <p style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{label}</p>
-                      <p style={{ fontSize: "0.88rem", fontWeight: 500, color: "#0F172A" }}>{value}</p>
+                      <p style={{ fontSize: label === "Item ID" ? "0.72rem" : "0.88rem", fontWeight: 500, color: "#0F172A", fontFamily: label === "Item ID" ? "monospace" : "inherit", wordBreak: "break-all" }}>{value}</p>
                     </div>
                   ))}
                 </div>
@@ -168,70 +215,83 @@ export function ClothingDetail() {
 
               {activeTab === "ai" && (
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, background: "#ECFDF5", borderRadius: 12, padding: "10px 14px" }}>
-                    <Cpu size={16} color="#10B981" />
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#059669" }}>Độ Tin Cậy AI: {item.aiConfidence}%</span>
-                    <div style={{ flex: 1, background: "#D1FAE5", borderRadius: 100, height: 6, marginLeft: 8 }}>
-                      <div style={{ width: `${item.aiConfidence}%`, background: "#10B981", borderRadius: 100, height: "100%" }} />
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {item.aiAttributes.map((attr) => (
-                      <div key={attr.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <p style={{ fontSize: "0.78rem", color: "#64748B", fontWeight: 500 }}>{attr.label}</p>
-                          <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#0F172A" }}>{attr.value}</p>
-                        </div>
-                        <div style={{ textAlign: "right", minWidth: 80 }}>
-                          <p style={{ fontSize: "0.72rem", color: "#94A3B8", marginBottom: 4 }}>{attr.confidence}%</p>
-                          <div style={{ background: "#F1F5F9", borderRadius: 100, height: 4, width: 80 }}>
-                            <div style={{ width: `${attr.confidence}%`, background: "#4F46E5", borderRadius: 100, height: "100%" }} />
-                          </div>
+                  {item.confidenceScore ? (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, background: "#ECFDF5", borderRadius: 12, padding: "10px 14px" }}>
+                        <Cpu size={16} color="#10B981" />
+                        <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#059669" }}>
+                          Độ Tin Cậy AI: {(item.confidenceScore * 100).toFixed(1)}%
+                        </span>
+                        <div style={{ flex: 1, background: "#D1FAE5", borderRadius: 100, height: 6, marginLeft: 8 }}>
+                          <div style={{ width: `${item.confidenceScore * 100}%`, background: "#10B981", borderRadius: 100, height: "100%" }} />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "notes" && (
-                <div>
-                  <div style={{ marginBottom: 16 }}>
-                    <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", marginBottom: 8 }}>Thẻ</p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {item.tags.map((tag) => (
-                        <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.8rem", fontWeight: 500 }}>
-                          #{tag}
-                        </span>
-                      ))}
-                      <button style={{ background: "#F1F5F9", color: "#64748B", borderRadius: 20, padding: "4px 12px", fontSize: "0.8rem", border: "1.5px dashed #CBD5E1", cursor: "pointer" }}>
-                        + Thêm thẻ
-                      </button>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {[
+                          { label: "Màu Chủ Đạo", value: item.dominantColor ?? "—", confidence: item.confidenceScore },
+                          { label: "Phong Cách", value: item.style ?? "—", confidence: item.confidenceScore * 0.95 },
+                          { label: "Danh Mục", value: category?.categoryName ?? "—", confidence: item.confidenceScore * 0.98 },
+                        ].map((attr) => (
+                          <div key={attr.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <p style={{ fontSize: "0.78rem", color: "#64748B", fontWeight: 500 }}>{attr.label}</p>
+                              <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#0F172A" }}>{attr.value}</p>
+                            </div>
+                            <div style={{ textAlign: "right", minWidth: 80 }}>
+                              <p style={{ fontSize: "0.72rem", color: "#94A3B8", marginBottom: 4 }}>{(attr.confidence * 100).toFixed(0)}%</p>
+                              <div style={{ background: "#F1F5F9", borderRadius: 100, height: 4, width: 80 }}>
+                                <div style={{ width: `${attr.confidence * 100}%`, background: "#4F46E5", borderRadius: 100, height: "100%" }} />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "32px 24px", color: "#64748B" }}>
+                      <Cpu size={32} color="#CBD5E1" style={{ marginBottom: 12 }} />
+                      <p>Chưa có dữ liệu phân tích AI</p>
                     </div>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", marginBottom: 8 }}>Ghi Chú Cá Nhân</p>
-                    <p style={{ fontSize: "0.88rem", color: "#64748B", lineHeight: 1.7, background: "#F8FAFC", borderRadius: 10, padding: "12px 14px" }}>{item.notes}</p>
-                  </div>
+                  )}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Similar Items */}
-          <div style={{ background: "white", borderRadius: 20, padding: 20, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <h4 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 14, fontSize: "0.95rem" }}>Vật Phẩm Tương Tự Trong Tủ Đồ</h4>
-            <div style={{ display: "flex", gap: 12 }}>
-              {similarItems.map((si) => (
-                <div key={si.id} onClick={() => navigate(`/app/wardrobe/${si.id}`)} style={{ cursor: "pointer", textAlign: "center" }}>
-                  <img src={si.img} alt={si.name} style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", border: "1px solid #E2E8F0" }} />
-                  <p style={{ fontSize: "0.65rem", color: "#64748B", marginTop: 5, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{si.name}</p>
-                </div>
-              ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirm Modal */}
+      {deleteConfirm && (
+        <div
+          onClick={() => setDeleteConfirm(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "white", borderRadius: 20, padding: 32, maxWidth: 380, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.2)", textAlign: "center" }}
+          >
+            <div style={{ fontSize: "2.5rem", marginBottom: 16 }}>⚠️</div>
+            <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Xóa vật phẩm này?</h3>
+            <p style={{ color: "#64748B", fontSize: "0.9rem", marginBottom: 24 }}>
+              <strong style={{ color: "#0F172A" }}>{item.itemName}</strong> sẽ bị xóa vĩnh viễn khỏi tủ đồ của bạn.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#374151", fontWeight: 600, cursor: "pointer" }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleDelete}
+                style={{ flex: 1, padding: "11px", borderRadius: 12, border: "none", background: "#EF4444", color: "white", fontWeight: 700, cursor: "pointer" }}
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

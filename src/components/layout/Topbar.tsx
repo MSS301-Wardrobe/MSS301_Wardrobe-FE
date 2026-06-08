@@ -1,12 +1,12 @@
 import { Bell, Search, Plus } from "lucide-react";
-import { useNavigate, useLocation } from "react-router";
-import { useState } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router";
+import { useState, useEffect } from "react";
 
 const routeTitles: Record<string, string> = {
   "/app/dashboard": "Tổng Quan",
   "/app/wardrobe": "Tủ Đồ Của Tôi",
   "/app/wardrobe/add": "Thêm Trang Phục",
-  "/app/wardrobe/zones": "Khu Vực Tủ Đồ",
+  "/app/wardrobe/zones": "Các Ngăn Kéo",
   "/app/profile": "Hồ Sơ",
   "/app/preferences": "Sở Thích",
   "/app/friend-groups": "Nhóm Bạn",
@@ -24,8 +24,31 @@ const routeTitles: Record<string, string> = {
 };
 
 export function Topbar() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const q = searchParams.get("q") || "";
+  
+  const [localSearch, setLocalSearch] = useState(q);
+
+  useEffect(() => {
+    setLocalSearch(q);
+  }, [q]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== q) {
+        if (localSearch) {
+          searchParams.set("q", localSearch);
+        } else {
+          searchParams.delete("q");
+        }
+        setSearchParams(searchParams, { replace: true });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
+
   const [notifOpen, setNotifOpen] = useState(false);
   const title = routeTitles[location.pathname] ??
     (location.pathname.startsWith("/app/wardrobe/") ? "Chi Tiết Trang Phục" :
@@ -38,6 +61,13 @@ export function Topbar() {
     { id: 2, text: "Gợi ý trang phục mới đã sẵn sàng", time: "15 phút trước", color: "#8B5CF6" },
     { id: 3, text: "Tủ đồ của bạn đã tổ chức được 85%", time: "1 giờ trước", color: "#10B981" },
   ];
+
+  const getSearchPlaceholder = () => {
+    if (location.pathname === "/app/wardrobe") return "Tìm kiếm tủ đồ...";
+    if (location.pathname === "/app/wardrobe/zones") return "Tìm kiếm ngăn kéo...";
+    if (location.pathname.startsWith("/app/wardrobe/")) return "Tìm kiếm trang phục...";
+    return "Tìm kiếm...";
+  };
 
   return (
     <header className="sticky top-0 z-20 bg-card border-b border-border flex items-center justify-between px-6 py-4">
@@ -53,21 +83,32 @@ export function Topbar() {
         <div className="hidden md:flex items-center gap-2 bg-muted rounded-xl px-3 py-2" style={{ minWidth: 220 }}>
           <Search size={15} color="#64748B" />
           <input
-            placeholder="Tìm kiếm tủ đồ..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            placeholder={getSearchPlaceholder()}
             className="bg-transparent outline-none border-none"
             style={{ fontSize: "0.85rem", color: "#0F172A", width: "100%" }}
           />
         </div>
 
         {/* Add Button */}
-        <button
-          onClick={() => navigate("/app/wardrobe/add")}
-          className="flex items-center gap-2 rounded-xl px-4 py-2 transition-all hover:opacity-90"
-          style={{ background: "#4F46E5", color: "white", fontSize: "0.85rem", fontWeight: 600 }}
-        >
-          <Plus size={15} />
-          <span className="hidden sm:inline">Thêm Vật Phẩm</span>
-        </button>
+        {(location.pathname !== "/app/wardrobe" && location.pathname !== "/app/wardrobe/zones" && location.pathname !== "/app/wardrobe/add") && (
+          <button
+            onClick={() => {
+              const zoneId = new URLSearchParams(location.search).get("zoneId");
+              if (zoneId) {
+                navigate(`/app/wardrobe/add?zoneId=${zoneId}`);
+              } else {
+                navigate("/app/wardrobe/add");
+              }
+            }}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 transition-all hover:opacity-90"
+            style={{ background: "#4F46E5", color: "white", fontSize: "0.85rem", fontWeight: 600 }}
+          >
+            <Plus size={15} />
+            <span className="hidden sm:inline">Thêm Vật Phẩm</span>
+          </button>
+        )}
 
         {/* Notifications */}
         <div className="relative">
