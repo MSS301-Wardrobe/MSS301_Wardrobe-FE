@@ -2,7 +2,7 @@ import { apiClient } from "./apiClient";
 
 export const authService = {
   async login(email: string, password: string) {
-    await apiClient.post("/auth/login", {
+    await apiClient.post("/users/auth/login", {
       email,
       password,
     });
@@ -11,7 +11,7 @@ export const authService = {
 
     localStorage.setItem("user", JSON.stringify(data));
 
-    const role = data.roles?.[0]?.roleName ?? data.role ?? "USER";
+    const role = data.roles?.[0]?.roleName ?? data.role ?? "ROLE_USER";
     localStorage.setItem("role", role);
 
     return data;
@@ -21,7 +21,7 @@ export const authService = {
     email: string;
     password: string;
   }) {
-    const { data } = await apiClient.post("/auth/register", payload);
+    const { data } = await apiClient.post("/users/auth/register", payload);
     return data;
   },
 
@@ -29,19 +29,19 @@ export const authService = {
     email: string;
     otp: string;
   }) {
-    const { data } = await apiClient.post("/auth/confirm-register", payload);
+    const { data } = await apiClient.post("/users/auth/confirm-register", payload);
     return data;
   },
 
   async resendCode(email: string) {
-    const { data } = await apiClient.post("/auth/resend-code", {
+    const { data } = await apiClient.post("/users/auth/resend-code", {
       email,
     });
     return data;
   },
 
   async logout() {
-    await apiClient.post("/auth/logout");
+    await apiClient.post("/users/auth/logout");
 
     localStorage.removeItem("user");
     localStorage.removeItem("role");
