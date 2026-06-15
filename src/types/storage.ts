@@ -4,6 +4,7 @@ export interface StoredImage {
   id: string;
   url: string;
   name?: string;
+  size?: number;
   createdAt?: string;
 }
 

@@ -9,6 +9,7 @@ import { Landing } from "../pages/landing/Landing";
 import { Login } from "../pages/auth/LoginPage";
 import { Register } from "../pages/auth/RegisterPage";
 import { ForgotPassword } from "../pages/auth/ForgotPasswordPage";
+import { VerifyOtp } from "../pages/auth/VerifyOtp";
 
 // End user pages
 import { Dashboard } from "../pages/user/dashboard/Dashboard";
@@ -16,6 +17,7 @@ import { WardrobeOverview } from "../pages/user/wardrobe/WardrobeOverview";
 import { ClothingDetail } from "../pages/user/wardrobe/ClothingDetail";
 import { AddClothing } from "../pages/user/wardrobe/AddClothing";
 import { WardrobeZones } from "../pages/user/wardrobe/WardrobeZones";
+import { WardrobeManagement } from "../pages/user/wardrobe/WardrobeManagement";
 import { FriendGroups } from "../pages/user/friend-groups/FriendGroups";
 import { FriendGroupDetails } from "../pages/user/friend-groups/FriendGroupDetails";
 import { AIDetection } from "../pages/user/ai-detection/AIDetection";
@@ -37,7 +39,6 @@ import { SystemSettings } from "../pages/admin/system-settings/SystemSettings";
 
 export const router = createBrowserRouter([
   {
-    // Root layout provides AuthProvider to all routes
     Component: RootLayout,
     children: [
       // Public routes
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
       { path: "/login", Component: Login },
       { path: "/register", Component: Register },
       { path: "/forgot-password", Component: ForgotPassword },
+      { path: "/verify-otp", Component: VerifyOtp },
 
       // End user routes (role: USER)
       {
@@ -55,7 +57,8 @@ export const router = createBrowserRouter([
             Component: UserLayout,
             children: [
               { path: "dashboard", Component: Dashboard },
-              { path: "wardrobe", Component: WardrobeOverview },
+              { path: "wardrobe", Component: WardrobeManagement },
+              { path: "wardrobe/items", Component: WardrobeOverview },
               { path: "wardrobe/add", Component: AddClothing },
               { path: "wardrobe/zones", Component: WardrobeZones },
               { path: "wardrobe/:id", Component: ClothingDetail },
