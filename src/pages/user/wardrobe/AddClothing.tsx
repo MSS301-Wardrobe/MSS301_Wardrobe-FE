@@ -1,8 +1,21 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { ArrowLeft, Upload, X, Cpu, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { clothingItemApi, categoryApi, wardrobeZoneApi } from "../../../services/wardrobeService";
+import {
+  clothingItemApi,
+  categoryApi,
+  ensureAiCategoryCatalog,
+  resolveCategoryFromAi,
+  wardrobeZoneApi,
+} from "../../../services/wardrobeService";
+import { aiService } from "../../../services/aiService";
+import {
+  mapAiStyleToFormStyle,
+  translateBaseColor,
+  translateCategory,
+  translateStyle,
+} from "../../../utils/aiMappings";
 import type { Category, WardrobeZone } from "../../../types/wardrobe";
 
 const inputStyle: React.CSSProperties = {
@@ -18,7 +31,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const colors = ["Đen", "Trắng", "Xanh Đậm", "Chàm", "Tím", "Đỏ", "Hồng", "Cam", "Vàng", "Xanh Lá", "Xanh Mòng Két", "Xám", "Nâu", "Be", "Nhiều Màu"];
-const styles = ["Trang Trọng", "Thường Ngày", "Thể Thao", "Tiệc Tùng", "Du Lịch", "Tối Giản", "Công Sở"];
+const styles = ["Trang Trọng", "Thanh Lịch", "Thường Ngày", "Thể Thao", "Tiệc Tùng", "Du Lịch", "Tối Giản", "Công Sở"];
 
 export function AddClothing() {
   const navigate = useNavigate();
@@ -26,12 +39,24 @@ export function AddClothing() {
   const initialZoneId = searchParams.get("zoneId");
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const pendingAiRef = useRef<{
+    classKey: string;
+    categoryName: string;
+    color: string;
+    formStyle: string;
+    confidence: number;
+  } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [aiDetecting, setAiDetecting] = useState(false);
-  const [aiResult, setAiResult] = useState<{ categoryName: string; confidence: number; color: string } | null>(null);
+  const [aiResult, setAiResult] = useState<{
+    categoryName: string;
+    confidence: number;
+    color: string;
+    style: string;
+  } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Real data from API
@@ -47,6 +72,42 @@ export function AddClothing() {
     confidenceScore: undefined as number | undefined,
   });
 
+  const applyAiToForm = useCallback(
+    async (
+      detection: {
+        classKey: string;
+        categoryName: string;
+        color: string;
+        formStyle: string;
+        confidence: number;
+      },
+      cats: Category[]
+    ) => {
+      const { category, categories: updatedCategories } = await resolveCategoryFromAi(
+        cats,
+        detection.classKey,
+        detection.categoryName
+      );
+
+      if (updatedCategories.length !== cats.length) {
+        setCategories(updatedCategories);
+      }
+
+      setForm((f) => ({
+        ...f,
+        categoryId: category?.categoryId ?? f.categoryId,
+        dominantColor: detection.color,
+        style: detection.formStyle || f.style,
+        confidenceScore: detection.confidence,
+      }));
+
+      if (category?.categoryId) {
+        pendingAiRef.current = null;
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     const fetchMeta = async () => {
       try {
@@ -54,7 +115,8 @@ export function AddClothing() {
           categoryApi.getAll(),
           wardrobeZoneApi.getAll(), // Fetch all zones to match ID with name, but dropdown will be disabled
         ]);
-        setCategories(cats);
+        const syncedCategories = await ensureAiCategoryCatalog(cats);
+        setCategories(syncedCategories);
         setZones(zns);
       } catch {
         toast.error("Không thể tải danh mục và ngăn kéo");
@@ -63,28 +125,65 @@ export function AddClothing() {
     fetchMeta();
   }, []);
 
+  useEffect(() => {
+    if (pendingAiRef.current) {
+      void applyAiToForm(pendingAiRef.current, categories);
+    }
+  }, [categories, applyAiToForm]);
+
   const handleFile = async (file: File) => {
     const url = URL.createObjectURL(file);
     setPreview(url);
     setSelectedFile(file);
     setAiDetecting(true);
     setAiResult(null);
-    // Simulate AI detection (would hook into ai-detection-service in the future)
-    await new Promise((r) => setTimeout(r, 1800));
-    setAiDetecting(false);
-    const detectedConfidence = 0.947;
-    const result = { categoryName: categories[0]?.categoryName ?? "Áo", confidence: detectedConfidence, color: "Trắng" };
-    setAiResult(result);
-    // Auto-fill form with AI result
-    const matchedCat = categories.find((c) => c.categoryName === result.categoryName);
-    setForm((f) => ({
-      ...f,
-      categoryId: matchedCat?.categoryId ?? f.categoryId,
-      dominantColor: result.color,
-      itemName: f.itemName || "Vật phẩm đã nhận diện",
-      confidenceScore: result.confidence,
-    }));
-    toast.success("Nhận diện AI hoàn tất!");
+
+    try {
+      const response = await aiService.detect(file);
+      const primary = response.detections[0];
+
+      if (!primary) {
+        toast.error("Không phát hiện trang phục nào trong ảnh");
+        return;
+      }
+
+      const categoryName = translateCategory(primary.class_name);
+      const colorName = translateBaseColor(primary.dominant_color.base_color);
+      const styleLabel = translateStyle(primary.style);
+      const formStyle = mapAiStyleToFormStyle(primary.style);
+
+      const result = {
+        categoryName,
+        confidence: primary.confidence,
+        color: colorName,
+        style: styleLabel,
+      };
+
+      setAiResult(result);
+
+      const detection = {
+        classKey: primary.class_name,
+        categoryName,
+        color: colorName,
+        formStyle,
+        confidence: primary.confidence,
+      };
+      pendingAiRef.current = detection;
+      await applyAiToForm(detection, categories);
+
+      toast.success("Nhận diện AI hoàn tất!");
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string; detail?: string } } })
+          .response?.data?.message ||
+        (error as { response?: { data?: { message?: string; detail?: string } } })
+          .response?.data?.detail ||
+        (error as Error).message ||
+        "Nhận diện AI thất bại";
+      toast.error(message);
+    } finally {
+      setAiDetecting(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -226,6 +325,13 @@ export function AddClothing() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", borderRadius: 10, padding: "10px 14px" }}>
                     <span style={{ fontSize: "0.82rem", color: "#374151", fontWeight: 500 }}>Màu Đã Phát Hiện</span>
                     <span style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.88rem" }}>{aiResult.color}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", borderRadius: 10, padding: "10px 14px" }}>
+                    <span style={{ fontSize: "0.82rem", color: "#374151", fontWeight: 500 }}>Phong Cách</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.88rem" }}>{aiResult.style}</span>
+                      <Check size={14} color="#10B981" />
+                    </div>
                   </div>
                 </div>
               </div>
