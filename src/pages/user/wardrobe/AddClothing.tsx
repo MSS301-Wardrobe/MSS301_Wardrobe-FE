@@ -112,8 +112,8 @@ export function AddClothing() {
                 onDrop={handleDrop}
                 onClick={() => !preview && fileRef.current?.click()}
                 style={{
-                  borderRadius: 16, border: `2px dashed ${dragOver ? "#4F46E5" : preview ? "#E2E8F0" : "#C7D2FE"}`,
-                  background: dragOver ? "#EEF2FF" : "#F8FAFC",
+                  borderRadius: 16, border: `2px dashed ${dragOver ? "#EA580C" : preview ? "#E2E8F0" : "#FED7AA"}`,
+                  background: dragOver ? "#FFEDD5" : "#F8FAFC",
                   cursor: preview ? "default" : "pointer",
                   transition: "all 0.2s", position: "relative", overflow: "hidden",
                   minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center",
@@ -130,7 +130,7 @@ export function AddClothing() {
                       <X size={14} color="white" />
                     </button>
                     {aiDetecting && (
-                      <div style={{ position: "absolute", inset: 0, background: "rgba(79,70,229,0.7)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ position: "absolute", inset: 0, background: "rgba(234,88,12,0.7)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                         <div style={{ width: 40, height: 40, border: "3px solid rgba(255,255,255,0.3)", borderTop: "3px solid white", borderRadius: "50%", animation: "spin 1s linear infinite", marginBottom: 12 }} />
                         <p style={{ color: "white", fontWeight: 600, fontSize: "0.9rem" }}>Đang Nhận Diện AI...</p>
                       </div>
@@ -138,8 +138,8 @@ export function AddClothing() {
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: 32 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                      <Upload size={24} color="#4F46E5" />
+                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                      <Upload size={24} color="#EA580C" />
                     </div>
                     <p style={{ fontWeight: 600, color: "#0F172A", marginBottom: 6 }}>Thả ảnh vào đây</p>
                     <p style={{ fontSize: "0.8rem", color: "#64748B", marginBottom: 16 }}>hoặc nhấn để duyệt</p>
@@ -208,9 +208,9 @@ export function AddClothing() {
                       key={cat} type="button"
                       onClick={() => setForm({ ...form, category: cat })}
                       style={{
-                        padding: "7px 16px", borderRadius: 20, border: `1.5px solid ${form.category === cat ? "#4F46E5" : "#E2E8F0"}`,
-                        background: form.category === cat ? "#EEF2FF" : "white",
-                        color: form.category === cat ? "#4F46E5" : "#64748B",
+                        padding: "7px 16px", borderRadius: 20, border: `1.5px solid ${form.category === cat ? "#EA580C" : "#E2E8F0"}`,
+                        background: form.category === cat ? "#FFEDD5" : "white",
+                        color: form.category === cat ? "#EA580C" : "#64748B",
                         fontWeight: form.category === cat ? 700 : 400,
                         cursor: "pointer", fontSize: "0.82rem",
                       }}
@@ -260,9 +260,9 @@ export function AddClothing() {
                       key={occ} type="button"
                       onClick={() => toggleOccasion(occ)}
                       style={{
-                        padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${form.occasion.includes(occ) ? "#8B5CF6" : "#E2E8F0"}`,
+                        padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${form.occasion.includes(occ) ? "#F97316" : "#E2E8F0"}`,
                         background: form.occasion.includes(occ) ? "#F5F3FF" : "white",
-                        color: form.occasion.includes(occ) ? "#8B5CF6" : "#64748B",
+                        color: form.occasion.includes(occ) ? "#F97316" : "#64748B",
                         fontWeight: form.occasion.includes(occ) ? 600 : 400,
                         cursor: "pointer", fontSize: "0.8rem",
                       }}
@@ -287,14 +287,14 @@ export function AddClothing() {
                       style={{ ...inputStyle, paddingLeft: 36 }}
                     />
                   </div>
-                  <button type="button" onClick={addTag} style={{ padding: "11px 16px", borderRadius: 10, border: "none", background: "#4F46E5", color: "white", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}>Thêm</button>
+                  <button type="button" onClick={addTag} style={{ padding: "11px 16px", borderRadius: 10, border: "none", background: "#EA580C", color: "white", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}>Thêm</button>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {tags.map((tag) => (
-                    <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 6 }}>
                       #{tag}
                       <button type="button" onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}>
-                        <X size={12} color="#4F46E5" />
+                        <X size={12} color="#EA580C" />
                       </button>
                     </span>
                   ))}
@@ -312,7 +312,7 @@ export function AddClothing() {
                 <button type="button" onClick={() => navigate("/app/wardrobe")} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#0F172A", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>
                   Hủy
                 </button>
-                <button type="submit" style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
+                <button type="submit" style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
                   Thêm Vào Tủ Đồ
                 </button>
               </div>

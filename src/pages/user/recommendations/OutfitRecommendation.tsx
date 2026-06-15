@@ -5,9 +5,9 @@ import { useNavigate } from "react-router";
 const occasions = ["Tất Cả", "Công Sở", "Thường Ngày", "Tiệc Tùng", "Đám Cưới", "Du Lịch"];
 
 const sourceBadges: Record<string, { label: string; color: string; bg: string }> = {
-  preferences: { label: "Sở Thích Của Bạn", color: "#4F46E5", bg: "#EEF2FF" },
+  preferences: { label: "Sở Thích Của Bạn", color: "#EA580C", bg: "#FFEDD5" },
   event: { label: "Loại Sự Kiện", color: "#F59E0B", bg: "#FFFBEB" },
-  friendGroup: { label: "Nhóm Bạn", color: "#8B5CF6", bg: "#F5F3FF" },
+  friendGroup: { label: "Nhóm Bạn", color: "#F97316", bg: "#F5F3FF" },
   similarUsers: { label: "Người Dùng Tương Tự", color: "#10B981", bg: "#ECFDF5" },
 };
 
@@ -22,7 +22,7 @@ const outfits = [
     description: "Trang phục gọn gàng, uy quyền — hoàn hảo cho các cuộc họp phòng hội đồng và thuyết trình với khách hàng.",
     img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=400&h=480&fit=crop",
     items: 4,
-    color: "#4F46E5",
+    color: "#EA580C",
   },
   {
     id: "2",
@@ -46,7 +46,7 @@ const outfits = [
     description: "Gây ấn tượng tại mọi sự kiện xã hội với bộ trang phục buổi tối được chọn lọc kỹ lưỡng.",
     img: "https://images.unsplash.com/photo-1617690033147-ce6b332d677b?w=400&h=480&fit=crop",
     items: 5,
-    color: "#8B5CF6",
+    color: "#F97316",
   },
   {
     id: "4",
@@ -106,7 +106,7 @@ export function OutfitRecommendation() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #8B5CF6 0%, #4F46E5 50%, #312E81 100%)", borderRadius: 20, padding: "28px 32px", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: "linear-gradient(135deg, #F97316 0%, #EA580C 50%, #C2410C 100%)", borderRadius: 20, padding: "28px 32px", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
         <div style={{ position: "absolute", bottom: -30, right: 80, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -139,10 +139,10 @@ export function OutfitRecommendation() {
             onClick={() => setActiveOccasion(occ)}
             style={{
               padding: "8px 20px", borderRadius: 20, border: "none", cursor: "pointer",
-              background: activeOccasion === occ ? "#4F46E5" : "white",
+              background: activeOccasion === occ ? "#EA580C" : "white",
               color: activeOccasion === occ ? "white" : "#64748B",
               fontWeight: activeOccasion === occ ? 700 : 400, fontSize: "0.875rem",
-              boxShadow: activeOccasion === occ ? "0 2px 8px rgba(79,70,229,0.35)" : "0 1px 4px rgba(0,0,0,0.06)",
+              boxShadow: activeOccasion === occ ? "0 2px 8px rgba(234,88,12,0.35)" : "0 1px 4px rgba(0,0,0,0.06)",
             }}
           >
             {occ} {occ !== "Tất Cả" && <span style={{ marginLeft: 4, opacity: 0.75, fontSize: "0.75rem" }}>({outfits.filter((o) => o.occasion === occ).length})</span>}

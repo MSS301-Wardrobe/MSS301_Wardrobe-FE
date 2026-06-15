@@ -94,7 +94,7 @@ export function ClothingDetail() {
           <div style={{ background: "white", borderRadius: 20, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <span style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "3px 12px", fontSize: "0.75rem", fontWeight: 600 }}>{item.category}</span>
+                <span style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 20, padding: "3px 12px", fontSize: "0.75rem", fontWeight: 600 }}>{item.category}</span>
                 <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A", marginTop: 10, marginBottom: 4 }}>{item.name}</h2>
                 <p style={{ color: "#64748B", fontSize: "0.85rem" }}>{item.brand} · {item.size} · {item.material}</p>
               </div>
@@ -131,11 +131,11 @@ export function ClothingDetail() {
                   onClick={() => setActiveTab(id as any)}
                   style={{
                     flex: 1, padding: "12px 16px", border: "none", cursor: "pointer",
-                    background: activeTab === id ? "#EEF2FF" : "white",
-                    color: activeTab === id ? "#4F46E5" : "#64748B",
+                    background: activeTab === id ? "#FFEDD5" : "white",
+                    color: activeTab === id ? "#EA580C" : "#64748B",
                     fontWeight: activeTab === id ? 700 : 400,
                     fontSize: "0.85rem",
-                    borderBottom: activeTab === id ? "2px solid #4F46E5" : "2px solid transparent",
+                    borderBottom: activeTab === id ? "2px solid #EA580C" : "2px solid transparent",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   }}
                 >
@@ -185,7 +185,7 @@ export function ClothingDetail() {
                         <div style={{ textAlign: "right", minWidth: 80 }}>
                           <p style={{ fontSize: "0.72rem", color: "#94A3B8", marginBottom: 4 }}>{attr.confidence}%</p>
                           <div style={{ background: "#F1F5F9", borderRadius: 100, height: 4, width: 80 }}>
-                            <div style={{ width: `${attr.confidence}%`, background: "#4F46E5", borderRadius: 100, height: "100%" }} />
+                            <div style={{ width: `${attr.confidence}%`, background: "#EA580C", borderRadius: 100, height: "100%" }} />
                           </div>
                         </div>
                       </div>
@@ -200,7 +200,7 @@ export function ClothingDetail() {
                     <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", marginBottom: 8 }}>Thẻ</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {item.tags.map((tag) => (
-                        <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.8rem", fontWeight: 500 }}>
+                        <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 20, padding: "4px 12px", fontSize: "0.8rem", fontWeight: 500 }}>
                           #{tag}
                         </span>
                       ))}

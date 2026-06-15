@@ -24,9 +24,9 @@ const zones: Zone[] = [
     name: "Khu Vực Công Sở",
     description: "Trang phục chuyên nghiệp cho các cuộc họp, sự kiện kinh doanh và dịp trang trọng",
     icon: Briefcase,
-    color: "#4F46E5",
-    bg: "linear-gradient(135deg, #EEF2FF, #E0E7FF)",
-    border: "#C7D2FE",
+    color: "#EA580C",
+    bg: "linear-gradient(135deg, #FFEDD5, #FFEDD5)",
+    border: "#FED7AA",
     count: 48,
     previews: [
       "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=80&h=80&fit=crop",
@@ -89,7 +89,7 @@ const zones: Zone[] = [
     name: "Khu Vực Tiệc Tùng",
     description: "Trang phục sành điệu và thời thượng cho các sự kiện xã hội, tiệc tùng và đêm muộn",
     icon: Music,
-    color: "#8B5CF6",
+    color: "#F97316",
     bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)",
     border: "#DDD6FE",
     count: 27,
@@ -158,7 +158,7 @@ export function WardrobeZones() {
         </div>
         <button
           onClick={() => setCreateOpen(true)}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.875rem" }}
         >
           <Plus size={15} />
           Tạo Khu Vực Tùy Chỉnh
@@ -292,7 +292,7 @@ export function WardrobeZones() {
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => setCreateOpen(false)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>Hủy</button>
-                <button onClick={handleCreate} style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+                <button onClick={handleCreate} style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
                   <Check size={15} />
                   Tạo Khu Vực
                 </button>

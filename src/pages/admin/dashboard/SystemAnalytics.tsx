@@ -5,8 +5,8 @@ import {
 } from "recharts";
 
 const widgets = [
-  { label: "Tổng Người Dùng", value: "52,847", change: "+1,234 tuần này", icon: Users, color: "#4F46E5", bg: "#EEF2FF", trend: "+12.4%" },
-  { label: "Vật Phẩm Trang Phục", value: "2.1M", change: "+48K tuần này", icon: Shirt, color: "#8B5CF6", bg: "#F5F3FF", trend: "+8.7%" },
+  { label: "Tổng Người Dùng", value: "52,847", change: "+1,234 tuần này", icon: Users, color: "#EA580C", bg: "#FFEDD5", trend: "+12.4%" },
+  { label: "Vật Phẩm Trang Phục", value: "2.1M", change: "+48K tuần này", icon: Shirt, color: "#F97316", bg: "#F5F3FF", trend: "+8.7%" },
   { label: "Yêu Cầu Nhận Diện", value: "847K", change: "+23K tuần này", icon: Cpu, color: "#10B981", bg: "#ECFDF5", trend: "+15.2%" },
   { label: "Yêu Cầu Gợi Ý", value: "329K", change: "+12K tuần này", icon: Sparkles, color: "#F59E0B", bg: "#FFFBEB", trend: "+9.8%" },
 ];
@@ -109,8 +109,8 @@ export function SystemAnalytics() {
             <AreaChart data={dailyUsage}>
               <defs>
                 <linearGradient id="usersGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#EA580C" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="detectGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
@@ -122,8 +122,8 @@ export function SystemAnalytics() {
               <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.78rem" }} />
               <Legend wrapperStyle={{ fontSize: "0.72rem" }} />
-              <Area type="monotone" dataKey="users" stroke="#4F46E5" strokeWidth={2} fill="url(#usersGrad)" name="Người Dùng Hoạt Động" dot={false} />
-              <Area type="monotone" dataKey="recommendations" stroke="#8B5CF6" strokeWidth={2} fill="none" strokeDasharray="5 3" name="Gợi Ý" dot={false} />
+              <Area type="monotone" dataKey="users" stroke="#EA580C" strokeWidth={2} fill="url(#usersGrad)" name="Người Dùng Hoạt Động" dot={false} />
+              <Area type="monotone" dataKey="recommendations" stroke="#F97316" strokeWidth={2} fill="none" strokeDasharray="5 3" name="Gợi Ý" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -162,8 +162,8 @@ export function SystemAnalytics() {
             <YAxis yAxisId="items" orientation="right" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.78rem" }} />
             <Legend wrapperStyle={{ fontSize: "0.72rem" }} />
-            <Bar yAxisId="users" dataKey="users" fill="#4F46E5" radius={[4, 4, 0, 0]} name="Người Dùng" />
-            <Bar yAxisId="items" dataKey="items" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Vật Phẩm" />
+            <Bar yAxisId="users" dataKey="users" fill="#EA580C" radius={[4, 4, 0, 0]} name="Người Dùng" />
+            <Bar yAxisId="items" dataKey="items" fill="#F97316" radius={[4, 4, 0, 0]} name="Vật Phẩm" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -173,7 +173,7 @@ export function SystemAnalytics() {
         {/* Top Countries */}
         <div style={{ background: "white", borderRadius: 16, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Globe size={16} color="#4F46E5" />
+            <Globe size={16} color="#EA580C" />
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Quốc Gia Hàng Đầu</h3>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -186,11 +186,11 @@ export function SystemAnalytics() {
                   </div>
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                     <span style={{ fontSize: "0.75rem", color: "#64748B" }}>{c.users.toLocaleString()}</span>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#4F46E5", minWidth: 40, textAlign: "right" }}>{c.pct}%</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#EA580C", minWidth: 40, textAlign: "right" }}>{c.pct}%</span>
                   </div>
                 </div>
                 <div style={{ background: "#F1F5F9", borderRadius: 100, height: 5 }}>
-                  <div style={{ width: `${c.pct * 2}%`, background: i === 0 ? "#4F46E5" : i === 1 ? "#8B5CF6" : "#C4B5FD", borderRadius: 100, height: "100%" }} />
+                  <div style={{ width: `${c.pct * 2}%`, background: i === 0 ? "#EA580C" : i === 1 ? "#F97316" : "#C4B5FD", borderRadius: 100, height: "100%" }} />
                 </div>
               </div>
             ))}
@@ -200,7 +200,7 @@ export function SystemAnalytics() {
         {/* Recent Activity */}
         <div style={{ background: "white", borderRadius: 16, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Clock size={16} color="#8B5CF6" />
+            <Clock size={16} color="#F97316" />
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Sự Kiện Hệ Thống Gần Đây</h3>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

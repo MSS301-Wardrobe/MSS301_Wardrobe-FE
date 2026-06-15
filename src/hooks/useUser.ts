@@ -24,7 +24,7 @@ function buildDemoProfile(user: { id: string; email: string; name?: string; role
 }
 
 const DEMO_PREFERENCES: UserPreferences = {
-  favoriteColors: ["#000000", "#4F46E5", "#FFFFFF"],
+  favoriteColors: ["#000000", "#EA580C", "#FFFFFF"],
   preferredStyles: ["minimal", "business"],
   lifestyles: ["office", "social"],
   clothingInterests: ["Áo Vest", "Đồ Denim", "Giày Dép"],
