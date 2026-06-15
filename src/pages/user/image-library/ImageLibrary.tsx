@@ -105,7 +105,7 @@ export function ImageLibrary() {
           {sortOpen && (
             <div style={{ position: "absolute", top: 44, right: 0, background: "white", border: "1px solid #E2E8F0", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", zIndex: 10, minWidth: 180, overflow: "hidden" }}>
               {sortOptions.map((opt) => (
-                <button key={opt} onClick={() => { setSort(opt); setSortOpen(false); }} style={{ display: "block", width: "100%", padding: "10px 16px", textAlign: "left", background: sort === opt ? "#EEF2FF" : "white", color: sort === opt ? "#4F46E5" : "#374151", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: sort === opt ? 600 : 400 }}>
+                <button key={opt} onClick={() => { setSort(opt); setSortOpen(false); }} style={{ display: "block", width: "100%", padding: "10px 16px", textAlign: "left", background: sort === opt ? "#FFEDD5" : "white", color: sort === opt ? "#EA580C" : "#374151", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: sort === opt ? 600 : 400 }}>
                   {opt}
                 </button>
               ))}
@@ -128,8 +128,8 @@ export function ImageLibrary() {
             key={img.id}
             style={{
               background: "white", borderRadius: 14, overflow: "hidden",
-              border: `1.5px solid ${selected.has(img.id) ? "#4F46E5" : "#E2E8F0"}`,
-              boxShadow: selected.has(img.id) ? "0 0 0 3px #EEF2FF" : "0 2px 8px rgba(0,0,0,0.04)",
+              border: `1.5px solid ${selected.has(img.id) ? "#EA580C" : "#E2E8F0"}`,
+              boxShadow: selected.has(img.id) ? "0 0 0 3px #FFEDD5" : "0 2px 8px rgba(0,0,0,0.04)",
               cursor: "pointer", position: "relative",
             }}
           >
@@ -143,7 +143,7 @@ export function ImageLibrary() {
             {/* Checkbox */}
             <button
               onClick={(e) => { e.stopPropagation(); toggleSelect(img.id); }}
-              style={{ position: "absolute", top: 8, left: 8, width: 22, height: 22, borderRadius: 6, background: selected.has(img.id) ? "#4F46E5" : "rgba(255,255,255,0.9)", border: `1.5px solid ${selected.has(img.id) ? "#4F46E5" : "#E2E8F0"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ position: "absolute", top: 8, left: 8, width: 22, height: 22, borderRadius: 6, background: selected.has(img.id) ? "#EA580C" : "rgba(255,255,255,0.9)", border: `1.5px solid ${selected.has(img.id) ? "#EA580C" : "#E2E8F0"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               {selected.has(img.id) && <span style={{ color: "white", fontSize: "0.7rem" }}>✓</span>}
             </button>
@@ -154,7 +154,7 @@ export function ImageLibrary() {
                 <span style={{ fontSize: "0.65rem", color: "#94A3B8" }}>{img.size}</span>
                 <span style={{ fontSize: "0.65rem", color: "#94A3B8" }}>{img.date}</span>
               </div>
-              <span style={{ display: "inline-block", marginTop: 6, background: "#EEF2FF", color: "#4F46E5", borderRadius: 5, padding: "2px 8px", fontSize: "0.62rem", fontWeight: 600 }}>{img.category}</span>
+              <span style={{ display: "inline-block", marginTop: 6, background: "#FFEDD5", color: "#EA580C", borderRadius: 5, padding: "2px 8px", fontSize: "0.62rem", fontWeight: 600 }}>{img.category}</span>
             </div>
 
             {/* Delete button */}
@@ -190,10 +190,10 @@ export function ImageLibrary() {
                 style={{
                   minWidth: 36, height: 36, padding: "0 6px", borderRadius: 10, cursor: "pointer", fontSize: "0.85rem",
                   border: p === currentPage ? "none" : "1.5px solid #E2E8F0",
-                  background: p === currentPage ? "linear-gradient(135deg, #4F46E5, #8B5CF6)" : "white",
+                  background: p === currentPage ? "linear-gradient(135deg, #EA580C, #F97316)" : "white",
                   color: p === currentPage ? "white" : "#374151",
                   fontWeight: p === currentPage ? 700 : 500,
-                  boxShadow: p === currentPage ? "0 2px 8px rgba(79,70,229,0.3)" : "none",
+                  boxShadow: p === currentPage ? "0 2px 8px rgba(234,88,12,0.3)" : "none",
                 }}
               >
                 {p}

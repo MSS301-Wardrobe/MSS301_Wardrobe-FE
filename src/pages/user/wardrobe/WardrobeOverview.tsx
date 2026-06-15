@@ -62,7 +62,7 @@ export function WardrobeOverview() {
         </div>
         <button
           onClick={() => navigate("/app/wardrobe/add")}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem" }}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem" }}
         >
           <Plus size={15} />
           Thêm Vật Phẩm
@@ -98,7 +98,7 @@ export function WardrobeOverview() {
                 <button
                   key={opt}
                   onClick={() => { setSort(opt); setSortOpen(false); }}
-                  style={{ display: "block", width: "100%", padding: "10px 16px", textAlign: "left", background: sort === opt ? "#EEF2FF" : "white", color: sort === opt ? "#4F46E5" : "#374151", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: sort === opt ? 600 : 400 }}
+                  style={{ display: "block", width: "100%", padding: "10px 16px", textAlign: "left", background: sort === opt ? "#FFEDD5" : "white", color: sort === opt ? "#EA580C" : "#374151", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: sort === opt ? 600 : 400 }}
                 >
                   {opt}
                 </button>
@@ -115,7 +115,7 @@ export function WardrobeOverview() {
               onClick={() => setViewMode(mode)}
               style={{ padding: "6px 10px", borderRadius: 8, background: viewMode === mode ? "white" : "transparent", border: "none", cursor: "pointer", boxShadow: viewMode === mode ? "0 1px 4px rgba(0,0,0,0.1)" : "none" }}
             >
-              {mode === "grid" ? <Grid3X3 size={16} color={viewMode === mode ? "#4F46E5" : "#94A3B8"} /> : <List size={16} color={viewMode === mode ? "#4F46E5" : "#94A3B8"} />}
+              {mode === "grid" ? <Grid3X3 size={16} color={viewMode === mode ? "#EA580C" : "#94A3B8"} /> : <List size={16} color={viewMode === mode ? "#EA580C" : "#94A3B8"} />}
             </button>
           ))}
         </div>
@@ -129,11 +129,11 @@ export function WardrobeOverview() {
             onClick={() => { setActiveCategory(cat); setPage(1); }}
             style={{
               padding: "7px 18px", borderRadius: 20, border: "none", cursor: "pointer",
-              background: activeCategory === cat ? "#4F46E5" : "white",
+              background: activeCategory === cat ? "#EA580C" : "white",
               color: activeCategory === cat ? "white" : "#64748B",
               fontWeight: activeCategory === cat ? 700 : 400,
               fontSize: "0.85rem", whiteSpace: "nowrap",
-              boxShadow: activeCategory === cat ? "0 2px 8px rgba(79,70,229,0.3)" : "0 1px 4px rgba(0,0,0,0.06)",
+              boxShadow: activeCategory === cat ? "0 2px 8px rgba(234,88,12,0.3)" : "0 1px 4px rgba(0,0,0,0.06)",
             }}
           >
             {cat}
@@ -152,7 +152,7 @@ export function WardrobeOverview() {
           <div style={{ fontSize: "3rem", marginBottom: 16 }}>👗</div>
           <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Không tìm thấy vật phẩm</h3>
           <p style={{ color: "#64748B", fontSize: "0.9rem", marginBottom: 20 }}>Thử điều chỉnh tìm kiếm hoặc bộ lọc</p>
-          <button onClick={() => navigate("/app/wardrobe/add")} style={{ padding: "10px 20px", borderRadius: 12, background: "#4F46E5", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>
+          <button onClick={() => navigate("/app/wardrobe/add")} style={{ padding: "10px 20px", borderRadius: 12, background: "#EA580C", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>
             Thêm Trang Phục
           </button>
         </div>
@@ -203,7 +203,7 @@ export function WardrobeOverview() {
               </div>
               <div style={{ display: "flex", gap: 5 }}>
                 {item.tags.slice(0, 2).map((tag) => (
-                  <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem" }}>{tag}</span>
+                  <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem" }}>{tag}</span>
                 ))}
               </div>
               <span style={{ background: "#ECFDF5", color: "#10B981", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{item.confidence}%</span>
@@ -235,10 +235,10 @@ export function WardrobeOverview() {
                 style={{
                   minWidth: 36, height: 36, padding: "0 6px", borderRadius: 10, cursor: "pointer", fontSize: "0.85rem",
                   border: p === currentPage ? "none" : "1.5px solid #E2E8F0",
-                  background: p === currentPage ? "linear-gradient(135deg, #4F46E5, #8B5CF6)" : "white",
+                  background: p === currentPage ? "linear-gradient(135deg, #EA580C, #F97316)" : "white",
                   color: p === currentPage ? "white" : "#374151",
                   fontWeight: p === currentPage ? 700 : 500,
-                  boxShadow: p === currentPage ? "0 2px 8px rgba(79,70,229,0.3)" : "none",
+                  boxShadow: p === currentPage ? "0 2px 8px rgba(234,88,12,0.3)" : "none",
                 }}
               >
                 {p}

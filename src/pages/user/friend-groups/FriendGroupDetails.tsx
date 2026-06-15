@@ -8,8 +8,8 @@ const group = {
   id: "1",
   name: "Minimalist Collective",
   emoji: "🎯",
-  color: "#4F46E5",
-  bg: "#EEF2FF",
+  color: "#EA580C",
+  bg: "#FFEDD5",
   members: 12,
   description: "Cộng đồng những người yêu thích thời trang tối giản, đề cao chất lượng hơn số lượng. Chúng tôi chia sẻ ý tưởng trang phục, mẹo phối đồ và khuyến khích cách tiếp cận có chủ ý trong việc xây dựng tủ quần áo.",
   topStyle: "Tối Giản",
@@ -22,7 +22,7 @@ const group = {
     { style: "Công Sở", pct: 54 },
     { style: "Đơn Sắc", pct: 88 },
   ],
-  sharedColors: ["#000000", "#FFFFFF", "#4F46E5", "#334155", "#94A3B8", "#E2E8F0"],
+  sharedColors: ["#000000", "#FFFFFF", "#EA580C", "#334155", "#94A3B8", "#E2E8F0"],
   radarData: [
     { subject: "Tối Giản", A: 95 },
     { subject: "Công Sở", A: 72 },
@@ -32,8 +32,8 @@ const group = {
     { subject: "Xu Hướng", A: 68 },
   ],
   members_list: [
-    { id: "1", name: "Jamie Smith", initials: "JS", color: "#4F46E5", role: "admin", items: 247, style: "Tối Giản" },
-    { id: "2", name: "Alex Chen", initials: "AC", color: "#8B5CF6", role: "member", items: 183, style: "Công Sở Thường" },
+    { id: "1", name: "Jamie Smith", initials: "JS", color: "#EA580C", role: "admin", items: 247, style: "Tối Giản" },
+    { id: "2", name: "Alex Chen", initials: "AC", color: "#F97316", role: "member", items: 183, style: "Công Sở Thường" },
     { id: "3", name: "Sam Rivera", initials: "SR", color: "#10B981", role: "member", items: 156, style: "Tối Giản" },
     { id: "4", name: "Jordan Lee", initials: "JL", color: "#F59E0B", role: "member", items: 312, style: "Lịch Sự Thường Ngày" },
     { id: "5", name: "Morgan Taylor", initials: "MT", color: "#EF4444", role: "member", items: 94, style: "Công Sở" },
@@ -48,8 +48,8 @@ const trendingOutfits = [
 ];
 
 const influenceBreakdown = [
-  { source: "Bảng Màu Nhóm", pct: 42, color: "#4F46E5" },
-  { source: "Phong Cách Chung", pct: 31, color: "#8B5CF6" },
+  { source: "Bảng Màu Nhóm", pct: 42, color: "#EA580C" },
+  { source: "Phong Cách Chung", pct: 31, color: "#F97316" },
   { source: "Trang Phục Phổ Biến", pct: 18, color: "#F59E0B" },
   { source: "Hoạt Động Thành Viên", pct: 9, color: "#10B981" },
 ];
@@ -70,7 +70,7 @@ export function FriendGroupDetails() {
       </button>
 
       {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", borderRadius: 20, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+      <div style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", borderRadius: 20, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
         <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
           <div style={{ width: 72, height: 72, borderRadius: 18, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", flexShrink: 0 }}>
@@ -124,7 +124,7 @@ export function FriendGroupDetails() {
             onClick={() => setActiveTab(tabId)}
             style={{
               padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer",
-              background: activeTab === tabId ? "#4F46E5" : "transparent",
+              background: activeTab === tabId ? "#EA580C" : "transparent",
               color: activeTab === tabId ? "white" : "#64748B",
               fontWeight: activeTab === tabId ? 700 : 400, fontSize: "0.85rem", whiteSpace: "nowrap",
             }}
@@ -140,7 +140,7 @@ export function FriendGroupDetails() {
           {/* Shared Styles */}
           <div style={{ background: "white", borderRadius: 18, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 18, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 8 }}>
-              <Sparkles size={16} color="#4F46E5" />
+              <Sparkles size={16} color="#EA580C" />
               Sở Thích Phong Cách Chung
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -148,10 +148,10 @@ export function FriendGroupDetails() {
                 <div key={s.style}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
                     <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "#374151" }}>{s.style}</span>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#4F46E5" }}>{s.pct}%</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#EA580C" }}>{s.pct}%</span>
                   </div>
                   <div style={{ background: "#F1F5F9", borderRadius: 100, height: 6 }}>
-                    <div style={{ width: `${s.pct}%`, background: "linear-gradient(90deg, #4F46E5, #8B5CF6)", borderRadius: 100, height: "100%" }} />
+                    <div style={{ width: `${s.pct}%`, background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%" }} />
                   </div>
                 </div>
               ))}
@@ -161,7 +161,7 @@ export function FriendGroupDetails() {
           {/* Style Radar */}
           <div style={{ background: "white", borderRadius: 18, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 4, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 8 }}>
-              <TrendingUp size={16} color="#8B5CF6" />
+              <TrendingUp size={16} color="#F97316" />
               Đặc Trưng Phong Cách Nhóm
             </h3>
             <p style={{ fontSize: "0.78rem", color: "#64748B", marginBottom: 8 }}>Phân bố phong cách trung bình của tất cả thành viên</p>
@@ -169,7 +169,7 @@ export function FriendGroupDetails() {
               <RadarChart data={group.radarData}>
                 <PolarGrid stroke="#E2E8F0" />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#94A3B8" }} />
-                <Radar dataKey="A" stroke="#4F46E5" fill="#4F46E5" fillOpacity={0.15} strokeWidth={2} />
+                <Radar dataKey="A" stroke="#EA580C" fill="#EA580C" fillOpacity={0.15} strokeWidth={2} />
                 <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.8rem" }} />
               </RadarChart>
             </ResponsiveContainer>
@@ -192,7 +192,7 @@ export function FriendGroupDetails() {
           <div style={{ background: "white", borderRadius: 18, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, alignItems: "center" }}>
               <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.95rem" }}>Thành Viên Tích Cực</h3>
-              <button onClick={() => setActiveTab("members")} style={{ fontSize: "0.8rem", color: "#4F46E5", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
+              <button onClick={() => setActiveTab("members")} style={{ fontSize: "0.8rem", color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {group.members_list.slice(0, 4).map((m) => (
@@ -230,8 +230,8 @@ export function FriendGroupDetails() {
                   <p style={{ fontSize: "0.65rem", color: "#64748B" }}>Vật Phẩm</p>
                 </div>
                 <div style={{ width: 10 }} />
-                <div style={{ background: "#EEF2FF", borderRadius: 10, padding: "8px 12px", flex: 1, textAlign: "center" }}>
-                  <p style={{ fontSize: "1rem", fontWeight: 800, color: "#4F46E5" }}>87%</p>
+                <div style={{ background: "#FFEDD5", borderRadius: 10, padding: "8px 12px", flex: 1, textAlign: "center" }}>
+                  <p style={{ fontSize: "1rem", fontWeight: 800, color: "#EA580C" }}>87%</p>
                   <p style={{ fontSize: "0.65rem", color: "#64748B" }}>Phù Hợp</p>
                 </div>
               </div>
@@ -257,10 +257,10 @@ export function FriendGroupDetails() {
                   <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem", marginBottom: 6 }}>{outfit.title}</p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.6rem", fontWeight: 700 }}>{outfit.postedBy}</div>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#EA580C", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.6rem", fontWeight: 700 }}>{outfit.postedBy}</div>
                       <span style={{ fontSize: "0.72rem", color: "#64748B" }}>bởi thành viên</span>
                     </div>
-                    <button onClick={() => toast.success("Đã thêm vào cảm hứng tủ đồ!")} style={{ background: "#EEF2FF", border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: "0.72rem", color: "#4F46E5", fontWeight: 600 }}>
+                    <button onClick={() => toast.success("Đã thêm vào cảm hứng tủ đồ!")} style={{ background: "#FFEDD5", border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: "0.72rem", color: "#EA580C", fontWeight: 600 }}>
                       Lưu
                     </button>
                   </div>
@@ -273,9 +273,9 @@ export function FriendGroupDetails() {
 
       {activeTab === "influence" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ background: "linear-gradient(135deg, #EEF2FF, #F5F3FF)", borderRadius: 18, padding: 24, border: "1px solid #C7D2FE" }}>
+          <div style={{ background: "linear-gradient(135deg, #FFEDD5, #F5F3FF)", borderRadius: 18, padding: 24, border: "1px solid #FED7AA" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <Sparkles size={18} color="#4F46E5" />
+              <Sparkles size={18} color="#EA580C" />
               <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Nhóm Này Ảnh Hưởng Đến Gợi Ý Của Bạn Như Thế Nào</h3>
             </div>
             <p style={{ color: "#64748B", fontSize: "0.875rem", lineHeight: 1.7 }}>
@@ -284,10 +284,10 @@ export function FriendGroupDetails() {
             <div style={{ marginTop: 16, background: "white", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div>
                 <p style={{ fontSize: "0.78rem", color: "#64748B", fontWeight: 500 }}>Mức Độ Ảnh Hưởng Nhóm</p>
-                <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "#4F46E5" }}>23%</p>
+                <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "#EA580C" }}>23%</p>
               </div>
               <div style={{ flex: 1, background: "#F1F5F9", borderRadius: 100, height: 10 }}>
-                <div style={{ width: "23%", background: "linear-gradient(90deg, #4F46E5, #8B5CF6)", borderRadius: 100, height: "100%" }} />
+                <div style={{ width: "23%", background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%" }} />
               </div>
               <span style={{ fontSize: "0.75rem", color: "#64748B", whiteSpace: "nowrap" }}>trên tổng trọng số AI</span>
             </div>

@@ -116,7 +116,7 @@ export function UserProfile() {
     <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Profile Header Card */}
       <div style={{ background: "white", borderRadius: 20, border: "1px solid #E2E8F0", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-        <div style={{ height: 120, background: "linear-gradient(135deg, #4F46E5, #8B5CF6, #C084FC)" }} />
+        <div style={{ height: 120, background: "linear-gradient(135deg, #EA580C, #F97316, #FB923C)" }} />
         <div style={{ padding: "0 32px 28px", position: "relative" }}>
           <div style={{ position: "relative", display: "inline-block", marginTop: -44 }}>
             {profile?.avatarUrl ? (
@@ -128,7 +128,7 @@ export function UserProfile() {
             ) : (
               <div style={{
                 width: 88, height: 88, borderRadius: "50%",
-                background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+                background: "linear-gradient(135deg, #EA580C, #F97316)",
                 border: "4px solid white",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: "1.8rem", fontWeight: 800, color: "white",
@@ -142,7 +142,7 @@ export function UserProfile() {
               style={{
                 position: "absolute", bottom: 0, right: 0,
                 width: 28, height: 28, borderRadius: "50%",
-                background: "#4F46E5", border: "2px solid white",
+                background: "#EA580C", border: "2px solid white",
                 display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
               }}
               aria-label="Đổi ảnh đại diện"
@@ -165,7 +165,7 @@ export function UserProfile() {
             <p style={{ color: "#64748B", fontSize: "0.85rem", marginTop: 2 }}>{form.email}</p>
             <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
               {["Yêu Thời Trang", "Khám Phá Phong Cách", "Tối Giản"].map((tag) => (
-                <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.75rem", fontWeight: 600 }}>
+                <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 20, padding: "4px 12px", fontSize: "0.75rem", fontWeight: 600 }}>
                   {tag}
                 </span>
               ))}
@@ -177,8 +177,8 @@ export function UserProfile() {
       {/* Personal Information */}
       <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <User size={18} color="#4F46E5" />
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <User size={18} color="#EA580C" />
           </div>
           <div>
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Thông Tin Cá Nhân</h3>
@@ -228,7 +228,7 @@ export function UserProfile() {
       <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Ruler size={18} color="#8B5CF6" />
+            <Ruler size={18} color="#F97316" />
           </div>
           <div>
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Số Đo Cơ Thể</h3>
@@ -265,9 +265,9 @@ export function UserProfile() {
                   style={{
                     padding: "8px 18px",
                     borderRadius: 10,
-                    border: `1.5px solid ${measurements.fitPreference === fit ? "#4F46E5" : "#E2E8F0"}`,
-                    background: measurements.fitPreference === fit ? "#EEF2FF" : "white",
-                    color: measurements.fitPreference === fit ? "#4F46E5" : "#64748B",
+                    border: `1.5px solid ${measurements.fitPreference === fit ? "#EA580C" : "#E2E8F0"}`,
+                    background: measurements.fitPreference === fit ? "#FFEDD5" : "white",
+                    color: measurements.fitPreference === fit ? "#EA580C" : "#64748B",
                     fontWeight: measurements.fitPreference === fit ? 600 : 400,
                     cursor: "pointer",
                     fontSize: "0.85rem",
@@ -297,14 +297,14 @@ export function UserProfile() {
             <p style={{ fontSize: "0.75rem", color: "#64748B", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Phong Cách Ưa Thích</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {["Tối Giản", "Công Sở", "Thanh Lịch"].map((s) => (
-                <span key={s} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 500 }}>{s}</span>
+                <span key={s} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 500 }}>{s}</span>
               ))}
             </div>
           </div>
           <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
             <p style={{ fontSize: "0.75rem", color: "#64748B", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Màu Yêu Thích</p>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {["#0F172A", "#4F46E5", "#FFFFFF", "#F59E0B", "#10B981"].map((c) => (
+              {["#0F172A", "#EA580C", "#FFFFFF", "#F59E0B", "#10B981"].map((c) => (
                 <div key={c} style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: "1.5px solid #E2E8F0" }} />
               ))}
             </div>
@@ -334,7 +334,7 @@ export function UserProfile() {
           style={{
             display: "flex", alignItems: "center", gap: 8,
             padding: "11px 24px", borderRadius: 12,
-            background: isUpdatingProfile ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+            background: isUpdatingProfile ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white", border: "none", fontWeight: 700, cursor: isUpdatingProfile ? "default" : "pointer", fontSize: "0.9rem",
           }}
         >

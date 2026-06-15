@@ -45,7 +45,7 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
           className="flex items-center justify-center rounded-xl shrink-0"
           style={{
             width: 36, height: 36,
-            background: "linear-gradient(135deg, #4F46E5, #8B5CF6)"
+            background: "linear-gradient(135deg, #EA580C, #F97316)"
           }}
         >
           <Zap size={18} color="white" />
@@ -75,8 +75,8 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
               <div
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-150"
                 style={{
-                  background: isActive ? "#EEF2FF" : "transparent",
-                  color: isActive ? "#4F46E5" : "#64748B",
+                  background: isActive ? "#FFEDD5" : "transparent",
+                  color: isActive ? "#EA580C" : "#64748B",
                 }}
                 title={collapsed ? label : undefined}
               >
@@ -100,8 +100,8 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
               <div
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-150"
                 style={{
-                  background: isActive ? "#EEF2FF" : "transparent",
-                  color: isActive ? "#4F46E5" : "#64748B",
+                  background: isActive ? "#FFEDD5" : "transparent",
+                  color: isActive ? "#EA580C" : "#64748B",
                 }}
                 title={collapsed ? label : undefined}
               >
@@ -136,7 +136,7 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
                 className="rounded-full flex items-center justify-center shrink-0"
                 style={{
                   width: 32, height: 32,
-                  background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+                  background: "linear-gradient(135deg, #EA580C, #F97316)",
                   color: "white", fontSize: "0.75rem", fontWeight: 600
                 }}
               >

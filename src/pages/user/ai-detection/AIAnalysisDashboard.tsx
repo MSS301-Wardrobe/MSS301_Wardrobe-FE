@@ -5,9 +5,9 @@ import {
 } from "recharts";
 
 const stats = [
-  { label: "Tổng Nhận Diện", value: "1,843", change: "+127 tuần này", icon: Cpu, color: "#4F46E5", bg: "#EEF2FF" },
+  { label: "Tổng Nhận Diện", value: "1,843", change: "+127 tuần này", icon: Cpu, color: "#EA580C", bg: "#FFEDD5" },
   { label: "Độ Tin Cậy TB", value: "94.6%", change: "↑ 1.2% so với tháng trước", icon: TrendingUp, color: "#10B981", bg: "#ECFDF5" },
-  { label: "Độ Chính Xác Cao (>90%)", value: "1,620", change: "87.9% tổng số lần nhận diện", icon: CheckCircle2, color: "#8B5CF6", bg: "#F5F3FF" },
+  { label: "Độ Chính Xác Cao (>90%)", value: "1,620", change: "87.9% tổng số lần nhận diện", icon: CheckCircle2, color: "#F97316", bg: "#F5F3FF" },
   { label: "Thời Gian Xử Lý", value: "1.2s", change: "TB mỗi ảnh", icon: Clock, color: "#F59E0B", bg: "#FFFBEB" },
 ];
 
@@ -83,7 +83,7 @@ export function AIAnalysisDashboard() {
               <YAxis yAxisId="right" orientation="right" domain={[85, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} unit="%" />
               <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.8rem" }} />
               <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
-              <Bar yAxisId="left" dataKey="detections" fill="#4F46E5" radius={[4, 4, 0, 0]} name="Nhận Diện" barSize={16} />
+              <Bar yAxisId="left" dataKey="detections" fill="#EA580C" radius={[4, 4, 0, 0]} name="Nhận Diện" barSize={16} />
               <Line yAxisId="right" type="monotone" dataKey="accuracy" stroke="#10B981" strokeWidth={2} dot={{ fill: "#10B981", r: 3 }} name="Độ Chính Xác %" />
             </ComposedChart>
           </ResponsiveContainer>
@@ -97,15 +97,15 @@ export function AIAnalysisDashboard() {
             <AreaChart data={monthlyTrend}>
               <defs>
                 <linearGradient id="confGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#EA580C" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
               <YAxis domain={[89, 97]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} unit="%" />
               <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.8rem" }} formatter={(v) => [`${v}%`, "Độ Tin Cậy"]} />
-              <Area type="monotone" dataKey="confidence" stroke="#4F46E5" strokeWidth={2.5} fill="url(#confGrad)" dot={{ fill: "#4F46E5", r: 4 }} />
+              <Area type="monotone" dataKey="confidence" stroke="#EA580C" strokeWidth={2.5} fill="url(#confGrad)" dot={{ fill: "#EA580C", r: 4 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -124,8 +124,8 @@ export function AIAnalysisDashboard() {
                   <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 2 }}>{cat.detections} lần nhận diện</p>
                 </div>
                 <span style={{
-                  background: cat.accuracy >= 96 ? "#ECFDF5" : cat.accuracy >= 93 ? "#EEF2FF" : "#FFFBEB",
-                  color: cat.accuracy >= 96 ? "#10B981" : cat.accuracy >= 93 ? "#4F46E5" : "#F59E0B",
+                  background: cat.accuracy >= 96 ? "#ECFDF5" : cat.accuracy >= 93 ? "#FFEDD5" : "#FFFBEB",
+                  color: cat.accuracy >= 96 ? "#10B981" : cat.accuracy >= 93 ? "#EA580C" : "#F59E0B",
                   borderRadius: 8, padding: "4px 10px", fontSize: "0.78rem", fontWeight: 700,
                 }}>
                   {cat.accuracy}%
@@ -134,7 +134,7 @@ export function AIAnalysisDashboard() {
               <div style={{ background: "#E2E8F0", borderRadius: 100, height: 6 }}>
                 <div style={{
                   width: `${cat.accuracy}%`, height: "100%", borderRadius: 100,
-                  background: cat.accuracy >= 96 ? "#10B981" : cat.accuracy >= 93 ? "#4F46E5" : "#F59E0B",
+                  background: cat.accuracy >= 96 ? "#10B981" : cat.accuracy >= 93 ? "#EA580C" : "#F59E0B",
                   transition: "width 0.5s",
                 }} />
               </div>
@@ -166,7 +166,7 @@ export function AIAnalysisDashboard() {
                     </div>
                   </td>
                   <td style={{ padding: "12px" }}>
-                    <span style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 600 }}>{det.category}</span>
+                    <span style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 600 }}>{det.category}</span>
                   </td>
                   <td style={{ padding: "12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

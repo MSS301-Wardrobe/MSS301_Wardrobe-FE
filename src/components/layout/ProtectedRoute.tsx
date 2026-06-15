@@ -29,8 +29,8 @@ export function ProtectedRoute({ allow }: ProtectedRouteProps) {
             style={{
               width: 36,
               height: 36,
-              border: "3px solid #EEF2FF",
-              borderTopColor: "#4F46E5",
+              border: "3px solid #FFEDD5",
+              borderTopColor: "#EA580C",
               borderRadius: "50%",
               animation: "spin 0.8s linear infinite",
               margin: "0 auto 12px",

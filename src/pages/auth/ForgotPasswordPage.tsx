@@ -45,11 +45,11 @@ export function ForgotPassword() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F8FAFC", fontFamily: "Inter, system-ui, sans-serif", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 440, background: "white", borderRadius: 24, padding: 48, boxShadow: "0 20px 60px rgba(79,70,229,0.10)", border: "1px solid #E2E8F0" }}>
+      <div style={{ width: "100%", maxWidth: 440, background: "white", borderRadius: 24, padding: 48, boxShadow: "0 20px 60px rgba(234,88,12,0.10)", border: "1px solid #E2E8F0" }}>
 
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #EA580C, #F97316)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Zap size={16} color="white" />
           </div>
           <span style={{ fontWeight: 800, color: "#0F172A" }}>StyleAI</span>
@@ -66,8 +66,8 @@ export function ForgotPassword() {
             </button>
 
             <div style={{ marginBottom: 32 }}>
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                <Mail size={24} color="#4F46E5" />
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                <Mail size={24} color="#EA580C" />
               </div>
               <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>Quên Mật Khẩu?</h2>
               <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.6 }}>
@@ -112,7 +112,7 @@ export function ForgotPassword() {
                   borderRadius: 10,
                   border: "none",
                   cursor: isForgotLoading ? "default" : "pointer",
-                  background: isForgotLoading ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+                  background: isForgotLoading ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
                   color: "white",
                   fontWeight: 700,
                   fontSize: "0.95rem",
@@ -154,7 +154,7 @@ export function ForgotPassword() {
                       width: 46,
                       height: 52,
                       textAlign: "center",
-                      border: `2px solid ${digit ? "#4F46E5" : "#E2E8F0"}`,
+                      border: `2px solid ${digit ? "#EA580C" : "#E2E8F0"}`,
                       borderRadius: 10,
                       fontSize: "1.1rem",
                       fontWeight: 700,
@@ -177,8 +177,8 @@ export function ForgotPassword() {
                 border: "none",
                 cursor: isResetLoading || otp.join("").length < 6 ? "default" : "pointer",
                 background: isResetLoading || otp.join("").length < 6
-                  ? "#A5B4FC"
-                  : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+                  ? "#FED7AA"
+                  : "linear-gradient(135deg, #EA580C, #F97316)",
                 color: "white",
                 fontWeight: 700,
                 fontSize: "0.95rem",
@@ -193,7 +193,7 @@ export function ForgotPassword() {
               <button
                 onClick={handleResend}
                 disabled={isForgotLoading}
-                style={{ display: "flex", alignItems: "center", gap: 4, color: "#4F46E5", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
+                style={{ display: "flex", alignItems: "center", gap: 4, color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
               >
                 <RefreshCw size={13} />
                 Gửi lại

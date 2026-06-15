@@ -44,7 +44,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           position: "relative",
           overflowY: "auto",
           overflowX: "hidden",
-          background: "linear-gradient(160deg, #4F46E5 0%, #5B3FD4 45%, #8B5CF6 100%)",
+          background: "linear-gradient(135deg, #EA580C 0%, #F97316 50%, #FB923C 100%)",
           flexDirection: "column",
           justifyContent: "flex-start",
           gap: 22,
@@ -55,7 +55,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         {/* Decorative glows */}
         <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
           <div style={{ position: "absolute", top: -120, right: -100, width: 360, height: 360, borderRadius: "50%", background: "rgba(255,255,255,0.12)", filter: "blur(20px)" }} />
-          <div style={{ position: "absolute", bottom: -140, left: -80, width: 320, height: 320, borderRadius: "50%", background: "rgba(139,92,246,0.35)", filter: "blur(30px)" }} />
+          <div style={{ position: "absolute", bottom: -140, left: -80, width: 320, height: 320, borderRadius: "50%", background: "rgba(251,146,60,0.35)", filter: "blur(30px)" }} />
         </div>
 
         {/* Hero */}
@@ -140,7 +140,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         {/* Top navigation */}
         <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 28px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #EA580C, #F97316)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Zap size={17} color="white" />
             </div>
             <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "#0F172A" }}>StyleAI</span>

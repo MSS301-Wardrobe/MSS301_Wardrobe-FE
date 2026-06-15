@@ -34,8 +34,8 @@ export function Topbar() {
      "StyleAI");
 
   const notifications = [
-    { id: 1, text: "AI đã nhận diện 3 trang phục mới", time: "2 phút trước", color: "#4F46E5" },
-    { id: 2, text: "Gợi ý trang phục mới đã sẵn sàng", time: "15 phút trước", color: "#8B5CF6" },
+    { id: 1, text: "AI đã nhận diện 3 trang phục mới", time: "2 phút trước", color: "#EA580C" },
+    { id: 2, text: "Gợi ý trang phục mới đã sẵn sàng", time: "15 phút trước", color: "#F97316" },
     { id: 3, text: "Tủ đồ của bạn đã tổ chức được 85%", time: "1 giờ trước", color: "#10B981" },
   ];
 
@@ -63,7 +63,7 @@ export function Topbar() {
         <button
           onClick={() => navigate("/app/wardrobe/add")}
           className="flex items-center gap-2 rounded-xl px-4 py-2 transition-all hover:opacity-90"
-          style={{ background: "#4F46E5", color: "white", fontSize: "0.85rem", fontWeight: 600 }}
+          style={{ background: "#EA580C", color: "white", fontSize: "0.85rem", fontWeight: 600 }}
         >
           <Plus size={15} />
           <span className="hidden sm:inline">Thêm Vật Phẩm</span>
@@ -111,7 +111,7 @@ export function Topbar() {
           className="rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
           style={{
             width: 38, height: 38,
-            background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+            background: "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white", fontSize: "0.8rem", fontWeight: 700
           }}
           onClick={() => navigate("/app/profile")}

@@ -8,12 +8,12 @@ const myGroups = [
     id: "1",
     name: "Minimalist Collective",
     emoji: "🎯",
-    color: "#4F46E5",
-    bg: "#EEF2FF",
+    color: "#EA580C",
+    bg: "#FFEDD5",
     members: 12,
     myRole: "admin",
     styles: ["Tối Giản", "Công Sở Thường", "Gọn Gàng"],
-    colors: ["#000000", "#FFFFFF", "#4F46E5"],
+    colors: ["#000000", "#FFFFFF", "#EA580C"],
     activity: "Active",
     recentOutfit: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=80&h=80&fit=crop",
     topStyle: "Tối Giản",
@@ -68,11 +68,11 @@ const discoverGroups = [
     id: "5",
     name: "Luxury Fashion Elite",
     emoji: "👑",
-    color: "#8B5CF6",
+    color: "#F97316",
     bg: "#F5F3FF",
     members: 34,
     styles: ["Xa Xỉ", "Thời Trang Cao Cấp", "Thanh Lịch"],
-    colors: ["#6D28D9", "#8B5CF6", "#C4B5FD"],
+    colors: ["#6D28D9", "#F97316", "#C4B5FD"],
     img: "https://images.unsplash.com/photo-1768767121186-b1486acc4e14?w=300&h=200&fit=crop",
     joined: false,
   },
@@ -114,7 +114,7 @@ export function FriendGroups() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #4F46E5 0%, #8B5CF6 60%, #C084FC 100%)", borderRadius: 20, padding: "28px 32px", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: "linear-gradient(135deg, #EA580C 0%, #F97316 60%, #FB923C 100%)", borderRadius: 20, padding: "28px 32px", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -50, right: -50, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
         <div style={{ position: "absolute", bottom: -30, right: 120, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
@@ -129,7 +129,7 @@ export function FriendGroups() {
           <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={() => setCreateOpen(true)}
-              style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "white", color: "#4F46E5", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
+              style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "white", color: "#EA580C", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
             >
               <Plus size={15} />
               Tạo Nhóm
@@ -303,7 +303,7 @@ export function FriendGroups() {
                     <button
                       key={em}
                       onClick={() => setNewGroup({ ...newGroup, emoji: em })}
-                      style={{ width: 40, height: 40, borderRadius: 10, background: newGroup.emoji === em ? "#EEF2FF" : "#F1F5F9", border: `1.5px solid ${newGroup.emoji === em ? "#4F46E5" : "transparent"}`, fontSize: "1.2rem", cursor: "pointer" }}
+                      style={{ width: 40, height: 40, borderRadius: 10, background: newGroup.emoji === em ? "#FFEDD5" : "#F1F5F9", border: `1.5px solid ${newGroup.emoji === em ? "#EA580C" : "transparent"}`, fontSize: "1.2rem", cursor: "pointer" }}
                     >
                       {em}
                     </button>
@@ -337,7 +337,7 @@ export function FriendGroups() {
                 <button onClick={() => setCreateOpen(false)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>Hủy</button>
                 <button
                   onClick={handleCreate}
-                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
                 >
                   <Sparkles size={15} />
                   Tạo Nhóm
