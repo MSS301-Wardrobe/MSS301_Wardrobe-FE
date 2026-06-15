@@ -64,7 +64,7 @@ export function RecommendationDetails() {
 
             {/* Occasion */}
             <div style={{ position: "absolute", bottom: 16, left: 16 }}>
-              <span style={{ background: "#4F46E5", color: "white", borderRadius: 8, padding: "5px 14px", fontSize: "0.78rem", fontWeight: 700 }}>{outfit.occasion}</span>
+              <span style={{ background: "#EA580C", color: "white", borderRadius: 8, padding: "5px 14px", fontSize: "0.78rem", fontWeight: 700 }}>{outfit.occasion}</span>
             </div>
           </div>
 
@@ -102,7 +102,7 @@ export function RecommendationDetails() {
             <p style={{ color: "#64748B", lineHeight: 1.7, fontSize: "0.9rem", marginBottom: 16 }}>{outfit.description}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {outfit.tags.map((tag) => (
-                <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 600 }}>{tag}</span>
+                <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 600 }}>{tag}</span>
               ))}
             </div>
           </div>
@@ -110,7 +110,7 @@ export function RecommendationDetails() {
           {/* Compatibility Breakdown */}
           <div style={{ background: "white", borderRadius: 20, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <Sparkles size={16} color="#8B5CF6" />
+              <Sparkles size={16} color="#F97316" />
               <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.95rem" }}>Phân Tích Điểm Tương Thích</h3>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -118,10 +118,10 @@ export function RecommendationDetails() {
                 <div key={item.aspect}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                     <span style={{ fontSize: "0.82rem", color: "#374151", fontWeight: 500 }}>{item.aspect}</span>
-                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#4F46E5" }}>{item.score}%</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#EA580C" }}>{item.score}%</span>
                   </div>
                   <div style={{ background: "#F1F5F9", borderRadius: 100, height: 7 }}>
-                    <div style={{ width: `${item.score}%`, background: "linear-gradient(90deg, #4F46E5, #8B5CF6)", borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
+                    <div style={{ width: `${item.score}%`, background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
                   </div>
                 </div>
               ))}
@@ -143,7 +143,7 @@ export function RecommendationDetails() {
                     <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem" }}>{item.name}</p>
                     <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 2 }}>{item.category} · {item.color}</p>
                   </div>
-                  <span style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{item.role}</span>
+                  <span style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{item.role}</span>
                   <ChevronRight size={14} color="#94A3B8" />
                 </div>
               ))}
@@ -151,9 +151,9 @@ export function RecommendationDetails() {
           </div>
 
           {/* Style Explanation */}
-          <div style={{ background: "linear-gradient(135deg, #EEF2FF, #F5F3FF)", borderRadius: 20, padding: 24, border: "1px solid #C7D2FE" }}>
+          <div style={{ background: "linear-gradient(135deg, #FFEDD5, #F5F3FF)", borderRadius: 20, padding: 24, border: "1px solid #FED7AA" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#EA580C", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Sparkles size={15} color="white" />
               </div>
               <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.95rem" }}>Giải Thích Phong Cách</h3>
@@ -164,7 +164,7 @@ export function RecommendationDetails() {
           {/* Friend Group Influence */}
           <div style={{ background: "white", borderRadius: 20, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#8B5CF6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#F97316", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontSize: "0.85rem" }}>👥</span>
               </div>
               <div>
@@ -184,10 +184,10 @@ export function RecommendationDetails() {
                     <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.85rem", marginBottom: 4 }}>{g.group}</p>
                     <p style={{ fontSize: "0.72rem", color: "#64748B" }}>{g.members} thành viên · {g.style}</p>
                     <div style={{ marginTop: 6, background: "#E2E8F0", borderRadius: 100, height: 4, overflow: "hidden" }}>
-                      <div style={{ width: `${g.influence}%`, background: "linear-gradient(90deg, #8B5CF6, #4F46E5)", borderRadius: 100, height: "100%" }} />
+                      <div style={{ width: `${g.influence}%`, background: "linear-gradient(90deg, #F97316, #EA580C)", borderRadius: 100, height: "100%" }} />
                     </div>
                   </div>
-                  <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#8B5CF6", flexShrink: 0 }}>{g.influence}%</span>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#F97316", flexShrink: 0 }}>{g.influence}%</span>
                 </div>
               ))}
             </div>

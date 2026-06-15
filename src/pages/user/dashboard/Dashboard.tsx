@@ -1,19 +1,20 @@
-import { Shirt, Cpu, Sparkles, TrendingUp, Upload, Eye, Layers, Users, Calendar } from "lucide-react";
+import { Shirt, Cpu, Sparkles, Upload, Eye, Layers, Users, Calendar } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { useAuthContext } from "../../../app/providers/AuthProvider";
 
 const stats = [
-  { label: "Tổng Trang Phục", value: "247", change: "+12 tuần này", icon: Shirt, color: "#4F46E5", bg: "#EEF2FF" },
-  { label: "Khu Vực Tủ Đồ", value: "5", change: "4 mặc định + 1 tùy chỉnh", icon: Layers, color: "#8B5CF6", bg: "#F5F3FF" },
+  { label: "Tổng Trang Phục", value: "247", change: "+12 tuần này", icon: Shirt, color: "#EA580C", bg: "#FFEDD5" },
+  { label: "Khu Vực Tủ Đồ", value: "5", change: "4 mặc định + 1 tùy chỉnh", icon: Layers, color: "#F97316", bg: "#F5F3FF" },
   { label: "Nhận Diện AI", value: "1.843", change: "+38 hôm nay", icon: Cpu, color: "#F59E0B", bg: "#FFFBEB" },
   { label: "Bộ Đã Tạo", value: "92", change: "+5 tuần này", icon: Sparkles, color: "#10B981", bg: "#ECFDF5" },
 ];
 
 const pieData = [
-  { name: "Áo", value: 72, color: "#4F46E5" },
-  { name: "Quần", value: 54, color: "#8B5CF6" },
+  { name: "Áo", value: 72, color: "#EA580C" },
+  { name: "Quần", value: 54, color: "#F97316" },
   { name: "Váy", value: 38, color: "#F59E0B" },
   { name: "Áo Khoác", value: 45, color: "#10B981" },
   { name: "Phụ Kiện", value: 38, color: "#EF4444" },
@@ -52,18 +53,28 @@ const recommendations = [
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+
+  const displayName = user?.name ?? user?.email?.split("@")[0] ?? "bạn";
+
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Chào buổi sáng";
+    if (h < 18) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Greeting */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
         <div>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A" }}>Chào buổi sáng, Jamie! 👋</h2>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A" }}>{getGreeting()}, {displayName}! 👋</h2>
           <p style={{ color: "#64748B", marginTop: 4, fontSize: "0.9rem" }}>Đây là những gì đang diễn ra với tủ đồ của bạn hôm nay.</p>
         </div>
         <button
           onClick={() => navigate("/app/wardrobe/add")}
-          style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem" }}
+          style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem" }}
         >
           <Upload size={16} />
           Tải Lên Trang Phục
@@ -125,8 +136,8 @@ export function Dashboard() {
               <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.8rem" }} />
               <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
-              <Bar key="bar-items" dataKey="items" fill="#4F46E5" radius={[4, 4, 0, 0]} name="Trang Phục Thêm" />
-              <Bar key="bar-outfits" dataKey="outfits" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Bộ Trang Phục" />
+              <Bar key="bar-items" dataKey="items" fill="#EA580C" radius={[4, 4, 0, 0]} name="Trang Phục Thêm" />
+              <Bar key="bar-outfits" dataKey="outfits" fill="#F97316" radius={[4, 4, 0, 0]} name="Bộ Trang Phục" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -141,7 +152,7 @@ export function Dashboard() {
               <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Tải Lên Gần Đây</h3>
               <p style={{ fontSize: "0.78rem", color: "#64748B", marginTop: 2 }}>Vật phẩm mới nhất trong tủ đồ của bạn</p>
             </div>
-            <button onClick={() => navigate("/app/wardrobe")} style={{ fontSize: "0.8rem", color: "#4F46E5", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
+            <button onClick={() => navigate("/app/wardrobe")} style={{ fontSize: "0.8rem", color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {recentUploads.map((item) => (
@@ -175,7 +186,7 @@ export function Dashboard() {
                   </div>
                 </div>
                 <div style={{ background: "#F1F5F9", borderRadius: 100, height: 6 }}>
-                  <div style={{ width: `${s.accuracy}%`, background: "linear-gradient(90deg, #4F46E5, #8B5CF6)", borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
+                  <div style={{ width: `${s.accuracy}%`, background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
                 </div>
               </div>
             ))}
@@ -184,7 +195,7 @@ export function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div style={{ background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)", borderRadius: 16, padding: 24, color: "white" }}>
+      <div style={{ background: "linear-gradient(135deg, #EA580C 0%, #EA580C 100%)", borderRadius: 16, padding: 24, color: "white" }}>
         <h3 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 4 }}>Thao Tác Nhanh</h3>
         <p style={{ fontSize: "0.78rem", opacity: 0.8, marginBottom: 20 }}>Bắt đầu các thao tác phổ biến nhất</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -228,7 +239,7 @@ export function Dashboard() {
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Gợi Ý Trang Phục Hôm Nay</h3>
             <p style={{ fontSize: "0.78rem", color: "#64748B", marginTop: 2 }}>Trang phục AI gợi ý từ tủ đồ của bạn</p>
           </div>
-          <button onClick={() => navigate("/app/recommendations")} style={{ fontSize: "0.8rem", color: "#4F46E5", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
+          <button onClick={() => navigate("/app/recommendations")} style={{ fontSize: "0.8rem", color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {recommendations.map((r, i) => (
@@ -243,7 +254,7 @@ export function Dashboard() {
                 <p style={{ fontWeight: 600, fontSize: "0.85rem", color: "#0F172A", marginBottom: 6 }}>{r.title}</p>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {r.tags.map((tag) => (
-                    <span key={tag} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 500 }}>{tag}</span>
+                    <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 500 }}>{tag}</span>
                   ))}
                 </div>
               </div>
