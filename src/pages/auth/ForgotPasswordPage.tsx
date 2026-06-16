@@ -1,22 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Mail, Zap, ArrowLeft, CheckCircle2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { useAuth } from "../../hooks/useAuth";
 
 export function ForgotPassword() {
   const navigate = useNavigate();
+  const { forgotPassword, isForgotLoading, resetPassword, isResetLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"email" | "sent">("email");
-  const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    setStep("sent");
-    toast.success(`Link đặt lại đã gửi đến ${email}`);
+    forgotPassword(email.trim(), {
+      onSuccess: () => setStep("sent"),
+    });
+  };
+
+  const handleVerify = () => {
+    const code = otp.join("");
+    if (code.length < 6) return;
+    resetPassword({ email: email.trim(), otp: code, newPassword: "" });
+  };
+
+  const handleResend = () => {
+    forgotPassword(email.trim());
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -25,18 +33,23 @@ export function ForgotPassword() {
     newOtp[index] = value;
     setOtp(newOtp);
     if (value && index < 5) {
-      const next = document.getElementById(`otp-${index + 1}`);
-      next?.focus();
+      document.getElementById(`otp-${index + 1}`)?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus();
     }
   };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F8FAFC", fontFamily: "Inter, system-ui, sans-serif", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 440, background: "white", borderRadius: 24, padding: 48, boxShadow: "0 20px 60px rgba(79,70,229,0.10)", border: "1px solid #E2E8F0" }}>
+      <div style={{ width: "100%", maxWidth: 440, background: "white", borderRadius: 24, padding: 48, boxShadow: "0 20px 60px rgba(234,88,12,0.10)", border: "1px solid #E2E8F0" }}>
 
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #EA580C, #F97316)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Zap size={16} color="white" />
           </div>
           <span style={{ fontWeight: 800, color: "#0F172A" }}>StyleAI</span>
@@ -53,18 +66,20 @@ export function ForgotPassword() {
             </button>
 
             <div style={{ marginBottom: 32 }}>
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                <Mail size={24} color="#4F46E5" />
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                <Mail size={24} color="#EA580C" />
               </div>
               <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>Quên Mật Khẩu?</h2>
               <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                Đừng lo! Nhập địa chỉ email và chúng tôi sẽ gửi link đặt lại mật khẩu cho bạn.
+                Đừng lo! Nhập địa chỉ email và chúng tôi sẽ gửi mã xác minh cho bạn.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Địa Chỉ Email</label>
+                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                  Địa Chỉ Email
+                </label>
                 <div style={{ position: "relative" }}>
                   <Mail size={16} color="#94A3B8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
                   <input
@@ -74,10 +89,15 @@ export function ForgotPassword() {
                     placeholder="you@example.com"
                     required
                     style={{
-                      width: "100%", padding: "12px 14px 12px 42px",
-                      border: "1.5px solid #E2E8F0", borderRadius: 10,
-                      fontSize: "0.9rem", color: "#0F172A", background: "white",
-                      outline: "none", boxSizing: "border-box",
+                      width: "100%",
+                      padding: "12px 14px 12px 42px",
+                      border: "1.5px solid #E2E8F0",
+                      borderRadius: 10,
+                      fontSize: "0.9rem",
+                      color: "#0F172A",
+                      background: "white",
+                      outline: "none",
+                      boxSizing: "border-box",
                     }}
                   />
                 </div>
@@ -85,14 +105,20 @@ export function ForgotPassword() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isForgotLoading}
                 style={{
-                  width: "100%", padding: "13px", borderRadius: 10, border: "none", cursor: "pointer",
-                  background: loading ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
-                  color: "white", fontWeight: 700, fontSize: "0.95rem",
+                  width: "100%",
+                  padding: "13px",
+                  borderRadius: 10,
+                  border: "none",
+                  cursor: isForgotLoading ? "default" : "pointer",
+                  background: isForgotLoading ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
+                  color: "white",
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
                 }}
               >
-                {loading ? "Đang gửi..." : "Gửi Link Đặt Lại"}
+                {isForgotLoading ? "Đang gửi..." : "Gửi Mã Xác Minh"}
               </button>
             </form>
           </>
@@ -110,21 +136,31 @@ export function ForgotPassword() {
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 12, textAlign: "center" }}>Nhập mã xác minh</label>
+              <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 12, textAlign: "center" }}>
+                Nhập mã xác minh
+              </label>
               <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                 {otp.map((digit, i) => (
                   <input
                     key={i}
                     id={`otp-${i}`}
                     type="text"
+                    inputMode="numeric"
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
                     style={{
-                      width: 46, height: 52, textAlign: "center",
-                      border: `2px solid ${digit ? "#4F46E5" : "#E2E8F0"}`,
-                      borderRadius: 10, fontSize: "1.1rem", fontWeight: 700,
-                      color: "#0F172A", background: "white", outline: "none",
+                      width: 46,
+                      height: 52,
+                      textAlign: "center",
+                      border: `2px solid ${digit ? "#EA580C" : "#E2E8F0"}`,
+                      borderRadius: 10,
+                      fontSize: "1.1rem",
+                      fontWeight: 700,
+                      color: "#0F172A",
+                      background: "white",
+                      outline: "none",
                     }}
                   />
                 ))}
@@ -132,24 +168,35 @@ export function ForgotPassword() {
             </div>
 
             <button
-              onClick={() => { toast.success("Đặt lại mật khẩu thành công!"); navigate("/login"); }}
+              onClick={handleVerify}
+              disabled={isResetLoading || otp.join("").length < 6}
               style={{
-                width: "100%", padding: "13px", borderRadius: 10, border: "none", cursor: "pointer",
-                background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
-                color: "white", fontWeight: 700, fontSize: "0.95rem", marginBottom: 16,
+                width: "100%",
+                padding: "13px",
+                borderRadius: 10,
+                border: "none",
+                cursor: isResetLoading || otp.join("").length < 6 ? "default" : "pointer",
+                background: isResetLoading || otp.join("").length < 6
+                  ? "#FED7AA"
+                  : "linear-gradient(135deg, #EA580C, #F97316)",
+                color: "white",
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                marginBottom: 16,
               }}
             >
-              Xác Minh & Đặt Lại Mật Khẩu
+              {isResetLoading ? "Đang xác minh..." : "Xác Minh & Đặt Lại Mật Khẩu"}
             </button>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              <span style={{ fontSize: "0.85rem", color: "#64748B" }}>Didn't receive the code?</span>
+              <span style={{ fontSize: "0.85rem", color: "#64748B" }}>Chưa nhận được mã?</span>
               <button
-                onClick={() => toast.success("Code resent!")}
-                style={{ display: "flex", alignItems: "center", gap: 4, color: "#4F46E5", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
+                onClick={handleResend}
+                disabled={isForgotLoading}
+                style={{ display: "flex", alignItems: "center", gap: 4, color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
               >
                 <RefreshCw size={13} />
-                Resend
+                Gửi lại
               </button>
             </div>
 
@@ -158,7 +205,7 @@ export function ForgotPassword() {
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", marginTop: 16, color: "#64748B", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
             >
               <ArrowLeft size={15} />
-              Back
+              Quay lại
             </button>
           </>
         )}

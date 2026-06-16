@@ -6,14 +6,14 @@ const features = [
     icon: Camera,
     title: "Tải Lên Thông Minh",
     desc: "Kéo và thả ảnh trang phục. Hệ thống tự động xử lý và tổ chức chúng vào tủ đồ kỹ thuật số của bạn.",
-    color: "#4F46E5",
-    bg: "#EEF2FF",
+    color: "#EA580C",
+    bg: "#FFEDD5",
   },
   {
     icon: Cpu,
     title: "Nhận Diện AI",
     desc: "Thị giác máy tính tiên tiến nhận diện danh mục, màu sắc, họa tiết và phong cách với độ chính xác trên 95%.",
-    color: "#8B5CF6",
+    color: "#F97316",
     bg: "#F5F3FF",
   },
   {
@@ -54,14 +54,14 @@ const testimonials = [
     role: "Nhà Thiết Kế Thời Trang",
     avatar: "NL",
     text: "StyleAI đã thay đổi hoàn toàn cách tôi quản lý tủ đồ. Khả năng nhận diện AI cực kỳ chính xác!",
-    color: "#4F46E5",
+    color: "#EA580C",
   },
   {
     name: "Trần Văn Minh",
     role: "Giám Đốc Marketing",
     avatar: "TM",
     text: "Tôi tiết kiệm 20 phút mỗi sáng khi chọn trang phục. Gợi ý cho trang phục công sở rất phù hợp.",
-    color: "#8B5CF6",
+    color: "#F97316",
   },
   {
     name: "Phạm Thu Hà",
@@ -82,7 +82,7 @@ export function Landing() {
       <nav style={{ background: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)", borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #EA580C, #F97316)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Zap size={18} color="white" />
             </div>
             <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#0F172A" }}>StyleAI</span>
@@ -96,7 +96,7 @@ export function Landing() {
             </button>
             <button
               onClick={() => navigate("/register")}
-              style={{ padding: "8px 20px", borderRadius: 10, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 600, cursor: "pointer", border: "none", fontSize: "0.9rem" }}
+              style={{ padding: "8px 20px", borderRadius: 10, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 600, cursor: "pointer", border: "none", fontSize: "0.9rem" }}
             >
               Đăng Ký
             </button>
@@ -107,13 +107,13 @@ export function Landing() {
       {/* Hero */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px 60px" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 100, padding: "6px 14px", marginBottom: 24 }}>
-            <Sparkles size={14} color="#4F46E5" />
-            <span style={{ fontSize: "0.8rem", color: "#4F46E5", fontWeight: 600 }}>Trí Tuệ Thời Trang AI</span>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#FFEDD5", border: "1px solid #FED7AA", borderRadius: 100, padding: "6px 14px", marginBottom: 24 }}>
+            <Sparkles size={14} color="#EA580C" />
+            <span style={{ fontSize: "0.8rem", color: "#EA580C", fontWeight: 600 }}>Trí Tuệ Thời Trang AI</span>
           </div>
           <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, color: "#0F172A", lineHeight: 1.1, marginBottom: 24 }}>
             Tủ Đồ Của Bạn,{" "}
-            <span style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Được Tổ Chức Thông Minh
             </span>
           </h1>
@@ -123,17 +123,17 @@ export function Landing() {
         </div>
 
         {/* Hero image */}
-        <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 80px rgba(79,70,229,0.15)", border: "1px solid #E2E8F0" }}>
+        <div style={{ position: "relative", borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 80px rgba(234,88,12,0.15)", border: "1px solid #E2E8F0" }}>
           <img
             src="https://images.unsplash.com/photo-1672137233327-37b0c1049e77?w=1200&h=500&fit=crop&crop=center"
             alt="Tủ đồ sang trọng"
             style={{ width: "100%", height: 420, objectFit: "cover" }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(79,70,229,0.4), transparent)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(234,88,12,0.4), transparent)" }} />
 
           <div style={{ position: "absolute", top: 24, left: 24, background: "white", borderRadius: 16, padding: "12px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Cpu size={18} color="#4F46E5" />
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Cpu size={18} color="#EA580C" />
             </div>
             <div>
               <p style={{ fontSize: "0.7rem", color: "#64748B" }}>Nhận Diện AI</p>
@@ -164,7 +164,7 @@ export function Landing() {
       </section>
 
       {/* Stats */}
-      <section style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", padding: "48px 24px" }}>
+      <section style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", padding: "48px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32, textAlign: "center" }}>
           {stats.map((s) => (
             <div key={s.label}>
@@ -178,7 +178,7 @@ export function Landing() {
       {/* Features */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <p style={{ fontSize: "0.85rem", color: "#4F46E5", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>Tính Năng</p>
+          <p style={{ fontSize: "0.85rem", color: "#EA580C", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>Tính Năng</p>
           <h2 style={{ fontSize: "2.2rem", fontWeight: 800, color: "#0F172A", marginBottom: 16 }}>Tất Cả Những Gì Bạn Cần</h2>
           <p style={{ color: "#64748B", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
             Nền tảng quản lý tủ đồ toàn diện được hỗ trợ bởi công nghệ AI tiên tiến
@@ -201,7 +201,7 @@ export function Landing() {
       <section style={{ background: "white", padding: "80px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
           <div>
-            <p style={{ fontSize: "0.85rem", color: "#4F46E5", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>Lợi Ích</p>
+            <p style={{ fontSize: "0.85rem", color: "#EA580C", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>Lợi Ích</p>
             <h2 style={{ fontSize: "2.2rem", fontWeight: 800, color: "#0F172A", marginBottom: 20, lineHeight: 1.2 }}>
               Vì Sao Hàng Nghìn Người Yêu StyleAI
             </h2>
@@ -218,13 +218,13 @@ export function Landing() {
             </div>
             <button
               onClick={() => navigate("/register")}
-              style={{ marginTop: 36, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer", border: "none" }}
+              style={{ marginTop: 36, padding: "14px 28px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer", border: "none" }}
             >
               Bắt Đầu Miễn Phí Ngay
             </button>
           </div>
           <div style={{ position: "relative" }}>
-            <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 20px 60px rgba(79,70,229,0.15)" }}>
+            <div style={{ borderRadius: 20, overflow: "hidden", boxShadow: "0 20px 60px rgba(234,88,12,0.15)" }}>
               <img
                 src="https://images.unsplash.com/photo-1649361811423-a55616f7ab11?w=600&h=500&fit=crop"
                 alt="Tủ đồ được tổ chức"
@@ -269,7 +269,7 @@ export function Landing() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px", background: "linear-gradient(135deg, #4F46E5 0%, #8B5CF6 50%, #C084FC 100%)" }}>
+      <section style={{ padding: "80px 24px", background: "linear-gradient(135deg, #EA580C 0%, #F97316 50%, #FB923C 100%)" }}>
         <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "white", marginBottom: 20, lineHeight: 1.2 }}>
             Sẵn Sàng Thay Đổi Tủ Đồ Của Bạn?
@@ -280,7 +280,7 @@ export function Landing() {
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button
               onClick={() => navigate("/register")}
-              style={{ padding: "16px 36px", borderRadius: 14, background: "white", color: "#4F46E5", fontWeight: 800, fontSize: "1rem", cursor: "pointer", border: "none" }}
+              style={{ padding: "16px 36px", borderRadius: 14, background: "white", color: "#EA580C", fontWeight: 800, fontSize: "1rem", cursor: "pointer", border: "none" }}
             >
               Tạo Tài Khoản Miễn Phí
             </button>
@@ -300,7 +300,7 @@ export function Landing() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 40, marginBottom: 40 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #EA580C, #F97316)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Zap size={16} color="white" />
                 </div>
                 <span style={{ fontWeight: 800, fontSize: "1rem", color: "white" }}>StyleAI</span>

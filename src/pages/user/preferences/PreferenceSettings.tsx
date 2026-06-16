@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { Save, Palette, Shirt, Heart, Star } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { Save, Palette, Shirt, Heart, Star, Loader2 } from "lucide-react";
+import { useUser } from "../../../hooks/useUser";
 
 const colorSwatches = [
   { name: "Đen", hex: "#000000" },
   { name: "Trắng", hex: "#FFFFFF" },
   { name: "Xanh Đậm", hex: "#1E3A5F" },
-  { name: "Chàm", hex: "#4F46E5" },
-  { name: "Tím", hex: "#8B5CF6" },
+  { name: "Chàm", hex: "#EA580C" },
+  { name: "Tím", hex: "#F97316" },
   { name: "Hồng", hex: "#EC4899" },
   { name: "Đỏ", hex: "#EF4444" },
   { name: "Cam", hex: "#F97316" },
@@ -46,10 +46,21 @@ const clothingInterests = [
 ];
 
 export function PreferenceSettings() {
-  const [selectedColors, setSelectedColors] = useState<string[]>(["#000000", "#4F46E5", "#FFFFFF"]);
+  const { preferences, isPreferencesLoading, updatePreferences, isUpdatingPreferences } = useUser();
+
+  const [selectedColors, setSelectedColors] = useState<string[]>(["#000000", "#EA580C", "#FFFFFF"]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["minimal", "business"]);
   const [selectedLifestyles, setSelectedLifestyles] = useState<string[]>(["office", "social"]);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(["Blazers", "Denim", "Footwear"]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(["Áo Vest", "Đồ Denim", "Giày Dép"]);
+
+  // Populate from API when loaded
+  useEffect(() => {
+    if (!preferences) return;
+    setSelectedColors(preferences.favoriteColors ?? []);
+    setSelectedStyles(preferences.preferredStyles ?? []);
+    setSelectedLifestyles(preferences.lifestyles ?? []);
+    setSelectedInterests(preferences.clothingInterests ?? []);
+  }, [preferences]);
 
   const toggleColor = (hex: string) => {
     setSelectedColors((prev) => prev.includes(hex) ? prev.filter((c) => c !== hex) : [...prev, hex]);
@@ -65,13 +76,28 @@ export function PreferenceSettings() {
   };
 
   const handleSave = () => {
-    toast.success("Đã lưu sở thích! AI sẽ cá nhân hóa gợi ý theo sở thích của bạn.");
+    updatePreferences({
+      favoriteColors: selectedColors,
+      preferredStyles: selectedStyles,
+      lifestyles: selectedLifestyles,
+      clothingInterests: selectedInterests,
+    });
   };
+
+  if (isPreferencesLoading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#64748B", gap: 10 }}>
+        <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        Đang tải sở thích...
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 860, display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", borderRadius: 20, padding: "28px 32px", color: "white" }}>
+      <div style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", borderRadius: 20, padding: "28px 32px", color: "white" }}>
         <h2 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: 6 }}>Sở Thích Phong Cách</h2>
         <p style={{ opacity: 0.85, fontSize: "0.9rem", lineHeight: 1.6 }}>
           Hãy cho chúng tôi biết về phong cách của bạn để AI gợi ý trang phục hoàn hảo nhất.
@@ -81,8 +107,8 @@ export function PreferenceSettings() {
       {/* Favorite Colors */}
       <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Palette size={18} color="#4F46E5" />
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Palette size={18} color="#EA580C" />
           </div>
           <div>
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Màu Yêu Thích</h3>
@@ -104,8 +130,8 @@ export function PreferenceSettings() {
               >
                 <div style={{
                   width: 36, height: 36, borderRadius: "50%", background: c.hex,
-                  border: selected ? "3px solid #4F46E5" : "2px solid #E2E8F0",
-                  boxShadow: selected ? "0 0 0 2px #EEF2FF" : "none",
+                  border: selected ? "3px solid #EA580C" : "2px solid #E2E8F0",
+                  boxShadow: selected ? "0 0 0 2px #FFEDD5" : "none",
                   transition: "all 0.15s",
                 }} />
                 <span style={{ fontSize: "0.65rem", color: "#64748B", whiteSpace: "nowrap" }}>{c.name}</span>
@@ -119,7 +145,7 @@ export function PreferenceSettings() {
       <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Shirt size={18} color="#8B5CF6" />
+            <Shirt size={18} color="#F97316" />
           </div>
           <div>
             <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Phong Cách Ưa Thích</h3>
@@ -134,13 +160,13 @@ export function PreferenceSettings() {
                 key={style.id}
                 onClick={() => toggleStyle(style.id)}
                 style={{
-                  padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${selected ? "#4F46E5" : "#E2E8F0"}`,
-                  background: selected ? "#EEF2FF" : "white",
+                  padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${selected ? "#EA580C" : "#E2E8F0"}`,
+                  background: selected ? "#FFEDD5" : "white",
                   cursor: "pointer", textAlign: "left", transition: "all 0.15s",
                 }}
               >
                 <div style={{ fontSize: "1.4rem", marginBottom: 6 }}>{style.icon}</div>
-                <p style={{ fontWeight: 600, color: selected ? "#4F46E5" : "#0F172A", fontSize: "0.88rem" }}>{style.label}</p>
+                <p style={{ fontWeight: 600, color: selected ? "#EA580C" : "#0F172A", fontSize: "0.88rem" }}>{style.label}</p>
                 <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 3 }}>{style.desc}</p>
               </button>
             );
@@ -216,17 +242,37 @@ export function PreferenceSettings() {
 
       {/* Save */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-        <button style={{ padding: "11px 24px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#0F172A", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>
+        <button
+          onClick={() => {
+            if (preferences) {
+              setSelectedColors(preferences.favoriteColors ?? []);
+              setSelectedStyles(preferences.preferredStyles ?? []);
+              setSelectedLifestyles(preferences.lifestyles ?? []);
+              setSelectedInterests(preferences.clothingInterests ?? []);
+            }
+          }}
+          style={{ padding: "11px 24px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#0F172A", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+        >
           Đặt Lại
         </button>
         <button
           onClick={handleSave}
-          style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 24px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}
+          disabled={isUpdatingPreferences}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "11px 24px", borderRadius: 12,
+            background: isUpdatingPreferences ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
+            color: "white", border: "none", fontWeight: 700,
+            cursor: isUpdatingPreferences ? "default" : "pointer", fontSize: "0.9rem",
+          }}
         >
-          <Save size={15} />
-          Lưu Sở Thích
+          {isUpdatingPreferences
+            ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Đang lưu...</>
+            : <><Save size={15} /> Lưu Sở Thích</>
+          }
         </button>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

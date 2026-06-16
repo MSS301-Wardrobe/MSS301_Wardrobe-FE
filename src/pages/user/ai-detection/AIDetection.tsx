@@ -194,16 +194,8 @@ export function AIDetection() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div
-        style={{
-          background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
-          borderRadius: 20,
-          padding: "24px 28px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      {/* Header Banner */}
+      <div style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", borderRadius: 20, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <Cpu size={18} color="rgba(255,255,255,0.8)" />
@@ -266,8 +258,7 @@ export function AIDetection() {
               onDrop={handleDrop}
               onClick={() => !preview && fileRef.current?.click()}
               style={{
-                borderRadius: 16,
-                border: `2px dashed ${dragOver ? "#4F46E5" : "#C7D2FE"}`,
+                borderRadius: 16, border: `2px dashed ${dragOver ? "#4F46E5" : "#C7D2FE"}`,
                 background: dragOver ? "#EEF2FF" : "#F8FAFC",
                 cursor: preview ? "default" : "pointer",
                 transition: "all 0.2s",
@@ -310,54 +301,11 @@ export function AIDetection() {
                     }}
                   />
 
-                  {imageLayout && (
-                    <ManualCropOverlay
-                      layout={imageLayout}
-                      crop={cropArea}
-                      onChange={setCropArea}
-                      editable={cropEditable}
-                      confirmed={Boolean(result)}
-                      label={
-                        result
-                          ? `${categoryText} — ${result.confidence}%`
-                          : undefined
-                      }
-                    />
-                  )}
-
-                  {detecting && imageLayout && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: imageLayout.offsetX,
-                        top: imageLayout.offsetY,
-                        width: imageLayout.displayWidth,
-                        height: imageLayout.displayHeight,
-                        background: "rgba(79,70,229,0.85)",
-                        borderRadius: 14,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 16,
-                        zIndex: 20,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 50,
-                          height: 50,
-                          border: "3px solid rgba(255,255,255,0.3)",
-                          borderTop: "3px solid white",
-                          borderRadius: "50%",
-                          animation: "spin 0.8s linear infinite",
-                        }}
-                      />
-
-                      <p style={{ color: "white", fontWeight: 700 }}>
-                        Đang phân tích hình ảnh...
-                      </p>
-
+                  {/* AI detecting overlay */}
+                  {detecting && (
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(79,70,229,0.85)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+                      <div style={{ width: 50, height: 50, border: "3px solid rgba(255,255,255,0.3)", borderTop: "3px solid white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                      <p style={{ color: "white", fontWeight: 700 }}>Đang phân tích hình ảnh...</p>
                       <div style={{ width: 200, background: "rgba(255,255,255,0.2)", borderRadius: 100, height: 6 }}>
                         <div
                           style={{
@@ -402,18 +350,7 @@ export function AIDetection() {
                 </div>
               ) : (
                 <div style={{ textAlign: "center", padding: 40 }}>
-                  <div
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 18,
-                      background: "linear-gradient(135deg, #EEF2FF, #F5F3FF)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      margin: "0 auto 16px",
-                    }}
-                  >
+                  <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg, #EEF2FF, #F5F3FF)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                     <Cpu size={28} color="#4F46E5" />
                   </div>
 
@@ -427,19 +364,7 @@ export function AIDetection() {
 
                   <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
                     {["JPG", "PNG", "WEBP"].map((fmt) => (
-                      <span
-                        key={fmt}
-                        style={{
-                          background: "#EEF2FF",
-                          color: "#4F46E5",
-                          borderRadius: 6,
-                          padding: "3px 10px",
-                          fontSize: "0.72rem",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {fmt}
-                      </span>
+                      <span key={fmt} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{fmt}</span>
                     ))}
                   </div>
                 </div>
@@ -457,26 +382,8 @@ export function AIDetection() {
               style={{ display: "none" }}
             />
 
-            {!preview ? (
-              <button
-                onClick={() => fileRef.current?.click()}
-                style={{
-                  width: "100%",
-                  marginTop: 12,
-                  padding: "12px",
-                  borderRadius: 12,
-                  border: "none",
-                  background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
-                  color: "white",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-              >
+            {!preview && (
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <Upload size={16} />
                 Tải Lên Hình Ảnh
               </button>
@@ -650,6 +557,15 @@ export function AIDetection() {
                         {colorName}
                       </p>
                     </div>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: "0.75rem", color: "#64748B", fontWeight: 600, marginBottom: 8 }}>DỊP PHÙ HỢP GỢI Ý</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {result.occasion.map((occ) => (
+                      <span key={occ} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 600 }}>{occ}</span>
+                    ))}
                   </div>
 
                   <OccasionCard occasions={result.occasion || []} />
@@ -741,21 +657,7 @@ export function AIDetection() {
 
               <button
                 onClick={() => navigate("/app/wardrobe/add")}
-                style={{
-                  width: "100%",
-                  padding: "13px",
-                  borderRadius: 14,
-                  border: "none",
-                  background: "linear-gradient(135deg, #4F46E5, #8B5CF6)",
-                  color: "white",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
+                style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               >
                 Thêm Vào Tủ Đồ
                 <ChevronRight size={16} />

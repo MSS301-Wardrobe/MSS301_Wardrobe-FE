@@ -27,9 +27,9 @@ export function BackToHomeButton() {
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget;
-        el.style.borderColor = "#C7D2FE";
-        el.style.background = "#EEF2FF";
-        el.style.color = "#4F46E5";
+        el.style.borderColor = "#FED7AA";
+        el.style.background = "#FFEDD5";
+        el.style.color = "#EA580C";
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget;

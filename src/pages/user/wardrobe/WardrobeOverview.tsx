@@ -1,78 +1,41 @@
-import { useState, useEffect } from "react";
-import { Search, Filter, Grid3X3, List, Plus, ChevronDown, Heart, Eye, ChevronLeft, ChevronRight, Loader2, Archive } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router";
-import { toast } from "sonner";
-import { clothingItemApi, categoryApi, wardrobeZoneApi, wardrobeApi } from "../../../services/wardrobeService";
-import type { ClothingItem, Category } from "../../../types/wardrobe";
+import { useState } from "react";
+import { Search, Filter, Grid3X3, List, Plus, ChevronDown, Heart, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router";
 
-const sortOptions = ["Mới Nhất", "Cũ Nhất", "Tên A-Z"];
+const categories = ["Tất Cả", "Áo", "Quần", "Váy", "Áo Khoác", "Phụ Kiện", "Giày Dép"];
+
+const allItems = [
+  { id: "1", name: "Áo Sơ Mi Oxford Trắng", category: "Áo", color: "Trắng", tags: ["trang trọng", "văn phòng"], img: "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=300&h=300&fit=crop", favorite: true, confidence: 97 },
+  { id: "2", name: "Quần Jeans Slim Tối", category: "Quần", color: "Chàm", tags: ["thường ngày", "denim"], img: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=300&h=300&fit=crop", favorite: false, confidence: 98 },
+  { id: "3", name: "Áo Thun Nữ Đa Màu", category: "Áo", color: "Nhiều Màu", tags: ["thường ngày"], img: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=300&h=300&fit=crop", favorite: true, confidence: 95 },
+  { id: "4", name: "Giày Thể Thao Trắng", category: "Giày Dép", color: "Trắng", tags: ["thường ngày", "thể thao"], img: "https://images.unsplash.com/photo-1544441893-675973e31985?w=300&h=300&fit=crop", favorite: false, confidence: 99 },
+  { id: "5", name: "Mũ Len Cam", category: "Phụ Kiện", color: "Cam", tags: ["mùa đông", "thường ngày"], img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=300&h=300&fit=crop", favorite: false, confidence: 94 },
+  { id: "6", name: "Giày Boots Da Nâu", category: "Giày Dép", color: "Nâu", tags: ["thu đông", "lịch sự"], img: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?w=300&h=300&fit=crop", favorite: true, confidence: 96 },
+  { id: "7", name: "Thắt Lưng & Giày Da", category: "Phụ Kiện", color: "Nâu", tags: ["trang trọng", "công sở"], img: "https://images.unsplash.com/photo-1614676471928-2ed0ad1061a4?w=300&h=300&fit=crop", favorite: false, confidence: 93 },
+  { id: "8", name: "Quần Jeans Denim", category: "Quần", color: "Xanh", tags: ["thường ngày", "denim"], img: "https://images.unsplash.com/photo-1617178388553-a9d022974a5c?w=300&h=300&fit=crop", favorite: true, confidence: 98 },
+  { id: "9", name: "Áo Trắng Tối Giản", category: "Áo", color: "Trắng", tags: ["tối giản", "thanh lịch"], img: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=300&h=300&fit=crop", favorite: false, confidence: 91 },
+  { id: "10", name: "Áo Vest Đen", category: "Áo Khoác", color: "Đen", tags: ["trang trọng", "văn phòng"], img: "https://images.unsplash.com/photo-1731589802956-b4693dae884b?w=300&h=300&fit=crop", favorite: true, confidence: 97 },
+  { id: "11", name: "Váy Dạ Hội Đỏ", category: "Váy", color: "Đỏ", tags: ["tiệc tùng", "thanh lịch"], img: "https://images.unsplash.com/photo-1617690033147-ce6b332d677b?w=300&h=300&fit=crop", favorite: true, confidence: 95 },
+  { id: "12", name: "Áo Vest Trắng Công Sở", category: "Áo Khoác", color: "Trắng", tags: ["công sở", "trang trọng"], img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=300&h=300&fit=crop", favorite: false, confidence: 93 },
+];
+
+const sortOptions = ["Mới Nhất", "Cũ Nhất", "Tên A-Z", "Danh Mục", "Độ Tin Cậy"];
 
 const PAGE_SIZE = 10;
 
 export function WardrobeOverview() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const zoneId = searchParams.get("zoneId");
-
-  const [zoneName, setZoneName] = useState<string>("");
-  const [parentWardrobeId, setParentWardrobeId] = useState<string>("");
-  const [items, setItems] = useState<ClothingItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("Tất Cả");
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sort, setSort] = useState("Mới Nhất");
   const [sortOpen, setSortOpen] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(new Set(allItems.filter((i) => i.favorite).map((i) => i.id)));
   const [page, setPage] = useState(1);
 
-  // Fetch clothing items and categories on mount
-  useEffect(() => {
-    if (!zoneId) {
-      navigate("/app/wardrobe");
-      return;
-    }
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [z, fetchedItems, fetchedCategories] = await Promise.all([
-          wardrobeZoneApi.getById(zoneId),
-          clothingItemApi.getByZoneId(zoneId),
-          categoryApi.getAll(),
-        ]);
-        
-        setZoneName(z.zoneName);
-        setParentWardrobeId(z.wardrobeId);
-        setCategories(fetchedCategories);
-        setItems(fetchedItems);
-        
-      } catch (err) {
-        toast.error("Không thể tải dữ liệu tủ đồ. Vui lòng thử lại.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [zoneId, navigate]);
-
-  // Sort
-  const sorted = [...items].sort((a, b) => {
-    if (sort === "Mới Nhất") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    if (sort === "Cũ Nhất") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    if (sort === "Tên A-Z") return a.itemName.localeCompare(b.itemName);
-    return 0;
-  });
-
-  // Filter by category (using categoryId matching)
-  const activeCategoryObj = categories.find((c) => c.categoryName === activeCategory);
-  const filtered = sorted.filter((item) => {
-    const matchesCategory =
-      activeCategory === "Tất Cả" ||
-      (activeCategoryObj && item.categoryId === activeCategoryObj.categoryId);
-    const matchesSearch = item.itemName.toLowerCase().includes(search.toLowerCase());
+  const filtered = allItems.filter((item) => {
+    const matchesCategory = activeCategory === "Tất Cả" || item.category === activeCategory;
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase()) || item.tags.some((t) => t.includes(search.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -90,43 +53,20 @@ export function WardrobeOverview() {
     });
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await clothingItemApi.delete(id);
-      setItems((prev) => prev.filter((i) => i.itemId !== id));
-      toast.success("Đã xóa vật phẩm khỏi tủ đồ");
-    } catch {
-      toast.error("Xóa thất bại, vui lòng thử lại");
-    }
-  };
-
-  const getCategoryName = (categoryId?: string) => {
-    if (!categoryId) return "—";
-    return categories.find((c) => c.categoryId === categoryId)?.categoryName ?? "—";
-  };
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-            <button
-              onClick={() => navigate(parentWardrobeId ? `/app/wardrobe/zones?wardrobeId=${parentWardrobeId}` : "/app/wardrobe")}
-              style={{ background: "#F1F5F9", border: "none", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              <ChevronLeft size={18} color="#64748B" />
-            </button>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#0F172A" }}>
-              {zoneName ? zoneName : "Đang tải..."}
-            </h2>
-          </div>
-          <p style={{ color: "#64748B", fontSize: "0.85rem", marginLeft: 40 }}>
-            {loading ? "Đang tải..." : `${filtered.length} vật phẩm trong ngăn kéo này`}
-          </p>
+          <p style={{ color: "#64748B", fontSize: "0.85rem", marginTop: 2 }}>{filtered.length} vật phẩm trong tủ đồ của bạn</p>
         </div>
-        <div style={{ flex: 1 }}></div>
+        <button
+          onClick={() => navigate("/app/wardrobe/add")}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem" }}
+        >
+          <Plus size={15} />
+          Thêm Vật Phẩm
+        </button>
       </div>
 
       {/* Controls */}
@@ -135,7 +75,7 @@ export function WardrobeOverview() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#F1F5F9", borderRadius: 10, padding: "9px 14px", flex: 1, minWidth: 200 }}>
           <Search size={15} color="#94A3B8" />
           <input
-            placeholder="Tìm kiếm trang phục..."
+            placeholder="Tìm kiếm trang phục, thẻ..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             style={{ background: "none", border: "none", outline: "none", fontSize: "0.87rem", color: "#0F172A", width: "100%" }}
@@ -158,7 +98,7 @@ export function WardrobeOverview() {
                 <button
                   key={opt}
                   onClick={() => { setSort(opt); setSortOpen(false); }}
-                  style={{ display: "block", width: "100%", padding: "10px 16px", textAlign: "left", background: sort === opt ? "#EEF2FF" : "white", color: sort === opt ? "#4F46E5" : "#374151", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: sort === opt ? 600 : 400 }}
+                  style={{ display: "block", width: "100%", padding: "10px 16px", textAlign: "left", background: sort === opt ? "#FFEDD5" : "white", color: sort === opt ? "#EA580C" : "#374151", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: sort === opt ? 600 : 400 }}
                 >
                   {opt}
                 </button>
@@ -175,7 +115,7 @@ export function WardrobeOverview() {
               onClick={() => setViewMode(mode)}
               style={{ padding: "6px 10px", borderRadius: 8, background: viewMode === mode ? "white" : "transparent", border: "none", cursor: "pointer", boxShadow: viewMode === mode ? "0 1px 4px rgba(0,0,0,0.1)" : "none" }}
             >
-              {mode === "grid" ? <Grid3X3 size={16} color={viewMode === mode ? "#4F46E5" : "#94A3B8"} /> : <List size={16} color={viewMode === mode ? "#4F46E5" : "#94A3B8"} />}
+              {mode === "grid" ? <Grid3X3 size={16} color={viewMode === mode ? "#EA580C" : "#94A3B8"} /> : <List size={16} color={viewMode === mode ? "#EA580C" : "#94A3B8"} />}
             </button>
           ))}
         </div>
@@ -183,53 +123,36 @@ export function WardrobeOverview() {
 
       {/* Category Tabs */}
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
-        <button
-          onClick={() => { setActiveCategory("Tất Cả"); setPage(1); }}
-          style={{
-            padding: "7px 18px", borderRadius: 20, border: "none", cursor: "pointer",
-            background: activeCategory === "Tất Cả" ? "#4F46E5" : "white",
-            color: activeCategory === "Tất Cả" ? "white" : "#64748B",
-            fontWeight: activeCategory === "Tất Cả" ? 700 : 400,
-            fontSize: "0.85rem", whiteSpace: "nowrap",
-            boxShadow: activeCategory === "Tất Cả" ? "0 2px 8px rgba(79,70,229,0.3)" : "0 1px 4px rgba(0,0,0,0.06)",
-          }}
-        >
-          Tất Cả
-          <span style={{ marginLeft: 6, fontSize: "0.72rem", opacity: 0.8 }}>({items.length})</span>
-        </button>
         {categories.map((cat) => (
           <button
-            key={cat.categoryId}
-            onClick={() => { setActiveCategory(cat.categoryName); setPage(1); }}
+            key={cat}
+            onClick={() => { setActiveCategory(cat); setPage(1); }}
             style={{
               padding: "7px 18px", borderRadius: 20, border: "none", cursor: "pointer",
-              background: activeCategory === cat.categoryName ? "#4F46E5" : "white",
-              color: activeCategory === cat.categoryName ? "white" : "#64748B",
-              fontWeight: activeCategory === cat.categoryName ? 700 : 400,
+              background: activeCategory === cat ? "#EA580C" : "white",
+              color: activeCategory === cat ? "white" : "#64748B",
+              fontWeight: activeCategory === cat ? 700 : 400,
               fontSize: "0.85rem", whiteSpace: "nowrap",
-              boxShadow: activeCategory === cat.categoryName ? "0 2px 8px rgba(79,70,229,0.3)" : "0 1px 4px rgba(0,0,0,0.06)",
+              boxShadow: activeCategory === cat ? "0 2px 8px rgba(234,88,12,0.3)" : "0 1px 4px rgba(0,0,0,0.06)",
             }}
           >
-            {cat.categoryName}
-            <span style={{ marginLeft: 6, fontSize: "0.72rem", opacity: 0.8 }}>
-              ({items.filter((i) => i.categoryId === cat.categoryId).length})
-            </span>
+            {cat}
+            {cat !== "All" && (
+              <span style={{ marginLeft: 6, fontSize: "0.72rem", opacity: 0.8 }}>
+                ({allItems.filter((i) => i.category === cat).length})
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {/* Loading state */}
-      {loading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 24px", background: "white", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-          <Loader2 size={32} color="#4F46E5" style={{ animation: "spin 1s linear infinite" }} />
-          <span style={{ marginLeft: 12, color: "#64748B", fontSize: "0.95rem" }}>Đang tải tủ đồ...</span>
-        </div>
-      ) : filtered.length === 0 ? (
+      {/* Grid/List */}
+      {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 24px", background: "white", borderRadius: 20, border: "1px solid #E2E8F0" }}>
           <div style={{ fontSize: "3rem", marginBottom: 16 }}>👗</div>
           <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Không tìm thấy vật phẩm</h3>
-          <p style={{ color: "#64748B", fontSize: "0.9rem", marginBottom: 20 }}>Thử điều chỉnh tìm kiếm hoặc thêm quần áo mới</p>
-          <button onClick={() => navigate(zoneId ? `/app/wardrobe/add?zoneId=${zoneId}` : "/app/wardrobe/add")} style={{ padding: "10px 20px", borderRadius: 12, background: "#4F46E5", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>
+          <p style={{ color: "#64748B", fontSize: "0.9rem", marginBottom: 20 }}>Thử điều chỉnh tìm kiếm hoặc bộ lọc</p>
+          <button onClick={() => navigate("/app/wardrobe/add")} style={{ padding: "10px 20px", borderRadius: 12, background: "#EA580C", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>
             Thêm Trang Phục
           </button>
         </div>
@@ -237,34 +160,30 @@ export function WardrobeOverview() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16 }}>
           {paginated.map((item) => (
             <div
-              key={item.itemId}
-              onClick={() => navigate(`/app/wardrobe/${item.itemId}`)}
+              key={item.id}
+              onClick={() => navigate(`/app/wardrobe/${item.id}`)}
               style={{ background: "white", borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", transition: "transform 0.2s, box-shadow 0.2s" }}
             >
               <div style={{ position: "relative" }}>
-                <div style={{ width: "100%", height: 180, background: "linear-gradient(135deg, #EEF2FF, #E0E7FF)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: "3rem" }}>👕</span>
-                </div>
+                <img src={item.img} alt={item.name} style={{ width: "100%", height: 180, objectFit: "cover" }} />
                 <button
-                  onClick={(e) => toggleFavorite(item.itemId, e)}
+                  onClick={(e) => toggleFavorite(item.id, e)}
                   style={{ position: "absolute", top: 10, right: 10, width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 >
-                  <Heart size={15} fill={favorites.has(item.itemId) ? "#EF4444" : "none"} color={favorites.has(item.itemId) ? "#EF4444" : "#94A3B8"} />
+                  <Heart size={15} fill={favorites.has(item.id) ? "#EF4444" : "none"} color={favorites.has(item.id) ? "#EF4444" : "#94A3B8"} />
                 </button>
-                {item.confidenceScore && (
-                  <div style={{ position: "absolute", bottom: 8, left: 8, background: "#10B981", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
-                    {Math.round(item.confidenceScore * 100)}% AI
-                  </div>
-                )}
+                <div style={{ position: "absolute", bottom: 8, left: 8, background: "#10B981", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
+                  {item.confidence}% AI
+                </div>
               </div>
               <div style={{ padding: "12px 14px" }}>
-                <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.itemName}</p>
-                <p style={{ fontSize: "0.75rem", color: "#64748B", marginBottom: 8 }}>
-                  {getCategoryName(item.categoryId)}{item.dominantColor ? ` · ${item.dominantColor}` : ""}
-                </p>
-                {item.style && (
-                  <span style={{ background: "#F1F5F9", color: "#64748B", borderRadius: 6, padding: "2px 8px", fontSize: "0.65rem" }}>{item.style}</span>
-                )}
+                <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</p>
+                <p style={{ fontSize: "0.75rem", color: "#64748B", marginBottom: 8 }}>{item.category} · {item.color}</p>
+                <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                  {item.tags.slice(0, 2).map((tag) => (
+                    <span key={tag} style={{ background: "#F1F5F9", color: "#64748B", borderRadius: 6, padding: "2px 8px", fontSize: "0.65rem" }}>{tag}</span>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
@@ -273,40 +192,29 @@ export function WardrobeOverview() {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {paginated.map((item) => (
             <div
-              key={item.itemId}
-              onClick={() => navigate(`/app/wardrobe/${item.itemId}`)}
+              key={item.id}
+              onClick={() => navigate(`/app/wardrobe/${item.id}`)}
               style={{ background: "white", borderRadius: 14, padding: "12px 16px", border: "1px solid #E2E8F0", cursor: "pointer", display: "flex", alignItems: "center", gap: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
             >
-              <div style={{ width: 56, height: 56, borderRadius: 10, background: "linear-gradient(135deg, #EEF2FF, #E0E7FF)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: "1.5rem" }}>👕</span>
-              </div>
+              <img src={item.img} alt={item.name} style={{ width: 56, height: 56, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem" }}>{item.itemName}</p>
-                <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 2 }}>
-                  {getCategoryName(item.categoryId)}{item.dominantColor ? ` · ${item.dominantColor}` : ""}
-                </p>
+                <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem" }}>{item.name}</p>
+                <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 2 }}>{item.category} · {item.color}</p>
               </div>
-              {item.style && (
-                <span style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem" }}>{item.style}</span>
-              )}
-              {item.confidenceScore && (
-                <span style={{ background: "#ECFDF5", color: "#10B981", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 700 }}>
-                  {Math.round(item.confidenceScore * 100)}%
-                </span>
-              )}
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/wardrobe/${item.itemId}`); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
-              >
-                <Eye size={16} color="#94A3B8" />
-              </button>
+              <div style={{ display: "flex", gap: 5 }}>
+                {item.tags.slice(0, 2).map((tag) => (
+                  <span key={tag} style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem" }}>{tag}</span>
+                ))}
+              </div>
+              <span style={{ background: "#ECFDF5", color: "#10B981", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{item.confidence}%</span>
+              <Eye size={16} color="#94A3B8" />
             </div>
           ))}
         </div>
       )}
 
       {/* Pagination */}
-      {!loading && filtered.length > 0 && (
+      {filtered.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginTop: 4 }}>
           <p style={{ fontSize: "0.8rem", color: "#64748B" }}>
             Hiển thị {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} trong {filtered.length} vật phẩm
@@ -327,10 +235,10 @@ export function WardrobeOverview() {
                 style={{
                   minWidth: 36, height: 36, padding: "0 6px", borderRadius: 10, cursor: "pointer", fontSize: "0.85rem",
                   border: p === currentPage ? "none" : "1.5px solid #E2E8F0",
-                  background: p === currentPage ? "linear-gradient(135deg, #4F46E5, #8B5CF6)" : "white",
+                  background: p === currentPage ? "linear-gradient(135deg, #EA580C, #F97316)" : "white",
                   color: p === currentPage ? "white" : "#374151",
                   fontWeight: p === currentPage ? 700 : 500,
-                  boxShadow: p === currentPage ? "0 2px 8px rgba(79,70,229,0.3)" : "none",
+                  boxShadow: p === currentPage ? "0 2px 8px rgba(234,88,12,0.3)" : "none",
                 }}
               >
                 {p}
