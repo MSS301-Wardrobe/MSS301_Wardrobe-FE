@@ -7,10 +7,17 @@ interface ProtectedRouteProps {
   allow: Role;
 }
 
+function normalizeRole(role?: string | null): Role {
+  if (role === "ROLE_ADMIN" || role === "ADMIN") {
+    return "ADMIN";
+  }
+
+  return "USER";
+}
+
 export function ProtectedRoute({ allow }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuthContext();
 
-  // Wait for auth state to be resolved before redirecting
   if (isLoading) {
     return (
       <div
@@ -43,11 +50,11 @@ export function ProtectedRoute({ allow }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  const role = user?.role ?? "USER";
+  const role = normalizeRole(user.role);
 
   if (role !== allow) {
     return (
@@ -61,7 +68,6 @@ export function ProtectedRoute({ allow }: ProtectedRouteProps) {
   return <Outlet />;
 }
 
-// Convenience guards so routes.ts can stay JSX-free.
 export function RequireUser() {
   return <ProtectedRoute allow="USER" />;
 }
