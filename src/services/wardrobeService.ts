@@ -1,4 +1,9 @@
 import { apiClient } from "./apiClient";
+import {
+  matchCategoryFromAi,
+  normalizeVi,
+  SUPPORTED_CATEGORY_NAMES_VI,
+} from "../utils/aiMappings";
 import type {
   ApiResponse,
   Wardrobe,
@@ -157,6 +162,56 @@ export const categoryApi = {
     await apiClient.delete(`${W}/categories/${id}`);
   },
 };
+
+/** Đảm bảo 13 danh mục AI có trong DB để dropdown khớp nhãn nhận diện */
+export async function ensureAiCategoryCatalog(
+  existing: Category[]
+): Promise<Category[]> {
+  const catalog = [...existing];
+  const known = new Set(catalog.map((category) => normalizeVi(category.categoryName)));
+
+  for (const label of SUPPORTED_CATEGORY_NAMES_VI) {
+    if (known.has(normalizeVi(label))) {
+      continue;
+    }
+
+    try {
+      const created = await categoryApi.create({ categoryName: label });
+      catalog.push(created);
+      known.add(normalizeVi(label));
+    } catch {
+      // Bỏ qua nếu không tạo được — resolveCategoryFromAi sẽ thử lại khi nhận diện
+    }
+  }
+
+  return catalog;
+}
+
+/** Tìm hoặc tạo danh mục khớp kết quả AI */
+export async function resolveCategoryFromAi(
+  categories: Category[],
+  classKey: string,
+  aiLabel: string
+): Promise<{ category: Category | undefined; categories: Category[] }> {
+  let matched = matchCategoryFromAi(categories, classKey, aiLabel);
+  if (matched) {
+    return { category: matched, categories };
+  }
+
+  const alreadyExists = categories.find(
+    (category) => normalizeVi(category.categoryName) === normalizeVi(aiLabel)
+  );
+  if (alreadyExists) {
+    return { category: alreadyExists, categories };
+  }
+
+  try {
+    const created = await categoryApi.create({ categoryName: aiLabel });
+    return { category: created, categories: [...categories, created] };
+  } catch {
+    return { category: undefined, categories };
+  }
+}
 
 // ─── Clothing Item API ────────────────────────────────────────────────────────
 

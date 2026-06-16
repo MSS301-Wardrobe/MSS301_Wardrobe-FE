@@ -7,10 +7,7 @@ import { AuthProvider } from "./providers/AuthProvider";
 export default function App() {
   return (
     <QueryProvider>
-      <RouterProvider
-        router={router}
-        future={{ v7_startTransition: true }}
-      />
+      <RouterProvider router={router} />
       <Toaster position="top-right" richColors />
     </QueryProvider>
   );
