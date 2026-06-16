@@ -21,22 +21,18 @@ export function Login() {
 
     const user = await authService.login(email.trim(), password);
 
+    console.log("LOGIN USER:", user);
+    console.log("ROLE:", user.role);
+
     toast.success("Đăng nhập thành công!");
 
-    const role =
-      user.roles?.[0]?.roleName ||
-      user.role ||
-      "USER";
+    const role = user.role ?? "ROLE_USER";
 
-    localStorage.setItem("role", role);
-
-    setTimeout(() => {
-      if (role === "ROLE_ADMIN" || role === "ADMIN") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/app/dashboard");
-      }
-    }, 500);
+    if (role === "ROLE_ADMIN" || role === "ADMIN") {
+      navigate("/admin/dashboard", { replace: true });
+    } else {
+      navigate("/app/dashboard", { replace: true });
+    }
   } catch (err: any) {
     toast.error(err.message || "Đăng nhập thất bại");
   } finally {
