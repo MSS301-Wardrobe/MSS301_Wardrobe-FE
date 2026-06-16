@@ -301,12 +301,60 @@ export function AIDetection() {
                     }}
                   />
 
-                  {/* AI detecting overlay */}
-                  {detecting && (
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(79,70,229,0.85)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-                      <div style={{ width: 50, height: 50, border: "3px solid rgba(255,255,255,0.3)", borderTop: "3px solid white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                      <p style={{ color: "white", fontWeight: 700 }}>Đang phân tích hình ảnh...</p>
-                      <div style={{ width: 200, background: "rgba(255,255,255,0.2)", borderRadius: 100, height: 6 }}>
+                  {imageLayout && (
+                    <ManualCropOverlay
+                      layout={imageLayout}
+                      crop={cropArea}
+                      onChange={setCropArea}
+                      editable={cropEditable}
+                      confirmed={Boolean(result)}
+                      label={
+                        result
+                          ? `${categoryText} — ${result.confidence}%`
+                          : undefined
+                      }
+                    />
+                  )}
+
+                  {detecting && imageLayout && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: imageLayout.offsetX,
+                        top: imageLayout.offsetY,
+                        width: imageLayout.displayWidth,
+                        height: imageLayout.displayHeight,
+                        background: "rgba(79,70,229,0.85)",
+                        borderRadius: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 16,
+                        zIndex: 20,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 50,
+                          height: 50,
+                          border: "3px solid rgba(255,255,255,0.3)",
+                          borderTop: "3px solid white",
+                          borderRadius: "50%",
+                          animation: "spin 0.8s linear infinite",
+                        }}
+                      />
+                      <p style={{ color: "white", fontWeight: 700 }}>
+                        Đang phân tích hình ảnh...
+                      </p>
+                      <div
+                        style={{
+                          width: 200,
+                          background: "rgba(255,255,255,0.2)",
+                          borderRadius: 100,
+                          height: 6,
+                        }}
+                      >
                         <div
                           style={{
                             width: `${progress}%`,
@@ -382,7 +430,7 @@ export function AIDetection() {
               style={{ display: "none" }}
             />
 
-            {!preview && (
+            {!preview ? (
               <button onClick={() => fileRef.current?.click()} style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <Upload size={16} />
                 Tải Lên Hình Ảnh
@@ -557,15 +605,6 @@ export function AIDetection() {
                         {colorName}
                       </p>
                     </div>
-                  ))}
-                </div>
-
-                <div style={{ marginTop: 14 }}>
-                  <p style={{ fontSize: "0.75rem", color: "#64748B", fontWeight: 600, marginBottom: 8 }}>DỊP PHÙ HỢP GỢI Ý</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {result.occasion.map((occ) => (
-                      <span key={occ} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 600 }}>{occ}</span>
-                    ))}
                   </div>
 
                   <OccasionCard occasions={result.occasion || []} />
