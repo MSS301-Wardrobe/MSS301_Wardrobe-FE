@@ -15,6 +15,12 @@ function normalizeRole(role?: string | null): Role {
   return "USER";
 }
 
+function getUserRole(user: any): Role {
+  const rawRole = user?.roles?.[0]?.roleName ?? user?.role ?? "ROLE_USER";
+
+  return normalizeRole(rawRole);
+}
+
 export function ProtectedRoute({ allow }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuthContext();
 
@@ -54,7 +60,7 @@ export function ProtectedRoute({ allow }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  const role = normalizeRole(user.role);
+  const role = getUserRole(user);
 
   if (role !== allow) {
     return (

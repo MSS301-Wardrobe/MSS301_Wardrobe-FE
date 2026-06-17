@@ -1,19 +1,29 @@
 import { apiClient } from "./apiClient";
+import type { User } from "../types/user";
+
+type LoginResponse = {
+  message?: string;
+  user?: User;
+};
 
 export const authService = {
-  async login(email: string, password: string) {
-    await apiClient.post("/users/auth/login", {
+  async login(email: string, password: string): Promise<User> {
+    const { data } = await apiClient.post<LoginResponse>("/users/auth/login", {
       email,
       password,
     });
 
-    const { data } = await apiClient.get("/users/me");
+    // Nếu backend login trả luôn user
+    if (data?.user) {
+      return data.user;
+    }
 
-    localStorage.setItem("user", JSON.stringify(data));
+    // Nếu backend login chỉ set cookie và trả message
+    return this.me();
+  },
 
-    const role = data.roles?.[0]?.roleName ?? data.role ?? "ROLE_USER";
-    localStorage.setItem("role", role);
-
+  async me(): Promise<User> {
+    const { data } = await apiClient.get<User>("/users/me");
     return data;
   },
 
@@ -56,12 +66,13 @@ export const authService = {
     return data;
   },
 
-  async logout() {
+  async logout(): Promise<void> {
     await apiClient.post("/users/auth/logout");
-
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
   },
+
+  async refresh(): Promise<void> {
+  await apiClient.post("/users/auth/refresh");
+}
 };
 
 export default authService;

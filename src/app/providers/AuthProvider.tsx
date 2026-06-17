@@ -7,14 +7,14 @@ import {
   type ReactNode,
 } from "react";
 import type { User } from "../../types/user";
-import { apiClient } from "../../services/apiClient";
+import { authService } from "../../services/authService";
 
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextValue>({
   isAuthenticated: false,
   isLoading: true,
   setUser: () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -31,35 +31,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setUser = useCallback((user: User | null) => {
     setUserState(user);
-
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("role", user.role ?? "ROLE_USER");
-    } else {
-      localStorage.removeItem("user");
-      localStorage.removeItem("role");
-    }
   }, []);
 
   useEffect(() => {
-    apiClient
-      .get<User>("/users/me")
-      .then(({ data }) => {
-        setUser(data);
+    let cancelled = false;
+
+    authService
+      .me()
+      .then((user) => {
+        if (!cancelled) {
+          setUser(user);
+        }
       })
       .catch(() => {
-        setUser(null);
+        if (!cancelled) {
+          setUser(null);
+        }
       })
       .finally(() => {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [setUser]);
 
-  const logout = useCallback(() => {
-    // Nếu backend có API logout thì gọi thêm ở đây
-    // apiClient.post("/users/auth/logout");
-
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+    }
   }, [setUser]);
 
   return (
