@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { ArrowLeft, Upload, X, Cpu, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -8,8 +8,10 @@ import {
   ensureAiCategoryCatalog,
   resolveCategoryFromAi,
   wardrobeZoneApi,
+  wardrobeApi,
 } from "../../../services/wardrobeService";
 import { aiService } from "../../../services/aiService";
+import { storageService } from "../../../services/storageService";
 import {
   mapAiStyleToFormStyle,
   translateBaseColor,
@@ -30,13 +32,15 @@ const inputStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-const colors = ["?en", "Tr?ng", "Xanh ??m", "Ch�m", "T�m", "??", "H?ng", "Cam", "V�ng", "Xanh L�", "Xanh M�ng K�t", "X�m", "N�u", "Be", "Nhi?u M�u"];
-const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ng�y", "Th? Thao", "Ti?c T�ng", "Du L?ch", "T?i Gi?n", "C�ng S?"];
+const colors = ["?en", "Tr?ng", "Xanh ??m", "Ch�m", "T�m", "??", "H?ng", "Cam", "V�ng", "Xanh L�", "Xanh M�ng K�t", "X�m", "N�u", "Be", "Nhi?u M�u"];
+const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ng�y", "Th? Thao", "Ti?c T�ng", "Du L?ch", "T?i Gi?n", "C�ng S?"];
 
 export function AddClothing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialZoneId = searchParams.get("zoneId");
+  const location = useLocation();
+  const navState = location.state as { prefillDetection?: any; previewImage?: string; sourceFile?: File } | null;
 
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingAiRef = useRef<{
@@ -61,11 +65,13 @@ export function AddClothing() {
 
   // Real data from API
   const [categories, setCategories] = useState<Category[]>([]);
+  const [wardrobes, setWardrobes] = useState<any[]>([]);
   const [zones, setZones] = useState<WardrobeZone[]>([]);
 
   const [form, setForm] = useState({
     itemName: "",
     categoryId: "",
+    wardrobeId: "",
     zoneId: initialZoneId || "",
     dominantColor: "",
     style: "",
@@ -111,19 +117,46 @@ export function AddClothing() {
   useEffect(() => {
     const fetchMeta = async () => {
       try {
-        const [cats, zns] = await Promise.all([
+        const [cats, zns, wrdbs] = await Promise.all([
           categoryApi.getAll(),
-          wardrobeZoneApi.getAll(), // Fetch all zones to match ID with name, but dropdown will be disabled
+          wardrobeZoneApi.getAll(),
+          wardrobeApi.getAll(),
         ]);
         const syncedCategories = await ensureAiCategoryCatalog(cats);
         setCategories(syncedCategories);
         setZones(zns);
+        setWardrobes(wrdbs);
+        if (initialZoneId) {
+          const foundZone = zns.find((z: WardrobeZone) => z.zoneId === initialZoneId);
+          if (foundZone) setForm(prev => ({ ...prev, wardrobeId: (foundZone as any).wardrobeId || '' }));
+        }
       } catch {
         toast.error("Không thể tải danh mục và ngăn kéo");
       }
     };
     fetchMeta();
   }, []);
+
+
+  // Apply AI detection data from navigation state
+  useEffect(() => {
+    if (!navState?.prefillDetection) return;
+    if (navState.previewImage) setPreview(navState.previewImage);
+    if (navState.sourceFile) setSelectedFile(navState.sourceFile);
+    const primary = navState.prefillDetection;
+    const colorLabel = primary.colorLabel || primary.color?.name || '';
+    const styleLabel = primary.style || '';
+    const formStyle = mapAiStyleToFormStyle(styleLabel);
+    const catName = primary.category || '';
+    const confValue = typeof primary.confidence === 'number'
+      ? (primary.confidence > 1 ? primary.confidence / 100 : primary.confidence)
+      : 0;
+    setAiResult({ categoryName: catName, confidence: confValue, color: colorLabel, style: styleLabel });
+    const detection = { classKey: primary.class_name || '', categoryName: catName, color: colorLabel, formStyle, confidence: confValue };
+    pendingAiRef.current = detection;
+    setForm(f => ({ ...f, dominantColor: colorLabel, style: styleLabel, confidenceScore: confValue }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navState]);
 
   useEffect(() => {
     if (pendingAiRef.current) {
@@ -213,7 +246,7 @@ export function AddClothing() {
         dominantColor: form.dominantColor || undefined,
         style: form.style || undefined,
         confidenceScore: form.confidenceScore,
-        // imageId would come from storage-service upload in a full flow
+        imageId: undefined as string | undefined,
       });
       toast.success("Đã thêm vật phẩm vào tủ đồ!");
       setTimeout(() => {
@@ -371,17 +404,33 @@ export function AddClothing() {
                 </select>
               </div>
 
-              {/* Zone */}
+              {/* Wardrobe */}
               <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Ngăn Kéo</label>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Tu Do</label>
                 <select
-                  value={form.zoneId}
-                  onChange={(e) => setForm({ ...form, zoneId: e.target.value })}
+                  value={form.wardrobeId}
+                  onChange={(e) => setForm({ ...form, wardrobeId: e.target.value, zoneId: "" })}
                   style={{ ...inputStyle, cursor: initialZoneId ? "not-allowed" : "pointer", background: initialZoneId ? "#F8FAFC" : "white" }}
                   disabled={!!initialZoneId}
                 >
-                  <option value="">Chọn ngăn kéo</option>
-                  {zones.map((z) => (
+                  <option value="">Chon tu do</option>
+                  {wardrobes.map((w: any) => (
+                    <option key={w.wardrobeId} value={w.wardrobeId}>{w.wardrobeName}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Zone */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Ngan Keo</label>
+                <select
+                  value={form.zoneId}
+                  onChange={(e) => setForm({ ...form, zoneId: e.target.value })}
+                  style={{ ...inputStyle, cursor: (!form.wardrobeId && !initialZoneId) ? "not-allowed" : "pointer", background: (!form.wardrobeId && !initialZoneId) ? "#F8FAFC" : "white" }}
+                  disabled={!form.wardrobeId && !initialZoneId}
+                >
+                  <option value="">Chon ngan keo</option>
+                  {zones.filter((z: any) => !form.wardrobeId || z.wardrobeId === form.wardrobeId).map((z) => (
                     <option key={z.zoneId} value={z.zoneId}>{z.zoneName}</option>
                   ))}
                 </select>
@@ -390,30 +439,28 @@ export function AddClothing() {
               {/* Color + Style */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Màu Chủ Đạo</label>
-                  <select
+                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Mau Chu Dao</label>
+                  <input
+                    type="text"
                     value={form.dominantColor}
                     onChange={(e) => setForm({ ...form, dominantColor: e.target.value })}
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                  >
-                    <option value="">Chọn màu</option>
-                    {colors.map((c) => <option key={c}>{c}</option>)}
-                  </select>
+                    placeholder="Vd: Xam"
+                    style={{ ...inputStyle, background: form.dominantColor ? "#F0FDF4" : "white" }}
+                  />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Phong Cách</label>
-                  <select
+                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Phong Cach</label>
+                  <input
+                    type="text"
                     value={form.style}
                     onChange={(e) => setForm({ ...form, style: e.target.value })}
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                  >
-                    <option value="">Chọn phong cách</option>
-                    {styles.map((s) => <option key={s}>{s}</option>)}
-                  </select>
+                    placeholder="Vd: Thuong ngay"
+                    style={{ ...inputStyle, background: form.style ? "#F0FDF4" : "white" }}
+                  />
                 </div>
               </div>
 
-              {/* Confidence Score */}
+                            {/* Confidence Score */}
               {aiResult && (
                 <div>
                   <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>

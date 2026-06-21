@@ -8,7 +8,6 @@ export interface Wardrobe {
 }
 
 export interface CreateWardrobePayload {
-  userId: string;
   wardrobeName: string;
 }
 

@@ -695,7 +695,13 @@ export function AIDetection() {
               </div>
 
               <button
-                onClick={() => navigate("/app/wardrobe/add")}
+                onClick={() => navigate("/app/wardrobe/add", { 
+                  state: { 
+                    prefillDetection: result, 
+                    previewImage: preview, 
+                    sourceFile: sourceFile 
+                  } 
+                })}
                 style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               >
                 Thêm Vào Tủ Đồ

@@ -1,34 +1,47 @@
 import { useState } from "react";
 import { Search, Trash2, Download, Grid3X3, ChevronDown, X, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { storageService } from "../../../services/storageService";
 
 const sortOptions = ["Mới Nhất", "Cũ Nhất", "Lớn Nhất", "Nhỏ Nhất", "Tên A-Z"];
 
 const PAGE_SIZE = 10;
 
-const allImages = [
-  { id: "1", name: "white-oxford-shirt.jpg", size: "2.4 MB", date: "2025-05-28", category: "Tops", img: "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=300&h=300&fit=crop" },
-  { id: "2", name: "dark-slim-jeans.jpg", size: "3.1 MB", date: "2025-05-25", category: "Bottoms", img: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=300&h=300&fit=crop" },
-  { id: "3", name: "womens-assorted-tops.jpg", size: "4.2 MB", date: "2025-05-23", category: "Tops", img: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=300&h=300&fit=crop" },
-  { id: "4", name: "white-sneakers.jpg", size: "1.8 MB", date: "2025-05-22", category: "Footwear", img: "https://images.unsplash.com/photo-1544441893-675973e31985?w=300&h=300&fit=crop" },
-  { id: "5", name: "orange-knit-beanie.jpg", size: "2.6 MB", date: "2025-05-20", category: "Accessories", img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=300&h=300&fit=crop" },
-  { id: "6", name: "brown-leather-boots.jpg", size: "3.7 MB", date: "2025-05-18", category: "Footwear", img: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?w=300&h=300&fit=crop" },
-  { id: "7", name: "leather-belt-shoes.jpg", size: "2.9 MB", date: "2025-05-16", category: "Accessories", img: "https://images.unsplash.com/photo-1614676471928-2ed0ad1061a4?w=300&h=300&fit=crop" },
-  { id: "8", name: "denim-jeans-blue.jpg", size: "2.3 MB", date: "2025-05-15", category: "Bottoms", img: "https://images.unsplash.com/photo-1617178388553-a9d022974a5c?w=300&h=300&fit=crop" },
-  { id: "9", name: "woman-white-outfit.jpg", size: "5.1 MB", date: "2025-05-12", category: "Tops", img: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=300&h=300&fit=crop" },
-  { id: "10", name: "black-blazer-jacket.jpg", size: "4.4 MB", date: "2025-05-10", category: "Jackets", img: "https://images.unsplash.com/photo-1731589802956-b4693dae884b?w=300&h=300&fit=crop" },
-  { id: "11", name: "red-evening-dress.jpg", size: "3.8 MB", date: "2025-05-08", category: "Dresses", img: "https://images.unsplash.com/photo-1617690033147-ce6b332d677b?w=300&h=300&fit=crop" },
-  { id: "12", name: "white-office-blazer.jpg", size: "4.0 MB", date: "2025-05-05", category: "Jackets", img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=300&h=300&fit=crop" },
-];
+
 
 export function ImageLibrary() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("Mới Nhất");
   const [sortOpen, setSortOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [preview, setPreview] = useState<(typeof allImages)[0] | null>(null);
-  const [images, setImages] = useState(allImages);
+  const [preview, setPreview] = useState<any>(null);
+  const [images, setImages] = useState<any[]>([]);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        setLoading(true);
+        const data = await storageService.listImages();
+        const mapped = data.map(img => ({
+          id: img.id,
+          name: img.name || "Không rõ tên",
+          size: img.size ? `${img.size} MB` : "0 MB",
+          date: img.createdAt ? new Date(img.createdAt).toLocaleDateString("vi-VN") : "Hôm nay",
+          category: "Chưa phân loại",
+          img: img.url
+        }));
+        setImages(mapped);
+      } catch (err) {
+        toast.error("Không thể tải thư viện ảnh");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImages();
+  }, []);
 
   const filtered = images.filter((img) =>
     img.name.toLowerCase().includes(search.toLowerCase()) ||
