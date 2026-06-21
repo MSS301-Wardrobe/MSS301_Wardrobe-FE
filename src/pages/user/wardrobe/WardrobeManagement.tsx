@@ -36,7 +36,6 @@ export function WardrobeManagement() {
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
-  const [createUserId, setCreateUserId] = useState("");
   const [creating, setCreating] = useState(false);
 
   // Edit inline
@@ -76,15 +75,13 @@ export function WardrobeManagement() {
 
   const handleCreate = async () => {
     if (!createName.trim()) return toast.error("Vui lòng nhập tên tủ đồ");
-    if (!createUserId.trim()) return toast.error("Vui lòng nhập User ID");
     setCreating(true);
     try {
-      const created = await wardrobeApi.create({ userId: createUserId.trim(), wardrobeName: createName.trim() });
+      const created = await wardrobeApi.create({ wardrobeName: createName.trim() });
       setWardrobes((prev) => [created, ...prev]);
       toast.success(`Tủ đồ "${created.wardrobeName}" đã được tạo!`);
       setCreateOpen(false);
       setCreateName("");
-      setCreateUserId("");
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Tạo tủ đồ thất bại");
     } finally {
@@ -141,7 +138,7 @@ export function WardrobeManagement() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#0F172A" }}>Tủ Đồ Của Tôi</h2>
+          {/* Title is already in Topbar */}
           <p style={{ color: "#64748B", fontSize: "0.85rem", marginTop: 3 }}>
             {loading ? "Đang tải..." : `${wardrobes.length} tủ đồ`}
           </p>
@@ -255,19 +252,11 @@ export function WardrobeManagement() {
                   </div>
                 </div>
 
-                {/* ID info */}
-                <div style={{ background: "rgba(255,255,255,0.6)", borderRadius: 10, padding: "8px 12px", marginBottom: 14 }}>
-                  <p style={{ fontSize: "0.68rem", color: "#94A3B8", fontFamily: "monospace", wordBreak: "break-all" }}>
-                    ID: {w.wardrobeId}
-                  </p>
-                  <p style={{ fontSize: "0.68rem", color: "#94A3B8", fontFamily: "monospace", marginTop: 2 }}>
-                    User: {w.userId}
-                  </p>
-                </div>
+                {/* ID info removed */}
 
                 {/* Navigate to contents */}
                 <button
-                  onClick={() => navigate(`/app/wardrobe/zones?wardrobeId=${w.wardrobeId}`)}
+                  onClick={() => navigate(`/app/wardrobe/zones?wardrobeId=${w.wardrobeId}&wardrobeName=${encodeURIComponent(w.wardrobeName)}`)}
                   style={{ width: "100%", padding: "10px", borderRadius: 12, border: `1.5px solid ${color.border}`, background: "white", color: color.accent, fontWeight: 700, cursor: "pointer", fontSize: "0.82rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                 >
                   Xem Các Ngăn Kéo
@@ -302,19 +291,6 @@ export function WardrobeManagement() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
-                  User ID <span style={{ color: "#EF4444" }}>*</span>
-                </label>
-                <input
-                  id="wardrobe-user-id-input"
-                  type="text"
-                  value={createUserId}
-                  onChange={(e) => setCreateUserId(e.target.value)}
-                  placeholder="UUID của người dùng"
-                  style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #E2E8F0", borderRadius: 10, fontSize: "0.88rem", outline: "none", boxSizing: "border-box", fontFamily: "monospace", color: "#0F172A" }}
-                />
-              </div>
               <div>
                 <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
                   Tên Tủ Đồ <span style={{ color: "#EF4444" }}>*</span>

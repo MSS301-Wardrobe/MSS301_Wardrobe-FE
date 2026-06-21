@@ -31,7 +31,7 @@ import type {
  *   → Gateway → lb://wardrobe-service → /api/v1/wardrobe/wardrobes
  *   → wardrobe-service (context-path /api/v1/wardrobe) → controller @RequestMapping("/wardrobes")
  */
-const W = "/api/v1/wardrobe";
+const W = "/wardrobe";
 
 // ─── Wardrobe API ─────────────────────────────────────────────────────────────
 

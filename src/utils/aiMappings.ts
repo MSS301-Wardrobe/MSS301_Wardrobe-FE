@@ -27,6 +27,7 @@ export const BASE_COLOR_LABELS_VI: Record<string, string> = {
   white: "Trắng",
   blue: "Xanh dương",
   gray: "Xám",
+  gainsboro: "Xám",
   grey: "Xám",
   red: "Đỏ",
   green: "Xanh lá",
