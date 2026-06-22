@@ -146,7 +146,7 @@ export function WardrobeManagement() {
         <button
           id="create-wardrobe-btn"
           onClick={() => setCreateOpen(true)}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
         >
           <Plus size={15} /> Tạo Tủ Đồ Mới
         </button>
@@ -155,7 +155,7 @@ export function WardrobeManagement() {
       {/* Loading */}
       {loading && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "64px 0", background: "white", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-          <Loader2 size={32} color="#4F46E5" style={{ animation: "spin 1s linear infinite" }} />
+          <Loader2 size={32} color="#EA580C" style={{ animation: "spin 1s linear infinite" }} />
           <span style={{ marginLeft: 12, color: "#64748B" }}>Đang tải tủ đồ...</span>
         </div>
       )}
@@ -170,7 +170,7 @@ export function WardrobeManagement() {
           </p>
           <button
             onClick={() => setCreateOpen(true)}
-            style={{ padding: "10px 24px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}
+            style={{ padding: "10px 24px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}
           >
             Tạo Ngay
           </button>
@@ -280,8 +280,8 @@ export function WardrobeManagement() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Package size={18} color="#4F46E5" />
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Package size={18} color="#EA580C" />
                 </div>
                 <h3 style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.05rem" }}>Tạo Tủ Đồ Mới</h3>
               </div>
@@ -319,7 +319,7 @@ export function WardrobeManagement() {
                   id="create-wardrobe-submit-btn"
                   onClick={handleCreate}
                   disabled={creating}
-                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creating ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: creating ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creating ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: creating ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
                   {creating ? (
                     <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang tạo...</>
