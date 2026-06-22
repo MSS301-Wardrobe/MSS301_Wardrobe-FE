@@ -32,15 +32,15 @@ const inputStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-const colors = ["?en", "Tr?ng", "Xanh ??m", "Ch�m", "T�m", "??", "H?ng", "Cam", "V�ng", "Xanh L�", "Xanh M�ng K�t", "X�m", "N�u", "Be", "Nhi?u M�u"];
-const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ng�y", "Th? Thao", "Ti?c T�ng", "Du L?ch", "T?i Gi?n", "C�ng S?"];
+const colors = ["?en", "Tr?ng", "Xanh ??m", "Chm", "Tm", "??", "H?ng", "Cam", "Vng", "Xanh L", "Xanh Mng Kt", "Xm", "Nu", "Be", "Nhi?u Mu"];
+const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ngy", "Th? Thao", "Ti?c Tng", "Du L?ch", "T?i Gi?n", "Cng S?"];
 
 export function AddClothing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialZoneId = searchParams.get("zoneId");
   const location = useLocation();
-  const navState = location.state as { prefillDetection?: any; previewImage?: string; sourceFile?: File } | null;
+  const navState = location.state as { prefillDetection?: any; previewImage?: string; sourceFile?: File; imageId?: string } | null;
 
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingAiRef = useRef<{
@@ -143,6 +143,7 @@ export function AddClothing() {
     if (!navState?.prefillDetection) return;
     if (navState.previewImage) setPreview(navState.previewImage);
     if (navState.sourceFile) setSelectedFile(navState.sourceFile);
+    if (navState.imageId) setUploadedImageId(navState.imageId);
     const primary = navState.prefillDetection;
     const colorLabel = primary.colorLabel || primary.color?.name || '';
     const styleLabel = primary.style || '';
@@ -239,6 +240,17 @@ export function AddClothing() {
     }
     setSubmitting(true);
     try {
+      let finalImageId: string | undefined = uploadedImageId || undefined;
+
+      // 1. Upload ảnh lên Storage Service (nếu chưa upload, vd up thẳng từ AddClothing)
+      if (!finalImageId && selectedFile) {
+        toast.loading("Đang tải ảnh lên...", { id: "upload-toast" });
+        const uploadResult = await storageService.upload(selectedFile);
+        finalImageId = uploadResult.id;
+        toast.success("Tải ảnh thành công!", { id: "upload-toast" });
+      }
+
+      // 2. Lưu vật phẩm vào DB của Wardrobe Service
       await clothingItemApi.create({
         itemName: form.itemName,
         categoryId: form.categoryId || undefined,
@@ -246,14 +258,21 @@ export function AddClothing() {
         dominantColor: form.dominantColor || undefined,
         style: form.style || undefined,
         confidenceScore: form.confidenceScore,
-        imageId: undefined as string | undefined,
+        imageId: finalImageId,
       });
+
+      // 3. Confirm ảnh (status: DONE)
+      if (finalImageId) {
+        await storageService.confirmImage(finalImageId);
+      }
+
       toast.success("Đã thêm vật phẩm vào tủ đồ!");
       setTimeout(() => {
         if (initialZoneId) navigate(`/app/wardrobe/items?zoneId=${initialZoneId}`);
         else navigate("/app/wardrobe");
       }, 600);
     } catch (err: any) {
+      toast.dismiss("upload-toast");
       toast.error(err?.response?.data?.message ?? "Thêm thất bại, vui lòng thử lại");
     } finally {
       setSubmitting(false);

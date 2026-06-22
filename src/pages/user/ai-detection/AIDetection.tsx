@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { ManualCropOverlay } from "../../../components/ai/ManualCropOverlay";
 import { aiService, LowConfidenceDetectionError } from "../../../services/aiService";
+import { storageService } from "../../../services/storageService";
 import type { AIDetectionViewResult } from "../../../types/ai";
 import { SUPPORTED_CATEGORY_NAMES_VI } from "../../../utils/aiMappings";
 import {
@@ -47,6 +48,7 @@ export function AIDetection() {
   const [lowConfidence, setLowConfidence] = useState<number | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [cropArea, setCropArea] = useState<NormalizedCrop>(DEFAULT_CROP);
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
 
   const updateImageLayout = useCallback(() => {
     const container = previewContainerRef.current;
@@ -115,9 +117,10 @@ export function AIDetection() {
     setDetectionWarning(null);
     setLowConfidence(null);
     setCropArea(DEFAULT_CROP);
+    setUploadedImageId(null);
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     resetPreview();
     setSourceFile(file);
     setPreview(URL.createObjectURL(file));
@@ -125,6 +128,15 @@ export function AIDetection() {
     setDetectionWarning(null);
     setLowConfidence(null);
     setCropArea(DEFAULT_CROP);
+
+    try {
+      toast.loading("Đang tải ảnh lên (tạm thời)...", { id: "upload-ai-toast" });
+      const uploadResult = await storageService.upload(file);
+      setUploadedImageId(uploadResult.id);
+      toast.success("Tải ảnh lên thành công", { id: "upload-ai-toast" });
+    } catch (e) {
+      toast.error("Tải ảnh lên thất bại", { id: "upload-ai-toast" });
+    }
   };
 
   const runDetection = async () => {
@@ -699,7 +711,8 @@ export function AIDetection() {
                   state: { 
                     prefillDetection: result, 
                     previewImage: preview, 
-                    sourceFile: sourceFile 
+                    sourceFile: sourceFile,
+                    imageId: uploadedImageId
                   } 
                 })}
                 style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}

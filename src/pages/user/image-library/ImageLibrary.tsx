@@ -61,16 +61,31 @@ export function ImageLibrary() {
     });
   };
 
-  const deleteSelected = () => {
-    setImages((prev) => prev.filter((img) => !selected.has(img.id)));
-    toast.success(`Đã xóa ${selected.size} hình ảnh`);
-    setSelected(new Set());
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    toast.loading("Đang xóa hình ảnh...", { id: "delete-toast" });
+    try {
+      const ids = Array.from(selected);
+      await Promise.allSettled(ids.map(id => storageService.remove(id)));
+      
+      setImages((prev) => prev.filter((img) => !selected.has(img.id)));
+      toast.success(`Đã xóa ${selected.size} hình ảnh`, { id: "delete-toast" });
+      setSelected(new Set());
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi xóa hình ảnh", { id: "delete-toast" });
+    }
   };
 
-  const deleteSingle = (id: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== id));
-    toast.success("Đã xóa hình ảnh");
-    if (preview?.id === id) setPreview(null);
+  const deleteSingle = async (id: string) => {
+    toast.loading("Đang xóa...", { id: "delete-single-toast" });
+    try {
+      await storageService.remove(id);
+      setImages((prev) => prev.filter((img) => img.id !== id));
+      toast.success("Đã xóa hình ảnh", { id: "delete-single-toast" });
+      if (preview?.id === id) setPreview(null);
+    } catch (error: any) {
+      toast.error(error?.response?.data || "Không thể xóa hình ảnh này", { id: "delete-single-toast" });
+    }
   };
 
   const totalSize = images.reduce((sum, img) => sum + parseFloat(img.size), 0).toFixed(1);
