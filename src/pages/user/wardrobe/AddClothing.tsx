@@ -62,6 +62,7 @@ export function AddClothing() {
     style: string;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
 
   // Real data from API
   const [categories, setCategories] = useState<Category[]>([]);
@@ -141,9 +142,15 @@ export function AddClothing() {
   // Apply AI detection data from navigation state
   useEffect(() => {
     if (!navState?.prefillDetection) return;
-    if (navState.previewImage) setPreview(navState.previewImage);
+    
+    if (navState.imageId) {
+      setPreview(`http://localhost:8080/api/v1/storage/files/${navState.imageId}`);
+      setUploadedImageId(navState.imageId);
+    } else if (navState.previewImage) {
+      setPreview(navState.previewImage);
+    }
+    
     if (navState.sourceFile) setSelectedFile(navState.sourceFile);
-    if (navState.imageId) setUploadedImageId(navState.imageId);
     const primary = navState.prefillDetection;
     const colorLabel = primary.colorLabel || primary.color?.name || '';
     const styleLabel = primary.style || '';
@@ -238,6 +245,10 @@ export function AddClothing() {
       toast.error("Vui lòng nhập tên vật phẩm");
       return;
     }
+    if (!form.zoneId) {
+      toast.error("Vui lòng chọn Tủ Đồ và Ngăn Kéo để lưu vật phẩm");
+      return;
+    }
     setSubmitting(true);
     try {
       let finalImageId: string | undefined = uploadedImageId || undefined;
@@ -267,6 +278,9 @@ export function AddClothing() {
       }
 
       toast.success("Đã thêm vật phẩm vào tủ đồ!");
+      // Reset AI detection state sau khi lưu thành công
+      sessionStorage.removeItem("ai_detection_image_id");
+      sessionStorage.removeItem("ai_detection_result");
       setTimeout(() => {
         if (initialZoneId) navigate(`/app/wardrobe/items?zoneId=${initialZoneId}`);
         else navigate("/app/wardrobe");
@@ -506,7 +520,7 @@ export function AddClothing() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: submitting ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: submitting ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: submitting ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: submitting ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
                   {submitting ? (
                     <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang lưu...</>
