@@ -195,7 +195,7 @@ export function AIDetection() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header Banner */}
-      <div style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", borderRadius: 20, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", borderRadius: 20, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <Cpu size={18} color="rgba(255,255,255,0.8)" />
@@ -258,8 +258,8 @@ export function AIDetection() {
               onDrop={handleDrop}
               onClick={() => !preview && fileRef.current?.click()}
               style={{
-                borderRadius: 16, border: `2px dashed ${dragOver ? "#4F46E5" : "#C7D2FE"}`,
-                background: dragOver ? "#EEF2FF" : "#F8FAFC",
+                borderRadius: 16, border: `2px dashed ${dragOver ? "#EA580C" : "#FED7AA"}`,
+                background: dragOver ? "#FFF7ED" : "#F8FAFC",
                 cursor: preview ? "default" : "pointer",
                 transition: "all 0.2s",
                 position: "relative",
@@ -324,7 +324,7 @@ export function AIDetection() {
                         top: imageLayout.offsetY,
                         width: imageLayout.displayWidth,
                         height: imageLayout.displayHeight,
-                        background: "rgba(79,70,229,0.85)",
+                        background: "rgba(234,88,12,0.85)",
                         borderRadius: 14,
                         display: "flex",
                         flexDirection: "column",
@@ -398,8 +398,8 @@ export function AIDetection() {
                 </div>
               ) : (
                 <div style={{ textAlign: "center", padding: 40 }}>
-                  <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg, #EEF2FF, #F5F3FF)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                    <Cpu size={28} color="#4F46E5" />
+                  <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg, #FFF7ED, #FFF7ED)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                    <Cpu size={28} color="#EA580C" />
                   </div>
 
                   <p style={{ fontWeight: 700, color: "#0F172A", marginBottom: 6 }}>
@@ -412,7 +412,7 @@ export function AIDetection() {
 
                   <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
                     {["JPG", "PNG", "WEBP"].map((fmt) => (
-                      <span key={fmt} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{fmt}</span>
+                      <span key={fmt} style={{ background: "#FFF7ED", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{fmt}</span>
                     ))}
                   </div>
                 </div>
@@ -431,7 +431,7 @@ export function AIDetection() {
             />
 
             {!preview ? (
-              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <Upload size={16} />
                 Tải Lên Hình Ảnh
               </button>
@@ -449,8 +449,8 @@ export function AIDetection() {
                     borderRadius: 12,
                     border: "none",
                     background: detecting
-                      ? "#A5B4FC"
-                      : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+                      ? "#FDBA74"
+                      : "linear-gradient(135deg, #EA580C, #F97316)",
                     color: "white",
                     fontWeight: 700,
                     cursor: detecting ? "default" : "pointer",
@@ -475,9 +475,9 @@ export function AIDetection() {
                       width: "100%",
                       padding: "10px",
                       borderRadius: 12,
-                      border: "1.5px solid #C7D2FE",
+                      border: "1.5px solid #FED7AA",
                       background: "white",
-                      color: "#4F46E5",
+                      color: "#EA580C",
                       fontWeight: 600,
                       cursor: "pointer",
                       fontSize: "0.85rem",
@@ -702,7 +702,7 @@ export function AIDetection() {
                     sourceFile: sourceFile 
                   } 
                 })}
-                style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               >
                 Thêm Vào Tủ Đồ
                 <ChevronRight size={16} />

@@ -59,8 +59,8 @@ export function Login() {
     boxSizing: "border-box",
   };
   const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "#4F46E5";
-    e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.12)";
+    e.target.style.borderColor = "#EA580C";
+    e.target.style.boxShadow = "0 0 0 3px rgba(234,88,12,0.12)";
   };
   const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.style.borderColor = "#E2E8F0";
@@ -262,7 +262,7 @@ export function Login() {
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              style={{ accentColor: "#4F46E5", width: 15, height: 15 }}
+              style={{ accentColor: "#EA580C", width: 15, height: 15 }}
             />
             Ghi nhớ đăng nhập
           </label>
@@ -271,7 +271,7 @@ export function Login() {
             onClick={() => navigate("/forgot-password")}
             style={{
               fontSize: "0.83rem",
-              color: "#4F46E5",
+              color: "#EA580C",
               fontWeight: 600,
               background: "none",
               border: "none",
@@ -293,13 +293,13 @@ export function Login() {
             border: "none",
             cursor: loading ? "default" : "pointer",
             background: loading
-              ? "#A5B4FC"
-              : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+              ? "#FDBA74"
+              : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white",
             fontWeight: 700,
             fontSize: "0.95rem",
             marginTop: 2,
-            boxShadow: "0 8px 20px rgba(79,70,229,0.25)",
+            boxShadow: "0 8px 20px rgba(234,88,12,0.25)",
             transition: "opacity 0.2s, transform 0.1s",
           }}
           onMouseEnter={(e) => {
@@ -325,7 +325,7 @@ export function Login() {
         <button
           onClick={() => navigate("/register")}
           style={{
-            color: "#4F46E5",
+            color: "#EA580C",
             fontWeight: 700,
             background: "none",
             border: "none",
