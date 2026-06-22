@@ -48,10 +48,17 @@ export function ClothingDetail() {
   }, [id]);
 
   const handleDelete = async () => {
-    // mock delete
-    toast.success("Đã xóa vật phẩm khỏi tủ đồ");
-    navigate("/app/wardrobe");
+    if (!id) return;
+    if (!window.confirm("Bạn có chắc muốn xóa vật phẩm này không?")) return;
+    try {
+      await clothingItemApi.delete(id);
+      toast.success("Đã xóa vật phẩm khỏi tủ đồ");
+      navigate(-1);
+    } catch {
+      toast.error("Xóa thất bại, vui lòng thử lại");
+    }
   };
+
 
   const getImageUrl = (imgId?: string) => {
     if (!imgId) return "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=600&h=700&fit=crop";

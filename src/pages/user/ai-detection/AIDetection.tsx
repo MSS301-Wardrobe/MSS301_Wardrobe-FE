@@ -38,17 +38,30 @@ export function AIDetection() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const previewImageRef = useRef<HTMLImageElement>(null);
 
+  const SESSION_KEY_IMG_ID = "ai_detection_image_id";
+  const SESSION_KEY_RESULT = "ai_detection_result";
+
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [detecting, setDetecting] = useState(false);
-  const [result, setResult] = useState<AIDetectionViewResult | null>(null);
+  const [result, setResult] = useState<AIDetectionViewResult | null>(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY_RESULT);
+      return saved ? (JSON.parse(saved) as AIDetectionViewResult) : null;
+    } catch {
+      return null;
+    }
+  });
   const [progress, setProgress] = useState(0);
   const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
   const [detectionWarning, setDetectionWarning] = useState<string | null>(null);
   const [lowConfidence, setLowConfidence] = useState<number | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [cropArea, setCropArea] = useState<NormalizedCrop>(DEFAULT_CROP);
-  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(
+    () => sessionStorage.getItem(SESSION_KEY_IMG_ID)
+  );
+
 
   const updateImageLayout = useCallback(() => {
     const container = previewContainerRef.current;
@@ -105,6 +118,27 @@ export function AIDetection() {
     }
   }, [result, updateImageLayout]);
 
+  // Khi khôi phục từ sessionStorage: lấy pre-signed URL rồi fetch blob để tạo lại sourceFile
+  useEffect(() => {
+    if (uploadedImageId && !sourceFile) {
+      storageService.getPresignedUrl(uploadedImageId)
+        .then((presignedUrl) => {
+          setPreview(presignedUrl);
+          // Fetch blob từ S3 URL công khai để tạo lại File object cho cropImageFile
+          return fetch(presignedUrl)
+            .then((r) => r.blob())
+            .then((blob) => {
+              setSourceFile(new File([blob], "restored-image.jpg", { type: blob.type || "image/jpeg" }));
+            });
+        })
+        .catch(() => {
+          sessionStorage.removeItem(SESSION_KEY_IMG_ID);
+          sessionStorage.removeItem(SESSION_KEY_RESULT);
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploadedImageId]);
+
   const resetPreview = () => {
     if (preview?.startsWith("blob:")) {
       URL.revokeObjectURL(preview);
@@ -118,6 +152,8 @@ export function AIDetection() {
     setLowConfidence(null);
     setCropArea(DEFAULT_CROP);
     setUploadedImageId(null);
+    sessionStorage.removeItem(SESSION_KEY_IMG_ID);
+    sessionStorage.removeItem(SESSION_KEY_RESULT);
   };
 
   const handleFile = async (file: File) => {
@@ -133,6 +169,11 @@ export function AIDetection() {
       toast.loading("Đang tải ảnh lên (tạm thời)...", { id: "upload-ai-toast" });
       const uploadResult = await storageService.upload(file);
       setUploadedImageId(uploadResult.id);
+      // Lưu imageId vào sessionStorage để giữ state khi chuyển tab
+      sessionStorage.setItem(SESSION_KEY_IMG_ID, uploadResult.id);
+      // Lấy pre-signed URL để hiển thị preview (không dùng XHR, tránh CORS)
+      const presignedUrl = await storageService.getPresignedUrl(uploadResult.id);
+      setPreview(presignedUrl);
       toast.success("Tải ảnh lên thành công", { id: "upload-ai-toast" });
     } catch (e) {
       toast.error("Tải ảnh lên thất bại", { id: "upload-ai-toast" });
@@ -160,6 +201,8 @@ export function AIDetection() {
       const detectionResult = await aiService.detectForView(croppedFile);
       setProgress(100);
       setResult(detectionResult);
+      // Lưu kết quả AI vào sessionStorage để giữ khi chuyển tab
+      sessionStorage.setItem(SESSION_KEY_RESULT, JSON.stringify(detectionResult));
 
       toast.success(
         `Nhận diện hoàn tất! Độ tin cậy ${detectionResult.confidence}%`
@@ -707,13 +750,13 @@ export function AIDetection() {
               </div>
 
               <button
-                onClick={() => navigate("/app/wardrobe/add", { 
-                  state: { 
-                    prefillDetection: result, 
-                    previewImage: preview, 
+                onClick={() => navigate("/app/wardrobe/add", {
+                  state: {
+                    prefillDetection: result,
+                    previewImage: preview,
                     sourceFile: sourceFile,
                     imageId: uploadedImageId
-                  } 
+                  }
                 })}
                 style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               >
