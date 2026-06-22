@@ -19,6 +19,11 @@ export const storageService = {
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/storage/images/${id}`);
   },
+
+  async confirmImage(id: string): Promise<UploadResult> {
+    const { data } = await apiClient.patch<UploadResult>(`/storage/images/${id}/confirm`);
+    return data;
+  },
 };
 
 export default storageService;
