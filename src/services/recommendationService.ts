@@ -1,18 +1,26 @@
 import { apiClient } from "./apiClient";
-import type { Recommendation, RecommendationQuery } from "../types/recommendation";
+import type { Recommendation } from "../types/recommendation";
 
-// Placeholder recommendation service. Wire these to the real backend later.
 export const recommendationService = {
-  async getRecommendations(query?: RecommendationQuery): Promise<Recommendation[]> {
-    // const { data } = await apiClient.get<Recommendation[]>("/recommendations", { params: query });
-    // return data;
-    return Promise.resolve([]);
+  // Lấy toàn bộ danh sách gợi ý của 1 User
+  async getAllRecommendations(userId: string): Promise<Recommendation[]> {
+    const response = await apiClient.get(`/recommendations/user/${userId}`);
+    return response.data.data;
   },
-  async getRecommendation(id: string): Promise<Recommendation | void> {
-    // const { data } = await apiClient.get<Recommendation>(`/recommendations/${id}`);
-    // return data;
-    return Promise.resolve();
+
+  // Lấy chi tiết 1 gợi ý khi click vào Card
+  async getRecommendationDetail(id: string): Promise<Recommendation> {
+    const response = await apiClient.get(`/recommendations/${id}`);
+    return response.data.data;
   },
+
+  // Gợi ý cá nhân (Content-Based)
+  async generatePersonal(userId: string): Promise<Recommendation> {
+    const response = await apiClient.get(`/recommendations/generate/personal`, {
+      params: { userId }
+    });
+    return response.data.data;
+  }
 };
 
 export default recommendationService;
