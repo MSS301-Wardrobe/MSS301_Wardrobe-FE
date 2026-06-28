@@ -4,6 +4,8 @@ import { useNavigate } from "react-router";
 import { recommendationService } from "../../../services/recommendationService";
 import { useAuth } from "../../../hooks/useAuth";
 import type { Recommendation } from "../../../types/recommendation";
+// ĐÃ CẬP NHẬT: Import hàm dynamic URL từ file vừa tạo
+import { getDynamicOutfitImage } from "../../../utils/imageHelpers";
 
 const OCCASIONS = [
   { id: "All", label: "Tất Cả" },
@@ -13,8 +15,6 @@ const OCCASIONS = [
   { id: "Wedding", label: "Đám Cưới" },
   { id: "Travel", label: "Du Lịch" }
 ];
-
-const DEFAULT_IMG = "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=400&h=480&fit=crop";
 
 export function OutfitRecommendation() {
   const navigate = useNavigate();
@@ -68,7 +68,6 @@ export function OutfitRecommendation() {
       return;
     }
 
-    // Kiểm tra nếu đang ở tab Sự Kiện và chọn "Tất Cả" mà không chỉ định loại cụ thể
     if (activeRecType === 'event' && activeTab === 'All' && !specificEvent) {
       setShowEventModal(true);
       return;
@@ -100,7 +99,6 @@ export function OutfitRecommendation() {
 
   const filtered = outfits.filter((o) => {
     const name = o.outfit?.outfitName || "";
-
     const isPersonal = name.includes("Cá Nhân");
     const isGroup = name.includes("Nhóm");
     const isEvent = !isPersonal && !isGroup;
@@ -142,11 +140,10 @@ export function OutfitRecommendation() {
             </div>
         )}
 
-        {/* POPUP SELECTION CHỌN SỰ KIỆN KHI Ở TAB TẤT CẢ */}
         {showEventModal && (
             <div style={{ position: "fixed", zIndex: 100, inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ background: "white", borderRadius: 20, padding: 24, width: "100%", maxWidth: 440, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
-                <div style={{ display: "flex", justifyContent: "between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <h3 style={{ fontWeight: 800, fontSize: "1.1rem", color: "#0F172A" }}>Chọn Loại Sự Kiện Phối Đồ</h3>
                   <button onClick={() => setShowEventModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8" }}><X size={20} /></button>
                 </div>
@@ -232,6 +229,10 @@ export function OutfitRecommendation() {
               {filtered.map((item) => {
                 const outfit = item.outfit;
                 const score = item.recommendationScore ? Math.round(item.recommendationScore * 10) : 0;
+
+                // ĐÃ CẬP NHẬT: Gọi hàm từ imageHelpers bóc tách theo ID
+                const dynamicCoverImg = getDynamicOutfitImage(item.recommendationId, outfit?.outfitName, item.eventType);
+
                 return (
                     <div
                         key={item.recommendationId}
@@ -239,7 +240,7 @@ export function OutfitRecommendation() {
                         style={{ background: "white", borderRadius: 20, overflow: "hidden", border: "1px solid #E2E8F0", cursor: "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                     >
                       <div style={{ position: "relative" }}>
-                        <img src={outfit?.img || DEFAULT_IMG} alt={outfit?.outfitName} style={{ width: "100%", height: 260, objectFit: "cover" }} />
+                        <img src={outfit?.img || dynamicCoverImg} alt={outfit?.outfitName} style={{ width: "100%", height: 260, objectFit: "cover" }} />
                         <div style={{ position: "absolute", top: 12, left: 12, display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.95)", borderRadius: 20, padding: "4px 12px" }}>
                           <Star size={12} fill="#F59E0B" color="#F59E0B" />
                           <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0F172A" }}>{score}% phù hợp</span>
