@@ -1,50 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { toast } from "sonner";
 import { AuthLayout } from "../../components/layout/AuthLayout";
-import { authService } from "../../services/authService";
-import { useAuthContext } from "../../app/providers/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 
 export function Login() {
   const navigate = useNavigate();
+  const { login, isLoginLoading } = useAuth();
   const [showPw, setShowPw] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const { setUser } = useAuthContext();
 
-  const getUserRole = (user: any) => {
-    return user.roles?.[0]?.roleName ?? user.role ?? "ROLE_USER";
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      setLoading(true);
-
-      const user = await authService.login(email.trim(), password);
-
-      setUser(user);
-
-      toast.success("Đăng nhập thành công");
-
-      const role = getUserRole(user);
-
-      if (role === "ROLE_ADMIN" || role === "ADMIN") {
-        navigate("/admin/dashboard", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || err.message || "Đăng nhập thất bại",
-      );
-    } finally {
-      setLoading(false);
-    }
+    login({ email: email.trim(), password });
   };
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -59,8 +29,8 @@ export function Login() {
     boxSizing: "border-box",
   };
   const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "#4F46E5";
-    e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.12)";
+    e.target.style.borderColor = "#EA580C";
+    e.target.style.boxShadow = "0 0 0 3px rgba(234,88,12,0.12)";
   };
   const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.style.borderColor = "#E2E8F0";
@@ -262,7 +232,7 @@ export function Login() {
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              style={{ accentColor: "#4F46E5", width: 15, height: 15 }}
+              style={{ accentColor: "#EA580C", width: 15, height: 15 }}
             />
             Ghi nhớ đăng nhập
           </label>
@@ -271,7 +241,7 @@ export function Login() {
             onClick={() => navigate("/forgot-password")}
             style={{
               fontSize: "0.83rem",
-              color: "#4F46E5",
+              color: "#EA580C",
               fontWeight: 600,
               background: "none",
               border: "none",
@@ -285,31 +255,31 @@ export function Login() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={isLoginLoading}
           style={{
             width: "100%",
             padding: "13px 20px",
             borderRadius: 12,
             border: "none",
-            cursor: loading ? "default" : "pointer",
-            background: loading
-              ? "#A5B4FC"
-              : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+            cursor: isLoginLoading ? "default" : "pointer",
+            background: isLoginLoading
+              ? "#FDBA74"
+              : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white",
             fontWeight: 700,
             fontSize: "0.95rem",
             marginTop: 2,
-            boxShadow: "0 8px 20px rgba(79,70,229,0.25)",
+            boxShadow: "0 8px 20px rgba(234,88,12,0.25)",
             transition: "opacity 0.2s, transform 0.1s",
           }}
           onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.opacity = "0.92";
+            if (!isLoginLoading) e.currentTarget.style.opacity = "0.92";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.opacity = "1";
           }}
         >
-          {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
+          {isLoginLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
         </button>
       </form>
 
@@ -325,7 +295,7 @@ export function Login() {
         <button
           onClick={() => navigate("/register")}
           style={{
-            color: "#4F46E5",
+            color: "#EA580C",
             fontWeight: 700,
             background: "none",
             border: "none",

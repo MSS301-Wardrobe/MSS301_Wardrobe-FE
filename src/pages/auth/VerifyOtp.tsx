@@ -99,7 +99,7 @@ export function VerifyOtp() {
   return (
     <AuthLayout>
       <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <MailCheck size={42} color="#4F46E5" style={{ marginBottom: 10 }} />
+        <MailCheck size={42} color="#EA580C" style={{ marginBottom: 10 }} />
         <h1 style={{ fontSize: "1.55rem", fontWeight: 800, color: "#0F172A" }}>
           Xác Thực Email
         </h1>
@@ -148,7 +148,7 @@ export function VerifyOtp() {
             padding: "13px 20px",
             borderRadius: 12,
             border: "none",
-            background: loading ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+            background: loading ? "#A5B4FC" : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white",
             fontWeight: 700,
             fontSize: "0.95rem",
@@ -168,7 +168,7 @@ export function VerifyOtp() {
           marginTop: 14,
           background: "none",
           border: "none",
-          color: "#4F46E5",
+          color: "#EA580C",
           fontWeight: 700,
           cursor: resending ? "default" : "pointer",
         }}
@@ -181,7 +181,7 @@ export function VerifyOtp() {
         <button
           onClick={() => navigate("/login")}
           style={{
-            color: "#4F46E5",
+            color: "#EA580C",
             fontWeight: 700,
             background: "none",
             border: "none",

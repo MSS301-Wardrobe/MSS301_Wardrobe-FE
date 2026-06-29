@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { ArrowLeft, Upload, X, Cpu, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -8,8 +8,10 @@ import {
   ensureAiCategoryCatalog,
   resolveCategoryFromAi,
   wardrobeZoneApi,
+  wardrobeApi,
 } from "../../../services/wardrobeService";
 import { aiService } from "../../../services/aiService";
+import { storageService } from "../../../services/storageService";
 import {
   mapAiStyleToFormStyle,
   translateBaseColor,
@@ -30,13 +32,15 @@ const inputStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-const colors = ["?en", "Tr?ng", "Xanh ??m", "Ch�m", "T�m", "??", "H?ng", "Cam", "V�ng", "Xanh L�", "Xanh M�ng K�t", "X�m", "N�u", "Be", "Nhi?u M�u"];
-const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ng�y", "Th? Thao", "Ti?c T�ng", "Du L?ch", "T?i Gi?n", "C�ng S?"];
+const colors = ["?en", "Tr?ng", "Xanh ??m", "Chm", "Tm", "??", "H?ng", "Cam", "Vng", "Xanh L", "Xanh Mng Kt", "Xm", "Nu", "Be", "Nhi?u Mu"];
+const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ngy", "Th? Thao", "Ti?c Tng", "Du L?ch", "T?i Gi?n", "Cng S?"];
 
 export function AddClothing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialZoneId = searchParams.get("zoneId");
+  const location = useLocation();
+  const navState = location.state as { prefillDetection?: any; previewImage?: string; sourceFile?: File; imageId?: string } | null;
 
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingAiRef = useRef<{
@@ -58,14 +62,17 @@ export function AddClothing() {
     style: string;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
 
   // Real data from API
   const [categories, setCategories] = useState<Category[]>([]);
+  const [wardrobes, setWardrobes] = useState<any[]>([]);
   const [zones, setZones] = useState<WardrobeZone[]>([]);
 
   const [form, setForm] = useState({
     itemName: "",
     categoryId: "",
+    wardrobeId: "",
     zoneId: initialZoneId || "",
     dominantColor: "",
     style: "",
@@ -111,19 +118,53 @@ export function AddClothing() {
   useEffect(() => {
     const fetchMeta = async () => {
       try {
-        const [cats, zns] = await Promise.all([
+        const [cats, zns, wrdbs] = await Promise.all([
           categoryApi.getAll(),
-          wardrobeZoneApi.getAll(), // Fetch all zones to match ID with name, but dropdown will be disabled
+          wardrobeZoneApi.getAll(),
+          wardrobeApi.getAll(),
         ]);
         const syncedCategories = await ensureAiCategoryCatalog(cats);
         setCategories(syncedCategories);
         setZones(zns);
+        setWardrobes(wrdbs);
+        if (initialZoneId) {
+          const foundZone = zns.find((z: WardrobeZone) => z.zoneId === initialZoneId);
+          if (foundZone) setForm(prev => ({ ...prev, wardrobeId: (foundZone as any).wardrobeId || '' }));
+        }
       } catch {
         toast.error("Không thể tải danh mục và ngăn kéo");
       }
     };
     fetchMeta();
   }, []);
+
+
+  // Apply AI detection data from navigation state
+  useEffect(() => {
+    if (!navState?.prefillDetection) return;
+    
+    if (navState.imageId) {
+      setPreview(`http://localhost:8080/api/v1/storage/files/${navState.imageId}`);
+      setUploadedImageId(navState.imageId);
+    } else if (navState.previewImage) {
+      setPreview(navState.previewImage);
+    }
+    
+    if (navState.sourceFile) setSelectedFile(navState.sourceFile);
+    const primary = navState.prefillDetection;
+    const colorLabel = primary.colorLabel || primary.color?.name || '';
+    const styleLabel = primary.style || '';
+    const formStyle = mapAiStyleToFormStyle(styleLabel);
+    const catName = primary.category || '';
+    const confValue = typeof primary.confidence === 'number'
+      ? (primary.confidence > 1 ? primary.confidence / 100 : primary.confidence)
+      : 0;
+    setAiResult({ categoryName: catName, confidence: confValue, color: colorLabel, style: styleLabel });
+    const detection = { classKey: primary.class_name || '', categoryName: catName, color: colorLabel, formStyle, confidence: confValue };
+    pendingAiRef.current = detection;
+    setForm(f => ({ ...f, dominantColor: colorLabel, style: styleLabel, confidenceScore: confValue }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navState]);
 
   useEffect(() => {
     if (pendingAiRef.current) {
@@ -204,8 +245,23 @@ export function AddClothing() {
       toast.error("Vui lòng nhập tên vật phẩm");
       return;
     }
+    if (!form.zoneId) {
+      toast.error("Vui lòng chọn Tủ Đồ và Ngăn Kéo để lưu vật phẩm");
+      return;
+    }
     setSubmitting(true);
     try {
+      let finalImageId: string | undefined = uploadedImageId || undefined;
+
+      // 1. Upload ảnh lên Storage Service (nếu chưa upload, vd up thẳng từ AddClothing)
+      if (!finalImageId && selectedFile) {
+        toast.loading("Đang tải ảnh lên...", { id: "upload-toast" });
+        const uploadResult = await storageService.upload(selectedFile);
+        finalImageId = uploadResult.id;
+        toast.success("Tải ảnh thành công!", { id: "upload-toast" });
+      }
+
+      // 2. Lưu vật phẩm vào DB của Wardrobe Service
       await clothingItemApi.create({
         itemName: form.itemName,
         categoryId: form.categoryId || undefined,
@@ -213,14 +269,24 @@ export function AddClothing() {
         dominantColor: form.dominantColor || undefined,
         style: form.style || undefined,
         confidenceScore: form.confidenceScore,
-        // imageId would come from storage-service upload in a full flow
+        imageId: finalImageId,
       });
+
+      // 3. Confirm ảnh (status: DONE)
+      if (finalImageId) {
+        await storageService.confirmImage(finalImageId);
+      }
+
       toast.success("Đã thêm vật phẩm vào tủ đồ!");
+      // Reset AI detection state sau khi lưu thành công
+      sessionStorage.removeItem("ai_detection_image_id");
+      sessionStorage.removeItem("ai_detection_result");
       setTimeout(() => {
         if (initialZoneId) navigate(`/app/wardrobe/items?zoneId=${initialZoneId}`);
         else navigate("/app/wardrobe");
       }, 600);
     } catch (err: any) {
+      toast.dismiss("upload-toast");
       toast.error(err?.response?.data?.message ?? "Thêm thất bại, vui lòng thử lại");
     } finally {
       setSubmitting(false);
@@ -255,8 +321,8 @@ export function AddClothing() {
                 onDrop={handleDrop}
                 onClick={() => !preview && fileRef.current?.click()}
                 style={{
-                  borderRadius: 16, border: `2px dashed ${dragOver ? "#4F46E5" : preview ? "#E2E8F0" : "#C7D2FE"}`,
-                  background: dragOver ? "#EEF2FF" : "#F8FAFC",
+                  borderRadius: 16, border: `2px dashed ${dragOver ? "#EA580C" : preview ? "#E2E8F0" : "#C7D2FE"}`,
+                  background: dragOver ? "#FFEDD5" : "#F8FAFC",
                   cursor: preview ? "default" : "pointer",
                   transition: "all 0.2s", position: "relative", overflow: "hidden",
                   minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center",
@@ -273,7 +339,7 @@ export function AddClothing() {
                       <X size={14} color="white" />
                     </button>
                     {aiDetecting && (
-                      <div style={{ position: "absolute", inset: 0, background: "rgba(79,70,229,0.7)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ position: "absolute", inset: 0, background: "rgba(234,88,12,0.7)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                         <div style={{ width: 40, height: 40, border: "3px solid rgba(255,255,255,0.3)", borderTop: "3px solid white", borderRadius: "50%", animation: "spin 1s linear infinite", marginBottom: 12 }} />
                         <p style={{ color: "white", fontWeight: 600, fontSize: "0.9rem" }}>Đang Nhận Diện AI...</p>
                       </div>
@@ -281,8 +347,8 @@ export function AddClothing() {
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: 32 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                      <Upload size={24} color="#4F46E5" />
+                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                      <Upload size={24} color="#EA580C" />
                     </div>
                     <p style={{ fontWeight: 600, color: "#0F172A", marginBottom: 6 }}>Thả ảnh vào đây</p>
                     <p style={{ fontSize: "0.8rem", color: "#64748B", marginBottom: 16 }}>hoặc nhấn để duyệt</p>
@@ -371,17 +437,33 @@ export function AddClothing() {
                 </select>
               </div>
 
-              {/* Zone */}
+              {/* Wardrobe */}
               <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Ngăn Kéo</label>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Tu Do</label>
                 <select
-                  value={form.zoneId}
-                  onChange={(e) => setForm({ ...form, zoneId: e.target.value })}
+                  value={form.wardrobeId}
+                  onChange={(e) => setForm({ ...form, wardrobeId: e.target.value, zoneId: "" })}
                   style={{ ...inputStyle, cursor: initialZoneId ? "not-allowed" : "pointer", background: initialZoneId ? "#F8FAFC" : "white" }}
                   disabled={!!initialZoneId}
                 >
-                  <option value="">Chọn ngăn kéo</option>
-                  {zones.map((z) => (
+                  <option value="">Chon tu do</option>
+                  {wardrobes.map((w: any) => (
+                    <option key={w.wardrobeId} value={w.wardrobeId}>{w.wardrobeName}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Zone */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Ngan Keo</label>
+                <select
+                  value={form.zoneId}
+                  onChange={(e) => setForm({ ...form, zoneId: e.target.value })}
+                  style={{ ...inputStyle, cursor: (!form.wardrobeId && !initialZoneId) ? "not-allowed" : "pointer", background: (!form.wardrobeId && !initialZoneId) ? "#F8FAFC" : "white" }}
+                  disabled={!form.wardrobeId && !initialZoneId}
+                >
+                  <option value="">Chon ngan keo</option>
+                  {zones.filter((z: any) => !form.wardrobeId || z.wardrobeId === form.wardrobeId).map((z) => (
                     <option key={z.zoneId} value={z.zoneId}>{z.zoneName}</option>
                   ))}
                 </select>
@@ -390,30 +472,28 @@ export function AddClothing() {
               {/* Color + Style */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Màu Chủ Đạo</label>
-                  <select
+                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Mau Chu Dao</label>
+                  <input
+                    type="text"
                     value={form.dominantColor}
                     onChange={(e) => setForm({ ...form, dominantColor: e.target.value })}
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                  >
-                    <option value="">Chọn màu</option>
-                    {colors.map((c) => <option key={c}>{c}</option>)}
-                  </select>
+                    placeholder="Vd: Xam"
+                    style={{ ...inputStyle, background: form.dominantColor ? "#F0FDF4" : "white" }}
+                  />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Phong Cách</label>
-                  <select
+                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Phong Cach</label>
+                  <input
+                    type="text"
                     value={form.style}
                     onChange={(e) => setForm({ ...form, style: e.target.value })}
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                  >
-                    <option value="">Chọn phong cách</option>
-                    {styles.map((s) => <option key={s}>{s}</option>)}
-                  </select>
+                    placeholder="Vd: Thuong ngay"
+                    style={{ ...inputStyle, background: form.style ? "#F0FDF4" : "white" }}
+                  />
                 </div>
               </div>
 
-              {/* Confidence Score */}
+                            {/* Confidence Score */}
               {aiResult && (
                 <div>
                   <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
@@ -440,7 +520,7 @@ export function AddClothing() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: submitting ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: submitting ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: submitting ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: submitting ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
                   {submitting ? (
                     <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang lưu...</>

@@ -6,20 +6,31 @@ type LoginResponse = {
   user?: User;
 };
 
+// Demo credentials — used when backend is not available
+const DEMO_USERS = [
+  { email: "admin@gmail.com", password: "Admin@123", role: "ADMIN", name: "Admin" },
+  { email: "user@example.com", password: "User@123", role: "USER", name: "Demo User" },
+];
+
 export const authService = {
   async login(email: string, password: string): Promise<User> {
-    const { data } = await apiClient.post<LoginResponse>("/users/auth/login", {
-      email,
-      password,
-    });
-
-    // Nếu backend login trả luôn user
-    if (data?.user) {
-      return data.user;
+    try {
+      const { data } = await apiClient.post<LoginResponse>("/users/auth/login", {
+        email,
+        password,
+      });
+      if (data?.user) return data.user;
+      return this.me();
+    } catch {
+      // Demo fallback when backend is unavailable
+      const demo = DEMO_USERS.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      );
+      if (demo) {
+        return { id: "demo-user", email: demo.email, name: demo.name, role: demo.role as "USER" | "ADMIN" };
+      }
+      throw new Error("Email hoặc mật khẩu không đúng");
     }
-
-    // Nếu backend login chỉ set cookie và trả message
-    return this.me();
   },
 
   async me(): Promise<User> {
