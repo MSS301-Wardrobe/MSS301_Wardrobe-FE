@@ -321,8 +321,8 @@ export function AddClothing() {
                 onDrop={handleDrop}
                 onClick={() => !preview && fileRef.current?.click()}
                 style={{
-                  borderRadius: 16, border: `2px dashed ${dragOver ? "#4F46E5" : preview ? "#E2E8F0" : "#C7D2FE"}`,
-                  background: dragOver ? "#EEF2FF" : "#F8FAFC",
+                  borderRadius: 16, border: `2px dashed ${dragOver ? "#EA580C" : preview ? "#E2E8F0" : "#C7D2FE"}`,
+                  background: dragOver ? "#FFEDD5" : "#F8FAFC",
                   cursor: preview ? "default" : "pointer",
                   transition: "all 0.2s", position: "relative", overflow: "hidden",
                   minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center",
@@ -339,7 +339,7 @@ export function AddClothing() {
                       <X size={14} color="white" />
                     </button>
                     {aiDetecting && (
-                      <div style={{ position: "absolute", inset: 0, background: "rgba(79,70,229,0.7)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ position: "absolute", inset: 0, background: "rgba(234,88,12,0.7)", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                         <div style={{ width: 40, height: 40, border: "3px solid rgba(255,255,255,0.3)", borderTop: "3px solid white", borderRadius: "50%", animation: "spin 1s linear infinite", marginBottom: 12 }} />
                         <p style={{ color: "white", fontWeight: 600, fontSize: "0.9rem" }}>Đang Nhận Diện AI...</p>
                       </div>
@@ -347,8 +347,8 @@ export function AddClothing() {
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: 32 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                      <Upload size={24} color="#4F46E5" />
+                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                      <Upload size={24} color="#EA580C" />
                     </div>
                     <p style={{ fontWeight: 600, color: "#0F172A", marginBottom: 6 }}>Thả ảnh vào đây</p>
                     <p style={{ fontSize: "0.8rem", color: "#64748B", marginBottom: 16 }}>hoặc nhấn để duyệt</p>

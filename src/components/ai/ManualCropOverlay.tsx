@@ -129,8 +129,8 @@ export function ManualCropOverlay({
     setDragging(true);
   };
 
-  const borderColor = confirmed ? "#10B981" : "#4F46E5";
-  const labelBg = confirmed ? "#10B981" : "#4F46E5";
+  const borderColor = confirmed ? "#10B981" : "#EA580C";
+  const labelBg = confirmed ? "#10B981" : "#EA580C";
 
   return (
     <div
@@ -170,7 +170,7 @@ export function ManualCropOverlay({
           height: `${crop.height * 100}%`,
           border: `2px solid ${borderColor}`,
           borderRadius: 8,
-          boxShadow: `0 0 0 2px ${confirmed ? "rgba(16,185,129,0.25)" : "rgba(79,70,229,0.25)"}`,
+          boxShadow: `0 0 0 2px ${confirmed ? "rgba(16,185,129,0.25)" : "rgba(234,88,12,0.25)"}`,
           cursor: editable ? (dragging ? "grabbing" : "grab") : "default",
           boxSizing: "border-box",
         }}

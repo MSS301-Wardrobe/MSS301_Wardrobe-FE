@@ -9,7 +9,7 @@ const COLORS = [
   { color: "#EA580C", bg: "linear-gradient(135deg, #FFEDD5, #FFEDD5)", border: "#FED7AA" },
   { color: "#10B981", bg: "linear-gradient(135deg, #ECFDF5, #D1FAE5)", border: "#A7F3D0" },
   { color: "#3B82F6", bg: "linear-gradient(135deg, #EFF6FF, #DBEAFE)", border: "#BFDBFE" },
-  { color: "#8B5CF6", bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)", border: "#DDD6FE" },
+  { color: "#F97316", bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)", border: "#DDD6FE" },
   { color: "#F59E0B", bg: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", border: "#FDE68A" },
 ];
 

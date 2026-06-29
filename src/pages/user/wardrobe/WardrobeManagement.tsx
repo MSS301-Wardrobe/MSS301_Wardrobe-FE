@@ -9,10 +9,10 @@ import { wardrobeApi } from "../../../services/wardrobeService";
 import type { Wardrobe } from "../../../types/wardrobe";
 
 const COLORS = [
-  { bg: "linear-gradient(135deg, #EEF2FF, #E0E7FF)", border: "#C7D2FE", accent: "#4F46E5", icon: "#4F46E5" },
+  { bg: "linear-gradient(135deg, #FFEDD5, #E0E7FF)", border: "#C7D2FE", accent: "#EA580C", icon: "#EA580C" },
   { bg: "linear-gradient(135deg, #ECFDF5, #D1FAE5)", border: "#A7F3D0", accent: "#10B981", icon: "#10B981" },
   { bg: "linear-gradient(135deg, #FFF7ED, #FFEDD5)", border: "#FED7AA", accent: "#F97316", icon: "#F97316" },
-  { bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)", border: "#DDD6FE", accent: "#8B5CF6", icon: "#8B5CF6" },
+  { bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)", border: "#DDD6FE", accent: "#F97316", icon: "#F97316" },
   { bg: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", border: "#FDE68A", accent: "#F59E0B", icon: "#F59E0B" },
   { bg: "linear-gradient(135deg, #FDF2F8, #FCE7F3)", border: "#F9A8D4", accent: "#EC4899", icon: "#EC4899" },
 ];

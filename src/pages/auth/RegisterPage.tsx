@@ -73,8 +73,8 @@ export function Register() {
     boxSizing: "border-box",
   };
   const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "#4F46E5";
-    e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.12)";
+    e.target.style.borderColor = "#EA580C";
+    e.target.style.boxShadow = "0 0 0 3px rgba(234,88,12,0.12)";
   };
   const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.style.borderColor = "#E2E8F0";
@@ -128,12 +128,12 @@ export function Register() {
 
         {/* Terms */}
         <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, accentColor: "#4F46E5", width: 15, height: 15 }} />
+          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, accentColor: "#EA580C", width: 15, height: 15 }} />
           <span style={{ fontSize: "0.8rem", color: "#64748B", lineHeight: 1.5 }}>
             Tôi đồng ý với{" "}
-            <a href="#" style={{ color: "#4F46E5", fontWeight: 600 }}>Điều Khoản Dịch Vụ</a>
+            <a href="#" style={{ color: "#EA580C", fontWeight: 600 }}>Điều Khoản Dịch Vụ</a>
             {" "}và{" "}
-            <a href="#" style={{ color: "#4F46E5", fontWeight: 600 }}>Chính Sách Bảo Mật</a>
+            <a href="#" style={{ color: "#EA580C", fontWeight: 600 }}>Chính Sách Bảo Mật</a>
           </span>
         </label>
 
@@ -143,9 +143,9 @@ export function Register() {
           disabled={loading}
           style={{
             width: "100%", padding: "13px 20px", borderRadius: 12, border: "none", cursor: loading ? "default" : "pointer",
-            background: loading ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
+            background: loading ? "#A5B4FC" : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white", fontWeight: 700, fontSize: "0.95rem", marginTop: 2,
-            boxShadow: "0 8px 20px rgba(79,70,229,0.25)", transition: "opacity 0.2s",
+            boxShadow: "0 8px 20px rgba(234,88,12,0.25)", transition: "opacity 0.2s",
           }}
           onMouseEnter={(e) => { if (!loading) e.currentTarget.style.opacity = "0.92"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
@@ -156,7 +156,7 @@ export function Register() {
 
       <p style={{ textAlign: "center", marginTop: 16, fontSize: "0.85rem", color: "#64748B" }}>
         Đã có tài khoản?{" "}
-        <button onClick={() => navigate("/login")} style={{ color: "#4F46E5", fontWeight: 700, background: "none", border: "none", cursor: "pointer" }}>
+        <button onClick={() => navigate("/login")} style={{ color: "#EA580C", fontWeight: 700, background: "none", border: "none", cursor: "pointer" }}>
           Đăng nhập
         </button>
       </p>

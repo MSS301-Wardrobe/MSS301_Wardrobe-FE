@@ -866,8 +866,8 @@ function OccasionCard({ occasions }: { occasions: string[] }) {
             <span
               key={occ}
               style={{
-                background: "#EEF2FF",
-                color: "#4F46E5",
+                background: "#FFEDD5",
+                color: "#EA580C",
                 borderRadius: 20,
                 padding: "4px 10px",
                 fontSize: "0.75rem",

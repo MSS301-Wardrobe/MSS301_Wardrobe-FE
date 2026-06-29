@@ -1,50 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { toast } from "sonner";
 import { AuthLayout } from "../../components/layout/AuthLayout";
-import { authService } from "../../services/authService";
-import { useAuthContext } from "../../app/providers/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 
 export function Login() {
   const navigate = useNavigate();
+  const { login, isLoginLoading } = useAuth();
   const [showPw, setShowPw] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const { setUser } = useAuthContext();
 
-  const getUserRole = (user: any) => {
-    return user.roles?.[0]?.roleName ?? user.role ?? "ROLE_USER";
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      setLoading(true);
-
-      const user = await authService.login(email.trim(), password);
-
-      setUser(user);
-
-      toast.success("Đăng nhập thành công");
-
-      const role = getUserRole(user);
-
-      if (role === "ROLE_ADMIN" || role === "ADMIN") {
-        navigate("/admin/dashboard", { replace: true });
-      } else {
-        navigate("/app/dashboard", { replace: true });
-      }
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || err.message || "Đăng nhập thất bại",
-      );
-    } finally {
-      setLoading(false);
-    }
+    login({ email: email.trim(), password });
   };
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -285,14 +255,14 @@ export function Login() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={isLoginLoading}
           style={{
             width: "100%",
             padding: "13px 20px",
             borderRadius: 12,
             border: "none",
-            cursor: loading ? "default" : "pointer",
-            background: loading
+            cursor: isLoginLoading ? "default" : "pointer",
+            background: isLoginLoading
               ? "#FDBA74"
               : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white",
@@ -303,13 +273,13 @@ export function Login() {
             transition: "opacity 0.2s, transform 0.1s",
           }}
           onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.opacity = "0.92";
+            if (!isLoginLoading) e.currentTarget.style.opacity = "0.92";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.opacity = "1";
           }}
         >
-          {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
+          {isLoginLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
         </button>
       </form>
 
