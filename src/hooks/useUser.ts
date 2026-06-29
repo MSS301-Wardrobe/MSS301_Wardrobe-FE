@@ -2,13 +2,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "../services/userService";
 import { useAuthContext } from "../app/providers/AuthProvider";
-import type { UpdateUserPayload, UserPreferences, UserProfile } from "../types/user";
+import type {
+  UpdateUserPayload,
+  UserPreferences,
+  UserProfile,
+} from "../types/user";
 
 export const USER_PROFILE_KEY = ["user", "profile"] as const;
 export const USER_PREFERENCES_KEY = ["user", "preferences"] as const;
 
 // Demo fallback data when backend is not available
-function buildDemoProfile(user: { id: string; email: string; name?: string; role?: string }): UserProfile {
+function buildDemoProfile(user: {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+}): UserProfile {
   return {
     id: user.id,
     userId: user.id,
@@ -35,38 +44,37 @@ export function useUser() {
   const queryClient = useQueryClient();
 
   const profileQuery = useQuery({
-    queryKey: USER_PROFILE_KEY,
+    queryKey: ["user", "profile", user?.id ?? user?.email],
     queryFn: async () => {
       try {
         return await userService.getCurrentUser();
       } catch {
-        // Demo fallback
         if (user) return buildDemoProfile(user);
         throw new Error("Không thể tải hồ sơ");
       }
     },
-    enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000,
+    enabled: isAuthenticated && !!user,
+    staleTime: 0,
   });
 
   const preferencesQuery = useQuery({
-    queryKey: USER_PREFERENCES_KEY,
+    queryKey: ["user", "preferences", user?.id ?? user?.email],
     queryFn: async () => {
       try {
         return await userService.getPreferences();
       } catch {
-        // Demo fallback
         return DEMO_PREFERENCES;
       }
     },
-    enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000,
+    enabled: isAuthenticated && !!user,
+    staleTime: 0,
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (payload: UpdateUserPayload) => userService.updateProfile(payload),
+    mutationFn: (payload: UpdateUserPayload) =>
+      userService.updateProfile(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: USER_PROFILE_KEY });
+      queryClient.invalidateQueries({ queryKey: ["user", "profile"] });
       toast.success("Cập nhật hồ sơ thành công!");
     },
     onError: () => {
@@ -75,10 +83,13 @@ export function useUser() {
   });
 
   const updatePreferencesMutation = useMutation({
-    mutationFn: (payload: UserPreferences) => userService.updatePreferences(payload),
+    mutationFn: (payload: UserPreferences) =>
+      userService.updatePreferences(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: USER_PREFERENCES_KEY });
-      toast.success("Đã lưu sở thích! AI sẽ cá nhân hóa gợi ý theo sở thích của bạn.");
+      queryClient.invalidateQueries({ queryKey: ["user", "preferences"] });
+      toast.success(
+        "Đã lưu sở thích! AI sẽ cá nhân hóa gợi ý theo sở thích của bạn.",
+      );
     },
     onError: () => {
       toast.error("Không thể lưu sở thích. Vui lòng thử lại.");

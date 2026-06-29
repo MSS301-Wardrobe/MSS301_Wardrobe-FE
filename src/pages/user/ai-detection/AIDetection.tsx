@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { ManualCropOverlay } from "../../../components/ai/ManualCropOverlay";
 import { aiService, LowConfidenceDetectionError } from "../../../services/aiService";
-import { storageService } from "../../../services/storageService";
 import type { AIDetectionViewResult } from "../../../types/ai";
 import { SUPPORTED_CATEGORY_NAMES_VI } from "../../../utils/aiMappings";
 import {
@@ -38,30 +37,16 @@ export function AIDetection() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const previewImageRef = useRef<HTMLImageElement>(null);
 
-  const SESSION_KEY_IMG_ID = "ai_detection_image_id";
-  const SESSION_KEY_RESULT = "ai_detection_result";
-
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [detecting, setDetecting] = useState(false);
-  const [result, setResult] = useState<AIDetectionViewResult | null>(() => {
-    try {
-      const saved = sessionStorage.getItem(SESSION_KEY_RESULT);
-      return saved ? (JSON.parse(saved) as AIDetectionViewResult) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [result, setResult] = useState<AIDetectionViewResult | null>(null);
   const [progress, setProgress] = useState(0);
   const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
   const [detectionWarning, setDetectionWarning] = useState<string | null>(null);
   const [lowConfidence, setLowConfidence] = useState<number | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [cropArea, setCropArea] = useState<NormalizedCrop>(DEFAULT_CROP);
-  const [uploadedImageId, setUploadedImageId] = useState<string | null>(
-    () => sessionStorage.getItem(SESSION_KEY_IMG_ID)
-  );
-
 
   const updateImageLayout = useCallback(() => {
     const container = previewContainerRef.current;
@@ -118,27 +103,6 @@ export function AIDetection() {
     }
   }, [result, updateImageLayout]);
 
-  // Khi khôi phục từ sessionStorage: lấy pre-signed URL rồi fetch blob để tạo lại sourceFile
-  useEffect(() => {
-    if (uploadedImageId && !sourceFile) {
-      storageService.getPresignedUrl(uploadedImageId)
-        .then((presignedUrl) => {
-          setPreview(presignedUrl);
-          // Fetch blob từ S3 URL công khai để tạo lại File object cho cropImageFile
-          return fetch(presignedUrl)
-            .then((r) => r.blob())
-            .then((blob) => {
-              setSourceFile(new File([blob], "restored-image.jpg", { type: blob.type || "image/jpeg" }));
-            });
-        })
-        .catch(() => {
-          sessionStorage.removeItem(SESSION_KEY_IMG_ID);
-          sessionStorage.removeItem(SESSION_KEY_RESULT);
-        });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploadedImageId]);
-
   const resetPreview = () => {
     if (preview?.startsWith("blob:")) {
       URL.revokeObjectURL(preview);
@@ -151,12 +115,9 @@ export function AIDetection() {
     setDetectionWarning(null);
     setLowConfidence(null);
     setCropArea(DEFAULT_CROP);
-    setUploadedImageId(null);
-    sessionStorage.removeItem(SESSION_KEY_IMG_ID);
-    sessionStorage.removeItem(SESSION_KEY_RESULT);
   };
 
-  const handleFile = async (file: File) => {
+  const handleFile = (file: File) => {
     resetPreview();
     setSourceFile(file);
     setPreview(URL.createObjectURL(file));
@@ -164,20 +125,6 @@ export function AIDetection() {
     setDetectionWarning(null);
     setLowConfidence(null);
     setCropArea(DEFAULT_CROP);
-
-    try {
-      toast.loading("Đang tải ảnh lên (tạm thời)...", { id: "upload-ai-toast" });
-      const uploadResult = await storageService.upload(file);
-      setUploadedImageId(uploadResult.id);
-      // Lưu imageId vào sessionStorage để giữ state khi chuyển tab
-      sessionStorage.setItem(SESSION_KEY_IMG_ID, uploadResult.id);
-      // Lấy pre-signed URL để hiển thị preview (không dùng XHR, tránh CORS)
-      const presignedUrl = await storageService.getPresignedUrl(uploadResult.id);
-      setPreview(presignedUrl);
-      toast.success("Tải ảnh lên thành công", { id: "upload-ai-toast" });
-    } catch (e) {
-      toast.error("Tải ảnh lên thất bại", { id: "upload-ai-toast" });
-    }
   };
 
   const runDetection = async () => {
@@ -185,8 +132,6 @@ export function AIDetection() {
       toast.error("Vui lòng tải ảnh trước");
       return;
     }
-
-    console.log('HHHHHHHHHHH', sourceFile)
 
     setResult(null);
     setDetectionWarning(null);
@@ -203,8 +148,6 @@ export function AIDetection() {
       const detectionResult = await aiService.detectForView(croppedFile);
       setProgress(100);
       setResult(detectionResult);
-      // Lưu kết quả AI vào sessionStorage để giữ khi chuyển tab
-      sessionStorage.setItem(SESSION_KEY_RESULT, JSON.stringify(detectionResult));
 
       toast.success(
         `Nhận diện hoàn tất! Độ tin cậy ${detectionResult.confidence}%`
@@ -252,7 +195,7 @@ export function AIDetection() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header Banner */}
-      <div style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", borderRadius: 20, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", borderRadius: 20, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <Cpu size={18} color="rgba(255,255,255,0.8)" />
@@ -315,8 +258,8 @@ export function AIDetection() {
               onDrop={handleDrop}
               onClick={() => !preview && fileRef.current?.click()}
               style={{
-                borderRadius: 16, border: `2px dashed ${dragOver ? "#EA580C" : "#FED7AA"}`,
-                background: dragOver ? "#FFF7ED" : "#F8FAFC",
+                borderRadius: 16, border: `2px dashed ${dragOver ? "#4F46E5" : "#C7D2FE"}`,
+                background: dragOver ? "#EEF2FF" : "#F8FAFC",
                 cursor: preview ? "default" : "pointer",
                 transition: "all 0.2s",
                 position: "relative",
@@ -381,7 +324,7 @@ export function AIDetection() {
                         top: imageLayout.offsetY,
                         width: imageLayout.displayWidth,
                         height: imageLayout.displayHeight,
-                        background: "rgba(234,88,12,0.85)",
+                        background: "rgba(79,70,229,0.85)",
                         borderRadius: 14,
                         display: "flex",
                         flexDirection: "column",
@@ -455,8 +398,8 @@ export function AIDetection() {
                 </div>
               ) : (
                 <div style={{ textAlign: "center", padding: 40 }}>
-                  <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg, #FFF7ED, #FFF7ED)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                    <Cpu size={28} color="#EA580C" />
+                  <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg, #EEF2FF, #F5F3FF)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                    <Cpu size={28} color="#4F46E5" />
                   </div>
 
                   <p style={{ fontWeight: 700, color: "#0F172A", marginBottom: 6 }}>
@@ -469,7 +412,7 @@ export function AIDetection() {
 
                   <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
                     {["JPG", "PNG", "WEBP"].map((fmt) => (
-                      <span key={fmt} style={{ background: "#FFF7ED", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{fmt}</span>
+                      <span key={fmt} style={{ background: "#EEF2FF", color: "#4F46E5", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{fmt}</span>
                     ))}
                   </div>
                 </div>
@@ -488,7 +431,7 @@ export function AIDetection() {
             />
 
             {!preview ? (
-              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <Upload size={16} />
                 Tải Lên Hình Ảnh
               </button>
@@ -506,8 +449,8 @@ export function AIDetection() {
                     borderRadius: 12,
                     border: "none",
                     background: detecting
-                      ? "#FDBA74"
-                      : "linear-gradient(135deg, #EA580C, #F97316)",
+                      ? "#A5B4FC"
+                      : "linear-gradient(135deg, #4F46E5, #8B5CF6)",
                     color: "white",
                     fontWeight: 700,
                     cursor: detecting ? "default" : "pointer",
@@ -532,9 +475,9 @@ export function AIDetection() {
                       width: "100%",
                       padding: "10px",
                       borderRadius: 12,
-                      border: "1.5px solid #FED7AA",
+                      border: "1.5px solid #C7D2FE",
                       background: "white",
-                      color: "#EA580C",
+                      color: "#4F46E5",
                       fontWeight: 600,
                       cursor: "pointer",
                       fontSize: "0.85rem",
@@ -752,15 +695,8 @@ export function AIDetection() {
               </div>
 
               <button
-                onClick={() => navigate("/app/wardrobe/add", {
-                  state: {
-                    prefillDetection: result,
-                    previewImage: preview,
-                    sourceFile: sourceFile,
-                    imageId: uploadedImageId
-                  }
-                })}
-                style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                onClick={() => navigate("/app/wardrobe/add")}
+                style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               >
                 Thêm Vào Tủ Đồ
                 <ChevronRight size={16} />
@@ -868,8 +804,8 @@ function OccasionCard({ occasions }: { occasions: string[] }) {
             <span
               key={occ}
               style={{
-                background: "#FFEDD5",
-                color: "#EA580C",
+                background: "#EEF2FF",
+                color: "#4F46E5",
                 borderRadius: 20,
                 padding: "4px 10px",
                 fontSize: "0.75rem",
