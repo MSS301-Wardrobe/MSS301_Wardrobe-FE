@@ -19,6 +19,17 @@ export const storageService = {
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/storage/images/${id}`);
   },
+
+  async confirmImage(id: string): Promise<UploadResult> {
+    const { data } = await apiClient.patch<UploadResult>(`/storage/images/${id}/confirm`);
+    return data;
+  },
+
+  /** Lấy pre-signed S3 URL dạng text (không redirect) để dùng trong <img> */
+  async getPresignedUrl(id: string): Promise<string> {
+    const { data } = await apiClient.get<string>(`/storage/url/${id}`);
+    return data;
+  },
 };
 
 export default storageService;

@@ -7,15 +7,14 @@ import {
   type ReactNode,
 } from "react";
 import type { User } from "../../types/user";
-import { apiClient } from "../../services/apiClient";
-import { ACCESS_TOKEN_KEY } from "../../utils/constants";
+import { authService } from "../../services/authService";
 
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -23,53 +22,50 @@ const AuthContext = createContext<AuthContextValue>({
   isAuthenticated: false,
   isLoading: true,
   setUser: () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On mount, try to restore session from token
+  const setUser = useCallback((user: User | null) => {
+    setUserState(user);
+  }, []);
+
   useEffect(() => {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+    let cancelled = false;
 
-    // Demo mode: if token is the mock demo token, restore user from localStorage directly
-    if (token === "demo-token") {
-      const demoRole = localStorage.getItem("role") ?? "USER";
-      setUser({
-        id: "demo-user",
-        email: demoRole === "ADMIN" ? "admin@gmail.com" : "user@example.com",
-        name: demoRole === "ADMIN" ? "Admin" : "Demo User",
-        role: demoRole as "USER" | "ADMIN",
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    apiClient
-      .get<User>("/users/me")
-      .then(({ data }) => {
-        setUser(data);
-        localStorage.setItem("role", data.role ?? "USER");
+    authService
+      .me()
+      .then((user) => {
+        if (!cancelled) {
+          setUser(user);
+        }
       })
       .catch(() => {
-        // Token is invalid or expired — clear it
-        localStorage.removeItem(ACCESS_TOKEN_KEY);
-        localStorage.removeItem("role");
+        if (!cancelled) {
+          setUser(null);
+        }
       })
-      .finally(() => setIsLoading(false));
-  }, []);
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem("role");
-    setUser(null);
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [setUser]);
+
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+    }
+  }, [setUser]);
 
   return (
     <AuthContext.Provider

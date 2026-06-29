@@ -1,9 +1,21 @@
 import { NavLink, useNavigate } from "react-router";
 import {
-  LayoutDashboard, Shirt, Cpu, Sparkles, Images, User, Settings,
-  LogOut, ChevronLeft, ChevronRight, Zap, Users, Calendar
+  LayoutDashboard,
+  Shirt,
+  Cpu,
+  Sparkles,
+  Images,
+  User,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Zap,
+  Users,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthContext } from "../../app/providers/AuthProvider";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Tổng Quan", path: "/app/dashboard" },
@@ -27,11 +39,20 @@ interface SidebarProps {
 
 export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
+  const { logout } = useAuthContext();
 
-  const handleLogout = () => {
-    localStorage.removeItem("role");
-    toast.success("Đăng xuất thành công");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+
+      toast.success("Đăng xuất thành công");
+
+      navigate("/login", { replace: true });
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message || err.message || "Đăng xuất thất bại",
+      );
+    }
   };
 
   return (
@@ -44,16 +65,30 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
         <div
           className="flex items-center justify-center rounded-xl shrink-0"
           style={{
-            width: 36, height: 36,
-            background: "linear-gradient(135deg, #EA580C, #F97316)"
+            width: 36,
+            height: 36,
+            background: "linear-gradient(135deg, #EA580C, #F97316)",
           }}
         >
           <Zap size={18} color="white" />
         </div>
         {!collapsed && (
           <div>
-            <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#0F172A", lineHeight: 1.2 }}>StyleAI</p>
-            <p style={{ fontSize: "0.7rem", color: "#64748B", lineHeight: 1.2 }}>Tủ Đồ Thông Minh</p>
+            <p
+              style={{
+                fontWeight: 700,
+                fontSize: "0.9rem",
+                color: "#0F172A",
+                lineHeight: 1.2,
+              }}
+            >
+              StyleAI
+            </p>
+            <p
+              style={{ fontSize: "0.7rem", color: "#64748B", lineHeight: 1.2 }}
+            >
+              Tủ Đồ Thông Minh
+            </p>
           </div>
         )}
       </div>
@@ -64,7 +99,11 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
         className="absolute -right-3 top-16 z-10 flex items-center justify-center bg-white border border-border rounded-full shadow-sm cursor-pointer hover:bg-muted transition-colors"
         style={{ width: 24, height: 24 }}
       >
-        {collapsed ? <ChevronRight size={12} color="#64748B" /> : <ChevronLeft size={12} color="#64748B" />}
+        {collapsed ? (
+          <ChevronRight size={12} color="#64748B" />
+        ) : (
+          <ChevronLeft size={12} color="#64748B" />
+        )}
       </button>
 
       {/* Main nav */}
@@ -82,7 +121,12 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
               >
                 <Icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && (
-                  <span style={{ fontSize: "0.875rem", fontWeight: isActive ? 600 : 400 }}>
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: isActive ? 600 : 400,
+                    }}
+                  >
                     {label}
                   </span>
                 )}
@@ -107,7 +151,12 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
               >
                 <Icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && (
-                  <span style={{ fontSize: "0.875rem", fontWeight: isActive ? 600 : 400 }}>
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: isActive ? 600 : 400,
+                    }}
+                  >
                     {label}
                   </span>
                 )}
@@ -123,7 +172,9 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
           title={collapsed ? "Đăng xuất" : undefined}
         >
           <LogOut size={18} style={{ flexShrink: 0 }} />
-          {!collapsed && <span style={{ fontSize: "0.875rem" }}>Đăng Xuất</span>}
+          {!collapsed && (
+            <span style={{ fontSize: "0.875rem" }}>Đăng Xuất</span>
+          )}
         </button>
       </div>
 
@@ -135,16 +186,29 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
               <div
                 className="rounded-full flex items-center justify-center shrink-0"
                 style={{
-                  width: 32, height: 32,
+                  width: 32,
+                  height: 32,
                   background: "linear-gradient(135deg, #EA580C, #F97316)",
-                  color: "white", fontSize: "0.75rem", fontWeight: 600
+                  color: "white",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
                 }}
               >
                 JS
               </div>
               <div>
-                <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0F172A" }}>Jamie Smith</p>
-                <p style={{ fontSize: "0.7rem", color: "#64748B" }}>jamie@example.com</p>
+                <p
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "#0F172A",
+                  }}
+                >
+                  Jamie Smith
+                </p>
+                <p style={{ fontSize: "0.7rem", color: "#64748B" }}>
+                  jamie@example.com
+                </p>
               </div>
             </div>
           </NavLink>

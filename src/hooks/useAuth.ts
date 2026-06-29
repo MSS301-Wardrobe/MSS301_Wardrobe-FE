@@ -10,11 +10,21 @@ export function useAuth() {
   const navigate = useNavigate();
 
   const loginMutation = useMutation({
-    mutationFn: (payload: LoginPayload) => authService.login(payload),
+    mutationFn: (payload: LoginPayload) =>
+      authService.login(payload.email, payload.password),
     onSuccess: (data) => {
-      setUser(data.user);
+      const role = data.roles?.[0]?.roleName ?? data.role ?? "USER";
+      const normalizedRole = role === "ROLE_ADMIN" || role === "ADMIN" ? "ADMIN" : "USER";
+
+      setUser({
+        id: data.id ?? data.userId ?? "",
+        email: data.email ?? "",
+        name: data.name,
+        avatarUrl: data.avatarUrl,
+        role: normalizedRole,
+      });
       toast.success("Chào mừng trở lại!");
-      const dest = data.user.role === "ADMIN" ? "/admin/dashboard" : "/app/dashboard";
+      const dest = normalizedRole === "ADMIN" ? "/admin/dashboard" : "/app/dashboard";
       navigate(dest);
     },
     onError: () => {
@@ -24,13 +34,13 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: (payload: RegisterPayload) => authService.register(payload),
-    onSuccess: (data) => {
-      setUser(data.user);
-      toast.success("Tạo tài khoản thành công! Chào mừng đến với StyleAI!");
-      navigate("/app/dashboard");
+    onSuccess: (_data, variables) => {
+      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.");
+      navigate("/verify-otp", { state: { email: variables.email } });
     },
-    onError: () => {
-      toast.error("Không thể tạo tài khoản. Email có thể đã được sử dụng.");
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || "Không thể tạo tài khoản. Email có thể đã được sử dụng.";
+      toast.error(message);
     },
   });
 
@@ -56,9 +66,8 @@ export function useAuth() {
     },
   });
 
-  const logout = () => {
-    authService.logout();
-    ctxLogout();
+  const logout = async () => {
+    await ctxLogout();
     navigate("/login");
   };
 

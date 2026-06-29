@@ -5,7 +5,8 @@ import { useAuth } from "../../hooks/useAuth";
 
 export function ForgotPassword() {
   const navigate = useNavigate();
-  const { forgotPassword, isForgotLoading, resetPassword, isResetLoading } = useAuth();
+  const { forgotPassword, isForgotLoading, resetPassword, isResetLoading } =
+    useAuth();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"email" | "sent">("email");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -37,19 +38,58 @@ export function ForgotPassword() {
     }
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       document.getElementById(`otp-${index - 1}`)?.focus();
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F8FAFC", fontFamily: "Inter, system-ui, sans-serif", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 440, background: "white", borderRadius: 24, padding: 48, boxShadow: "0 20px 60px rgba(234,88,12,0.10)", border: "1px solid #E2E8F0" }}>
-
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#F8FAFC",
+        fontFamily: "Inter, system-ui, sans-serif",
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 440,
+          background: "white",
+          borderRadius: 24,
+          padding: 48,
+          boxShadow: "0 20px 60px rgba(234,88,12,0.10)",
+          border: "1px solid #E2E8F0",
+        }}
+      >
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, #EA580C, #F97316)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 32,
+          }}
+        >
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 9,
+              background: "linear-gradient(135deg, #EA580C, #F97316)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Zap size={16} color="white" />
           </div>
           <span style={{ fontWeight: 800, color: "#0F172A" }}>StyleAI</span>
@@ -59,29 +99,87 @@ export function ForgotPassword() {
           <>
             <button
               onClick={() => navigate("/login")}
-              style={{ display: "flex", alignItems: "center", gap: 6, color: "#64748B", background: "none", border: "none", cursor: "pointer", marginBottom: 20, padding: 0, fontSize: "0.85rem" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                color: "#64748B",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                marginBottom: 20,
+                padding: 0,
+                fontSize: "0.85rem",
+              }}
             >
               <ArrowLeft size={15} />
               Quay lại Đăng Nhập
             </button>
 
             <div style={{ marginBottom: 32 }}>
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 14,
+                  background: "#FFEDD5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 20,
+                }}
+              >
                 <Mail size={24} color="#EA580C" />
               </div>
-              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>Quên Mật Khẩu?</h2>
-              <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                Đừng lo! Nhập địa chỉ email và chúng tôi sẽ gửi mã xác minh cho bạn.
+              <h2
+                style={{
+                  fontSize: "1.6rem",
+                  fontWeight: 800,
+                  color: "#0F172A",
+                  marginBottom: 8,
+                }}
+              >
+                Quên Mật Khẩu?
+              </h2>
+              <p
+                style={{
+                  color: "#64748B",
+                  fontSize: "0.9rem",
+                  lineHeight: 1.6,
+                }}
+              >
+                Đừng lo! Nhập địa chỉ email và chúng tôi sẽ gửi mã xác minh cho
+                bạn.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <form
+              onSubmit={handleSubmit}
+              style={{ display: "flex", flexDirection: "column", gap: 16 }}
+            >
               <div>
-                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: "#374151",
+                    display: "block",
+                    marginBottom: 6,
+                  }}
+                >
                   Địa Chỉ Email
                 </label>
                 <div style={{ position: "relative" }}>
-                  <Mail size={16} color="#94A3B8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+                  <Mail
+                    size={16}
+                    color="#94A3B8"
+                    style={{
+                      position: "absolute",
+                      left: 14,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                    }}
+                  />
                   <input
                     type="email"
                     value={email}
@@ -112,7 +210,9 @@ export function ForgotPassword() {
                   borderRadius: 10,
                   border: "none",
                   cursor: isForgotLoading ? "default" : "pointer",
-                  background: isForgotLoading ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
+                  background: isForgotLoading
+                    ? "#FED7AA"
+                    : "linear-gradient(135deg, #EA580C, #F97316)",
                   color: "white",
                   fontWeight: 700,
                   fontSize: "0.95rem",
@@ -125,21 +225,59 @@ export function ForgotPassword() {
         ) : (
           <>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: "50%",
+                  background: "#ECFDF5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                }}
+              >
                 <CheckCircle2 size={28} color="#10B981" />
               </div>
-              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>Kiểm Tra Email</h2>
-              <p style={{ color: "#64748B", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                Chúng tôi đã gửi mã xác minh 6 chữ số đến<br />
+              <h2
+                style={{
+                  fontSize: "1.6rem",
+                  fontWeight: 800,
+                  color: "#0F172A",
+                  marginBottom: 8,
+                }}
+              >
+                Kiểm Tra Email
+              </h2>
+              <p
+                style={{
+                  color: "#64748B",
+                  fontSize: "0.9rem",
+                  lineHeight: 1.6,
+                }}
+              >
+                Chúng tôi đã gửi mã xác minh 6 chữ số đến
+                <br />
                 <strong style={{ color: "#0F172A" }}>{email}</strong>
               </p>
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 12, textAlign: "center" }}>
+              <label
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  color: "#374151",
+                  display: "block",
+                  marginBottom: 12,
+                  textAlign: "center",
+                }}
+              >
                 Nhập mã xác minh
               </label>
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              <div
+                style={{ display: "flex", gap: 8, justifyContent: "center" }}
+              >
                 {otp.map((digit, i) => (
                   <input
                     key={i}
@@ -175,25 +313,50 @@ export function ForgotPassword() {
                 padding: "13px",
                 borderRadius: 10,
                 border: "none",
-                cursor: isResetLoading || otp.join("").length < 6 ? "default" : "pointer",
-                background: isResetLoading || otp.join("").length < 6
-                  ? "#FED7AA"
-                  : "linear-gradient(135deg, #EA580C, #F97316)",
+                cursor:
+                  isResetLoading || otp.join("").length < 6
+                    ? "default"
+                    : "pointer",
+                background:
+                  isResetLoading || otp.join("").length < 6
+                    ? "#FED7AA"
+                    : "linear-gradient(135deg, #EA580C, #F97316)",
                 color: "white",
                 fontWeight: 700,
                 fontSize: "0.95rem",
                 marginBottom: 16,
               }}
             >
-              {isResetLoading ? "Đang xác minh..." : "Xác Minh & Đặt Lại Mật Khẩu"}
+              {isResetLoading
+                ? "Đang xác minh..."
+                : "Xác Minh & Đặt Lại Mật Khẩu"}
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              <span style={{ fontSize: "0.85rem", color: "#64748B" }}>Chưa nhận được mã?</span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <span style={{ fontSize: "0.85rem", color: "#64748B" }}>
+                Chưa nhận được mã?
+              </span>
               <button
                 onClick={handleResend}
                 disabled={isForgotLoading}
-                style={{ display: "flex", alignItems: "center", gap: 4, color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  color: "#EA580C",
+                  fontWeight: 600,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                }}
               >
                 <RefreshCw size={13} />
                 Gửi lại
@@ -202,7 +365,19 @@ export function ForgotPassword() {
 
             <button
               onClick={() => setStep("email")}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", marginTop: 16, color: "#64748B", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                width: "100%",
+                marginTop: 16,
+                color: "#64748B",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+              }}
             >
               <ArrowLeft size={15} />
               Quay lại

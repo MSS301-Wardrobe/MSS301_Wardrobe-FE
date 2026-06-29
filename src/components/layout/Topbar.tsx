@@ -1,5 +1,5 @@
 import { Bell, Search, Plus } from "lucide-react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation, useSearchParams } from "react-router";
 import { useState } from "react";
 
 const routeTitles: Record<string, string> = {
@@ -27,17 +27,33 @@ export function Topbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
-  const title = routeTitles[location.pathname] ??
+  const searchParams = new URLSearchParams(location.search);
+  const customTitle = searchParams.get("wardrobeName") || searchParams.get("zoneName");
+
+  const title = customTitle || (routeTitles[location.pathname] ??
     (location.pathname.startsWith("/app/wardrobe/") ? "Chi Tiết Trang Phục" :
      location.pathname.startsWith("/app/recommendations/") ? "Chi Tiết Gợi Ý" :
      location.pathname.startsWith("/app/friend-groups/") ? "Chi Tiết Nhóm" :
-     "StyleAI");
+     "StyleAI"));
 
   const notifications = [
     { id: 1, text: "AI đã nhận diện 3 trang phục mới", time: "2 phút trước", color: "#EA580C" },
     { id: 2, text: "Gợi ý trang phục mới đã sẵn sàng", time: "15 phút trước", color: "#F97316" },
     { id: 3, text: "Tủ đồ của bạn đã tổ chức được 85%", time: "1 giờ trước", color: "#10B981" },
   ];
+
+  const [searchParamsUrl, setSearchParamsUrl] = useSearchParams();
+  const q = searchParamsUrl.get("q") || "";
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val) {
+      searchParamsUrl.set("q", val);
+    } else {
+      searchParamsUrl.delete("q");
+    }
+    setSearchParamsUrl(searchParamsUrl);
+  };
 
   return (
     <header className="sticky top-0 z-20 bg-card border-b border-border flex items-center justify-between px-6 py-4">
@@ -53,21 +69,23 @@ export function Topbar() {
         <div className="hidden md:flex items-center gap-2 bg-muted rounded-xl px-3 py-2" style={{ minWidth: 220 }}>
           <Search size={15} color="#64748B" />
           <input
-            placeholder="Tìm kiếm tủ đồ..."
+            placeholder="Tìm kiếm..."
+            value={q}
+            onChange={handleSearch}
             className="bg-transparent outline-none border-none"
             style={{ fontSize: "0.85rem", color: "#0F172A", width: "100%" }}
           />
         </div>
 
         {/* Add Button */}
-        <button
+        {/* <button
           onClick={() => navigate("/app/wardrobe/add")}
           className="flex items-center gap-2 rounded-xl px-4 py-2 transition-all hover:opacity-90"
           style={{ background: "#EA580C", color: "white", fontSize: "0.85rem", fontWeight: 600 }}
         >
           <Plus size={15} />
           <span className="hidden sm:inline">Thêm Vật Phẩm</span>
-        </button>
+        </button> */}
 
         {/* Notifications */}
         <div className="relative">

@@ -1,35 +1,9 @@
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import { useEffect, useState } from "react";
+import { clothingItemApi, categoryApi } from "../../../services/wardrobeService";
+import type { ClothingItem, Category } from "../../../types/wardrobe";
 import { ArrowLeft, Heart, Edit2, Trash2, Share2, Tag, Info, Cpu } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
-
-const item = {
-  id: "1",
-  name: "Áo Sơ Mi Oxford Trắng",
-  category: "Áo",
-  subcategory: "Sơ Mi",
-  color: "Trắng",
-  material: "100% Cotton",
-  brand: "Uniqlo",
-  size: "M",
-  purchaseDate: "2024-03-15",
-  purchasePrice: "1.200.000đ",
-  condition: "Xuất Sắc",
-  wearCount: 24,
-  lastWorn: "3 ngày trước",
-  img: "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=600&h=700&fit=crop",
-  tags: ["trang trọng", "văn phòng", "công sở", "tối giản", "trắng"],
-  aiConfidence: 97.3,
-  aiAttributes: [
-    { label: "Danh Mục", value: "Áo / Sơ Mi", confidence: 97 },
-    { label: "Màu Sắc", value: "Trắng / Trắng Kem", confidence: 99 },
-    { label: "Họa Tiết", value: "Trơn", confidence: 98 },
-    { label: "Chất Liệu", value: "Cotton (ước tính)", confidence: 89 },
-    { label: "Phong Cách", value: "Trang Trọng / Công Sở", confidence: 94 },
-    { label: "Dịp Mặc", value: "Làm Việc, Văn Phòng, Thanh Lịch", confidence: 96 },
-  ],
-  notes: "Áo sơ mi văn phòng yêu thích của tôi. Phù hợp với quần tối màu và áo vest.",
-};
 
 const similarItems = [
   { id: "3", name: "Áo Thun Nữ Casual", img: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=100&h=100&fit=crop" },
@@ -39,13 +13,83 @@ const similarItems = [
 ];
 
 export function ClothingDetail() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [favorite, setFavorite] = useState(true);
   const [activeTab, setActiveTab] = useState<"info" | "ai" | "notes">("info");
+  const [itemData, setItemData] = useState<ClothingItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const handleDelete = () => {
-    toast.success("Đã xóa vật phẩm khỏi tủ đồ");
-    navigate("/app/wardrobe");
+  useEffect(() => {
+    const fetchMeta = async () => {
+      try {
+        const cats = await categoryApi.getAll();
+        setCategories(cats);
+      } catch(e) {}
+    };
+    fetchMeta();
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    const loadItem = async () => {
+      setLoading(true);
+      try {
+        const data = await clothingItemApi.getById(id);
+        setItemData(data);
+      } catch (err) {
+        toast.error("Không tìm thấy vật phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadItem();
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!window.confirm("Bạn có chắc muốn xóa vật phẩm này không?")) return;
+    try {
+      await clothingItemApi.delete(id);
+      toast.success("Đã xóa vật phẩm khỏi tủ đồ");
+      navigate(-1);
+    } catch {
+      toast.error("Xóa thất bại, vui lòng thử lại");
+    }
+  };
+
+
+  const getImageUrl = (imgId?: string) => {
+    if (!imgId) return "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=600&h=700&fit=crop";
+    if (imgId.startsWith("http")) return imgId;
+    return `http://localhost:8080/api/v1/storage/files/${imgId}`;
+  };
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Đang tải...</div>;
+  if (!itemData) return <div style={{ padding: 40, textAlign: "center" }}>Không tìm thấy dữ liệu</div>;
+
+  const catName = categories.find(c => c.categoryId === itemData.categoryId)?.categoryName || "Chưa phân loại";
+
+  const item = {
+    id: itemData.itemId,
+    name: itemData.itemName,
+    category: catName,
+    subcategory: "-",
+    color: itemData.dominantColor || "-",
+    material: "-",
+    brand: "-",
+    size: "-",
+    purchaseDate: new Date(itemData.createdAt).toLocaleDateString("vi-VN"),
+    purchasePrice: "-",
+    condition: "-",
+    wearCount: 0,
+    lastWorn: "-",
+    img: getImageUrl(itemData.imageId),
+    tags: [],
+    aiConfidence: itemData.confidenceScore ? (itemData.confidenceScore * 100).toFixed(1) : 0,
+    aiAttributes: [] as Array<{label: string, value: string, confidence: number}>,
+    notes: "Chưa có ghi chú",
   };
 
   return (

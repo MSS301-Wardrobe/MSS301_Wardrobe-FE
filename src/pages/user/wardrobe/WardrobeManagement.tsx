@@ -9,10 +9,10 @@ import { wardrobeApi } from "../../../services/wardrobeService";
 import type { Wardrobe } from "../../../types/wardrobe";
 
 const COLORS = [
-  { bg: "linear-gradient(135deg, #EEF2FF, #E0E7FF)", border: "#C7D2FE", accent: "#4F46E5", icon: "#4F46E5" },
+  { bg: "linear-gradient(135deg, #FFEDD5, #E0E7FF)", border: "#C7D2FE", accent: "#EA580C", icon: "#EA580C" },
   { bg: "linear-gradient(135deg, #ECFDF5, #D1FAE5)", border: "#A7F3D0", accent: "#10B981", icon: "#10B981" },
   { bg: "linear-gradient(135deg, #FFF7ED, #FFEDD5)", border: "#FED7AA", accent: "#F97316", icon: "#F97316" },
-  { bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)", border: "#DDD6FE", accent: "#8B5CF6", icon: "#8B5CF6" },
+  { bg: "linear-gradient(135deg, #F5F3FF, #EDE9FE)", border: "#DDD6FE", accent: "#F97316", icon: "#F97316" },
   { bg: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", border: "#FDE68A", accent: "#F59E0B", icon: "#F59E0B" },
   { bg: "linear-gradient(135deg, #FDF2F8, #FCE7F3)", border: "#F9A8D4", accent: "#EC4899", icon: "#EC4899" },
 ];
@@ -36,7 +36,6 @@ export function WardrobeManagement() {
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
-  const [createUserId, setCreateUserId] = useState("");
   const [creating, setCreating] = useState(false);
 
   // Edit inline
@@ -76,15 +75,13 @@ export function WardrobeManagement() {
 
   const handleCreate = async () => {
     if (!createName.trim()) return toast.error("Vui lòng nhập tên tủ đồ");
-    if (!createUserId.trim()) return toast.error("Vui lòng nhập User ID");
     setCreating(true);
     try {
-      const created = await wardrobeApi.create({ userId: createUserId.trim(), wardrobeName: createName.trim() });
+      const created = await wardrobeApi.create({ wardrobeName: createName.trim() });
       setWardrobes((prev) => [created, ...prev]);
       toast.success(`Tủ đồ "${created.wardrobeName}" đã được tạo!`);
       setCreateOpen(false);
       setCreateName("");
-      setCreateUserId("");
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Tạo tủ đồ thất bại");
     } finally {
@@ -141,7 +138,7 @@ export function WardrobeManagement() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#0F172A" }}>Tủ Đồ Của Tôi</h2>
+          {/* Title is already in Topbar */}
           <p style={{ color: "#64748B", fontSize: "0.85rem", marginTop: 3 }}>
             {loading ? "Đang tải..." : `${wardrobes.length} tủ đồ`}
           </p>
@@ -149,7 +146,7 @@ export function WardrobeManagement() {
         <button
           id="create-wardrobe-btn"
           onClick={() => setCreateOpen(true)}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
         >
           <Plus size={15} /> Tạo Tủ Đồ Mới
         </button>
@@ -158,7 +155,7 @@ export function WardrobeManagement() {
       {/* Loading */}
       {loading && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "64px 0", background: "white", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-          <Loader2 size={32} color="#4F46E5" style={{ animation: "spin 1s linear infinite" }} />
+          <Loader2 size={32} color="#EA580C" style={{ animation: "spin 1s linear infinite" }} />
           <span style={{ marginLeft: 12, color: "#64748B" }}>Đang tải tủ đồ...</span>
         </div>
       )}
@@ -173,7 +170,7 @@ export function WardrobeManagement() {
           </p>
           <button
             onClick={() => setCreateOpen(true)}
-            style={{ padding: "10px 24px", borderRadius: 12, background: "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}
+            style={{ padding: "10px 24px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}
           >
             Tạo Ngay
           </button>
@@ -255,19 +252,11 @@ export function WardrobeManagement() {
                   </div>
                 </div>
 
-                {/* ID info */}
-                <div style={{ background: "rgba(255,255,255,0.6)", borderRadius: 10, padding: "8px 12px", marginBottom: 14 }}>
-                  <p style={{ fontSize: "0.68rem", color: "#94A3B8", fontFamily: "monospace", wordBreak: "break-all" }}>
-                    ID: {w.wardrobeId}
-                  </p>
-                  <p style={{ fontSize: "0.68rem", color: "#94A3B8", fontFamily: "monospace", marginTop: 2 }}>
-                    User: {w.userId}
-                  </p>
-                </div>
+                {/* ID info removed */}
 
                 {/* Navigate to contents */}
                 <button
-                  onClick={() => navigate(`/app/wardrobe/zones?wardrobeId=${w.wardrobeId}`)}
+                  onClick={() => navigate(`/app/wardrobe/zones?wardrobeId=${w.wardrobeId}&wardrobeName=${encodeURIComponent(w.wardrobeName)}`)}
                   style={{ width: "100%", padding: "10px", borderRadius: 12, border: `1.5px solid ${color.border}`, background: "white", color: color.accent, fontWeight: 700, cursor: "pointer", fontSize: "0.82rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                 >
                   Xem Các Ngăn Kéo
@@ -291,8 +280,8 @@ export function WardrobeManagement() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Package size={18} color="#4F46E5" />
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Package size={18} color="#EA580C" />
                 </div>
                 <h3 style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.05rem" }}>Tạo Tủ Đồ Mới</h3>
               </div>
@@ -302,19 +291,6 @@ export function WardrobeManagement() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
-                  User ID <span style={{ color: "#EF4444" }}>*</span>
-                </label>
-                <input
-                  id="wardrobe-user-id-input"
-                  type="text"
-                  value={createUserId}
-                  onChange={(e) => setCreateUserId(e.target.value)}
-                  placeholder="UUID của người dùng"
-                  style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #E2E8F0", borderRadius: 10, fontSize: "0.88rem", outline: "none", boxSizing: "border-box", fontFamily: "monospace", color: "#0F172A" }}
-                />
-              </div>
               <div>
                 <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
                   Tên Tủ Đồ <span style={{ color: "#EF4444" }}>*</span>
@@ -343,7 +319,7 @@ export function WardrobeManagement() {
                   id="create-wardrobe-submit-btn"
                   onClick={handleCreate}
                   disabled={creating}
-                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creating ? "#A5B4FC" : "linear-gradient(135deg, #4F46E5, #8B5CF6)", color: "white", fontWeight: 700, cursor: creating ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creating ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: creating ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
                   {creating ? (
                     <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang tạo...</>

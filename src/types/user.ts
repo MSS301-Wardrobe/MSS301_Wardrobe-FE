@@ -1,11 +1,23 @@
 // User-related types matching the backend API contract.
 
+export type RoleName = "ROLE_USER" | "ROLE_ADMIN" | "USER" | "ADMIN";
+
+export interface Role {
+  id?: string | number;
+  roleName: RoleName;
+}
+
 export interface User {
   id: string;
   email: string;
   name?: string;
   avatarUrl?: string;
-  role?: "USER" | "ADMIN";
+
+  // Some APIs return a single role directly
+  role?: RoleName;
+
+  // Some APIs return roles as an array
+  roles?: Role[];
 }
 
 export interface UserProfile {
@@ -19,6 +31,7 @@ export interface UserProfile {
   dob?: string;
   gender?: string;
   avatarUrl?: string;
+
   // Body measurements
   height?: string;
   weight?: string;
@@ -57,8 +70,9 @@ export interface UpdateUserPayload {
   fitPreference?: string;
 }
 
+// Vì bạn dùng HttpOnly cookie, login response KHÔNG nên có accessToken ở body.
 export interface AuthResponse {
-  accessToken: string;
+  message?: string;
   user: User;
 }
 
