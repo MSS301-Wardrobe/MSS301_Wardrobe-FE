@@ -133,6 +133,8 @@ export function AIDetection() {
       return;
     }
 
+    console.log('HHHHHHHHHHH', sourceFile)
+
     setResult(null);
     setDetectionWarning(null);
     setLowConfidence(null);
