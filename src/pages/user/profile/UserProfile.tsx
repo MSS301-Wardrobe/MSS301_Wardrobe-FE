@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Camera, Save, User, Ruler, Heart, Loader2 } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
+import { useAuthContext } from "../../../app/providers/AuthProvider";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -53,9 +54,15 @@ export function UserProfile() {
     isProfileLoading,
     updateProfile,
     isUpdatingProfile,
-    uploadAvatar,
     isUploadingAvatar,
   } = useUser();
+
+  const {
+    user: authUser,
+    uploadAvatar,
+  } = useAuthContext();
+
+  const avatarUrl = authUser?.avatarUrl || profile?.avatarUrl;
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -150,19 +157,26 @@ export function UserProfile() {
     });
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) uploadAvatar(file);
+
+    if (!file) return;
+
+    try {
+      await uploadAvatar(file);
+    } finally {
+      e.target.value = "";
+    }
   };
 
   // Derive initials for avatar placeholder
   const initials = form.fullName
     ? form.fullName
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase()
     : "??";
 
   if (isProfileLoading) {
@@ -183,7 +197,6 @@ export function UserProfile() {
       </div>
     );
   }
-
   return (
     <div
       style={{
@@ -217,9 +230,10 @@ export function UserProfile() {
               marginTop: -44,
             }}
           >
-            {profile?.avatarUrl ? (
+            {avatarUrl ? (
               <img
-                src={profile.avatarUrl}
+                key={avatarUrl}
+                src={avatarUrl}
                 alt={form.fullName}
                 style={{
                   width: 88,

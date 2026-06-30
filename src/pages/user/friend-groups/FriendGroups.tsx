@@ -1,115 +1,123 @@
-import { useState } from "react";
-import { Users, Plus, Search, Crown, Sparkles, TrendingUp, UserPlus, X, Check, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Users,
+  Plus,
+  Search,
+  Crown,
+  Sparkles,
+  UserPlus,
+  X,
+  Check,
+  Globe,
+} from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
-const myGroups = [
-  {
-    id: "1",
-    name: "Minimalist Collective",
-    emoji: "🎯",
-    color: "#EA580C",
-    bg: "#FFEDD5",
-    members: 12,
-    myRole: "admin",
-    styles: ["Tối Giản", "Công Sở Thường", "Gọn Gàng"],
-    colors: ["#000000", "#FFFFFF", "#EA580C"],
-    activity: "Active",
-    recentOutfit: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=80&h=80&fit=crop",
-    topStyle: "Tối Giản",
-    joined: "3 tháng trước",
-  },
-  {
-    id: "2",
-    name: "Street Style Crew",
-    emoji: "🔥",
-    color: "#EF4444",
-    bg: "#FEF2F2",
-    members: 28,
-    myRole: "member",
-    styles: ["Đường Phố", "Đô Thị", "Thường Ngày"],
-    colors: ["#000000", "#EF4444", "#F97316"],
-    activity: "Very Active",
-    recentOutfit: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=80&h=80&fit=crop",
-    topStyle: "Đường Phố",
-    joined: "1 tháng trước",
-  },
-  {
-    id: "3",
-    name: "Office Chic Club",
-    emoji: "💼",
-    color: "#10B981",
-    bg: "#ECFDF5",
-    members: 19,
-    myRole: "member",
-    styles: ["Công Sở", "Kinh Doanh", "Lịch Sự"],
-    colors: ["#0F172A", "#334155", "#64748B"],
-    activity: "Active",
-    recentOutfit: "https://images.unsplash.com/photo-1731589802956-b4693dae884b?w=80&h=80&fit=crop",
-    topStyle: "Công Sở Trang Trọng",
-    joined: "2 tháng trước",
-  },
-];
 
-const discoverGroups = [
-  {
-    id: "4",
-    name: "Vintage Vibes",
-    emoji: "🎞️",
-    color: "#F59E0B",
-    bg: "#FFFBEB",
-    members: 47,
-    styles: ["Cổ Điển", "Retro", "Truyền Thống"],
-    colors: ["#92400E", "#D97706", "#F59E0B"],
-    img: "https://images.unsplash.com/photo-1761957374132-a5137e99f26c?w=300&h=200&fit=crop",
-    joined: false,
-  },
-  {
-    id: "5",
-    name: "Luxury Fashion Elite",
-    emoji: "👑",
-    color: "#F97316",
-    bg: "#F5F3FF",
-    members: 34,
-    styles: ["Xa Xỉ", "Thời Trang Cao Cấp", "Thanh Lịch"],
-    colors: ["#6D28D9", "#F97316", "#C4B5FD"],
-    img: "https://images.unsplash.com/photo-1768767121186-b1486acc4e14?w=300&h=200&fit=crop",
-    joined: false,
-  },
-  {
-    id: "6",
-    name: "Sporty & Athleisure",
-    emoji: "⚡",
-    color: "#10B981",
-    bg: "#ECFDF5",
-    members: 62,
-    styles: ["Thể Thao", "Năng Động", "Thoải Mái"],
-    colors: ["#10B981", "#34D399", "#6EE7B7"],
-    img: "https://images.unsplash.com/photo-1761957375235-46acb4862151?w=300&h=200&fit=crop",
-    joined: false,
-  },
-];
+import {
+  friendGroupService,
+  type FriendGroup,
+} from "../../../services/friendGroupService";
+
 
 export function FriendGroups() {
   const navigate = useNavigate();
+
+  const [myGroups, setMyGroups] = useState<FriendGroup[]>([]);
+  const [discoverGroups, setDiscoverGroups] = useState<FriendGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [newGroup, setNewGroup] = useState({ name: "", description: "", emoji: "👗" });
+  const [newGroup, setNewGroup] = useState({
+    name: "",
+    description: "",
+    emoji: "👗",
+  });
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const filteredDiscoverGroups = discoverGroups.filter((group) =>
+    group.groupName.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const handleJoin = (id: string, name: string) => {
-    setJoinedIds((prev) => new Set([...prev, id]));
-    toast.success(`Đã tham gia nhóm "${name}"!`);
+  const defaultBg = "#FFEDD5";
+  const defaultColor = "#EA580C";
+  const defaultStyles = ["Thời Trang", "Cộng Đồng"];
+  const defaultColors = ["#EA580C", "#F97316", "#FB923C"];
+
+  const handleJoin = async (id: string, name: string) => {
+    try {
+      const joinedGroup = await friendGroupService.joinGroup(id);
+
+      setJoinedIds((prev) => new Set([...prev, id]));
+
+      setMyGroups((prev) => [joinedGroup, ...prev]);
+      setDiscoverGroups((prev) => prev.filter((group) => group.groupId !== id));
+
+      toast.success(`Đã tham gia nhóm "${name}"!`);
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ||
+        err.message ||
+        "Tham gia nhóm thất bại"
+      );
+    }
   };
 
-  const handleCreate = () => {
-    if (!newGroup.name.trim()) { toast.error("Vui lòng nhập tên nhóm"); return; }
-    toast.success(`Nhóm "${newGroup.name}" đã được tạo!`);
-    setCreateOpen(false);
-    setNewGroup({ name: "", description: "", emoji: "👗" });
+  const handleCreate = async () => {
+    if (!newGroup.name.trim()) {
+      toast.error("Vui lòng nhập tên nhóm");
+      return;
+    }
+
+    try {
+      const createdGroup = await friendGroupService.createGroup({
+        groupName: newGroup.name.trim(),
+        description: newGroup.description,
+        emoji: newGroup.emoji,
+      });
+
+      setMyGroups((prev) => [createdGroup, ...prev]);
+
+      toast.success(`Nhóm "${createdGroup.groupName}" đã được tạo!`);
+
+      setCreateOpen(false);
+      setNewGroup({ name: "", description: "", emoji: "👗" });
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ||
+        err.message ||
+        "Tạo nhóm thất bại"
+      );
+    }
   };
 
   const emojiOptions = ["👗", "👔", "🎯", "🔥", "👑", "⚡", "🌸", "🎞️", "💼", "🌊"];
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        setIsLoading(true);
+
+        const [myGroupsData, discoverGroupsData] = await Promise.all([
+          friendGroupService.getMyGroups(),
+          friendGroupService.discoverGroups(),
+        ]);
+
+        setMyGroups(myGroupsData);
+        setDiscoverGroups(discoverGroupsData);
+      } catch (err: any) {
+        toast.error(
+          err.response?.data?.message ||
+          err.message ||
+          "Không thể tải danh sách nhóm"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGroups();
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -139,7 +147,7 @@ export function FriendGroups() {
         <div style={{ display: "flex", gap: 28, marginTop: 24 }}>
           {[
             { label: "Nhóm Của Tôi", value: myGroups.length },
-            { label: "Tổng Thành Viên", value: myGroups.reduce((s, g) => s + g.members, 0) },
+            { label: "Tổng Thành Viên", value: myGroups.reduce((s, g) => s + g.memberCount, 0) },
             { label: "Phù Hợp Phong Cách", value: "87%" },
           ].map(({ label, value }) => (
             <div key={label}>
@@ -150,57 +158,64 @@ export function FriendGroups() {
         </div>
       </div>
 
+      {isLoading && (
+        <p style={{ color: "#64748B", fontSize: "0.875rem" }}>
+          Đang tải danh sách nhóm...
+        </p>
+      )}
+
       {/* My Groups */}
       <div>
         <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 16, fontSize: "1.05rem" }}>Nhóm Của Tôi</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
           {myGroups.map((group) => (
             <div
-              key={group.id}
-              onClick={() => navigate(`/app/friend-groups/${group.id}`)}
+              key={group.groupId}
+              onClick={() => navigate(`/app/friend-groups/${group.groupId}`)}
               style={{ background: "white", borderRadius: 18, padding: 22, border: "1px solid #E2E8F0", cursor: "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", transition: "transform 0.2s, box-shadow 0.2s" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: group.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>
-                    {group.emoji}
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: defaultBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>
+                    {group.emoji || "👗"}
                   </div>
                   <div>
-                    <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.95rem" }}>{group.name}</p>
+                    <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.95rem" }}>{group.groupName}</p>
                     <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
                       <Users size={12} color="#94A3B8" />
-                      <span style={{ fontSize: "0.72rem", color: "#94A3B8" }}>{group.members} thành viên</span>
+                      <span style={{ fontSize: "0.72rem", color: "#94A3B8" }}>{group.memberCount} thành viên</span>
                     </div>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {group.myRole === "admin" && (
+                  {(group.myRole === "OWNER" || group.myRole === "ADMIN") && (
                     <div style={{ display: "flex", alignItems: "center", gap: 3, background: "#FFFBEB", borderRadius: 6, padding: "3px 8px" }}>
                       <Crown size={11} color="#F59E0B" />
                       <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#D97706" }}>Quản Trị Viên</span>
                     </div>
                   )}
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: group.activity === "Very Active" ? "#10B981" : "#F59E0B" }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: group.active ? "#10B981" : "#F59E0B" }} />
                 </div>
               </div>
 
               {/* Style tags */}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                {group.styles.map((s) => (
-                  <span key={s} style={{ background: group.bg, color: group.color, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
+                {defaultStyles.map((s) => (
+                  <span key={s} style={{ background: defaultBg, color: defaultColor, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
                 ))}
               </div>
 
               {/* Color palette + activity */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", gap: 5 }}>
-                  {group.colors.map((c) => (
+                  {defaultColors.map((c) => (
                     <div key={c} style={{ width: 18, height: 18, borderRadius: "50%", background: c, border: "1.5px solid #E2E8F0" }} />
                   ))}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <img src={group.recentOutfit} alt="" style={{ width: 26, height: 26, borderRadius: 6, objectFit: "cover" }} />
-                  <span style={{ fontSize: "0.7rem", color: "#94A3B8" }}>Đã tham gia {group.joined}</span>
+                  <span style={{ fontSize: "0.7rem", color: "#94A3B8" }}>
+                    Tạo lúc {group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "gần đây"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -226,18 +241,24 @@ export function FriendGroups() {
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {discoverGroups.map((group) => {
-            const isJoined = joinedIds.has(group.id);
+          {filteredDiscoverGroups.map((group) => {
+            const isJoined = joinedIds.has(group.groupId)
             return (
-              <div key={group.id} style={{ background: "white", borderRadius: 18, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+              <div key={group.groupId} style={{ background: "white", borderRadius: 18, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
                 <div style={{ position: "relative" }}>
-                  <img src={group.img} alt={group.name} style={{ width: "100%", height: 130, objectFit: "cover" }} />
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 130,
+                      background: "linear-gradient(135deg, #EA580C, #F97316)",
+                    }}
+                  />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.6), transparent)" }} />
                   <div style={{ position: "absolute", bottom: 10, left: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 9, background: group.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>{group.emoji}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: 9, background: defaultBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>{group.emoji}</div>
                     <div>
-                      <p style={{ color: "white", fontWeight: 700, fontSize: "0.9rem" }}>{group.name}</p>
-                      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.68rem" }}>{group.members} thành viên</p>
+                      <p style={{ color: "white", fontWeight: 700, fontSize: "0.9rem" }}>{group.groupName}</p>
+                      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.68rem" }}>{group.memberCount} thành viên</p>
                     </div>
                   </div>
                   <div style={{ position: "absolute", top: 10, right: 10 }}>
@@ -249,22 +270,22 @@ export function FriendGroups() {
                 </div>
                 <div style={{ padding: "14px 16px" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
-                    {group.styles.map((s) => (
-                      <span key={s} style={{ background: group.bg, color: group.color, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
+                    {defaultStyles.map((s) => (
+                      <span key={s} style={{ background: defaultBg, color: defaultColor, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
-                    {group.colors.map((c) => (
+                    {defaultColors.map((c) => (
                       <div key={c} style={{ width: 16, height: 16, borderRadius: "50%", background: c, border: "1.5px solid #E2E8F0" }} />
                     ))}
                   </div>
                   <button
-                    onClick={() => handleJoin(group.id, group.name)}
+                    onClick={() => handleJoin(group.groupId, group.groupName)}
                     disabled={isJoined}
                     style={{
-                      width: "100%", padding: "9px", borderRadius: 10, border: `1.5px solid ${isJoined ? "#10B981" : group.color}`,
-                      background: isJoined ? "#ECFDF5" : group.bg,
-                      color: isJoined ? "#10B981" : group.color,
+                      width: "100%", padding: "9px", borderRadius: 10, border: `1.5px solid ${isJoined ? "#10B981" : defaultColor}`,
+                      background: isJoined ? "#ECFDF5" : defaultBg,
+                      color: isJoined ? "#10B981" : defaultColor,
                       fontWeight: 700, cursor: isJoined ? "default" : "pointer", fontSize: "0.85rem",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     }}

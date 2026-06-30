@@ -1,16 +1,13 @@
 import { apiClient } from "./apiClient";
+import { ApiResponse } from "@/types/apiResonse";
+
 import type {
   UserProfile,
   UpdateUserPayload,
   UserPreferences,
+  User,
 } from "../types/user";
 
-type ApiResponse<T> = {
-  success: boolean;
-  code: string;
-  message: string;
-  data: T;
-};
 
 export const userService = {
   async getCurrentUser(): Promise<UserProfile> {
@@ -44,20 +41,22 @@ export const userService = {
     return data.data;
   },
 
-  async uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
+  async uploadAvatar(file: File): Promise<User> {
     const formData = new FormData();
     formData.append("file", file);
 
-    const { data } = await apiClient.post<ApiResponse<{ avatarUrl: string }>>(
+    const { data } = await apiClient.put<ApiResponse<User>>(
       "/users/me/avatar",
       formData,
       {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
 
     return data.data;
-  },
+  }
 };
 
 export default userService;
