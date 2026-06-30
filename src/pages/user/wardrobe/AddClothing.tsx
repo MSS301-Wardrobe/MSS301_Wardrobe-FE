@@ -10,7 +10,7 @@ import {
   wardrobeZoneApi,
   wardrobeApi,
 } from "../../../services/wardrobeService";
-import { aiService } from "../../../services/aiService";
+import { useAI } from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
 import {
   mapAiStyleToFormStyle,
@@ -37,6 +37,7 @@ const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ngy", "Th? Thao", "Ti?c Tng
 
 export function AddClothing() {
   const navigate = useNavigate();
+  const { detect } = useAI();
   const [searchParams] = useSearchParams();
   const initialZoneId = searchParams.get("zoneId");
   const location = useLocation();
@@ -180,7 +181,10 @@ export function AddClothing() {
     setAiResult(null);
 
     try {
-      const response = await aiService.detect(file);
+      // Auth error (401/403) đã được hook xử lý tự động, trả null → dừng
+      const response = await detect(file);
+      if (!response) return;
+
       const primary = response.detections[0];
 
       if (!primary) {
