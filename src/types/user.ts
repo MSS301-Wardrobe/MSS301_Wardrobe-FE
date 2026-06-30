@@ -9,37 +9,56 @@ export interface Role {
 
 export interface User {
   id: string;
+  userId?: string;
   email: string;
+  username?: string;
+  fullName?: string;
   name?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
 
-  // Some APIs return a single role directly
   role?: RoleName;
-
-  // Some APIs return roles as an array
   roles?: Role[];
 }
 
 export interface UserProfile {
-  id: string;
+  id?: string;
   userId: string;
-  name: string;
+  profileId?: string;
+
+  fullName: string;
   email: string;
+  username?: string;
+
+  avatarUrl?: string | null;
+  phoneNumber?: string | null;
+  address?: string | null;
+
+  role?: RoleName;
+  status?: string;
+
+  gender?: string | null;
+  dateOfBirth?: string | null;
+  notes?: string | null;
+
+  // Body measurements
+  height?: string | null;
+  weight?: string | null;
+  chest?: string | null;
+  waist?: string | null;
+  hips?: string | null;
+  shoeSize?: string | null;
+  fitPreference?: string | null;
+
+  favoriteColors?: string | null;
+  stylePreference?: string | null;
+  lifestylePreference?: string | null;
+  occupation?: string | null;
+
+  // Giữ tạm field cũ nếu vài màn khác còn dùng
   phone?: string;
   bio?: string;
   location?: string;
   dob?: string;
-  gender?: string;
-  avatarUrl?: string;
-
-  // Body measurements
-  height?: string;
-  weight?: string;
-  chest?: string;
-  waist?: string;
-  hips?: string;
-  shoeSize?: string;
-  fitPreference?: string;
 }
 
 export interface LoginPayload {
@@ -48,19 +67,21 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
+  username: string;
   email: string;
   password: string;
   name?: string;
 }
 
 export interface UpdateUserPayload {
-  name?: string;
+  fullName?: string;
   avatarUrl?: string;
-  phone?: string;
-  bio?: string;
-  location?: string;
-  dob?: string;
+  phoneNumber?: string;
+  notes?: string;
+  address?: string;
+  dateOfBirth?: string;
   gender?: string;
+
   height?: string;
   weight?: string;
   chest?: string;
@@ -68,6 +89,11 @@ export interface UpdateUserPayload {
   hips?: string;
   shoeSize?: string;
   fitPreference?: string;
+
+  favoriteColors?: string;
+  stylePreference?: string;
+  lifestylePreference?: string;
+  occupation?: string;
 }
 
 // Vì bạn dùng HttpOnly cookie, login response KHÔNG nên có accessToken ở body.

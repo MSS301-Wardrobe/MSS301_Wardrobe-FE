@@ -39,7 +39,19 @@ interface SidebarProps {
 
 export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
+  const { logout, user  } = useAuthContext();
+
+  const displayName = user?.fullName || user?.name || "Người dùng";
+  const displayEmail = user?.email || "";
+  const avatarUrl = user?.avatarUrl;
+
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   const handleLogout = async () => {
     try {
@@ -183,32 +195,52 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="px-4 py-3 border-t border-sidebar-border">
           <NavLink to="/app/profile">
             <div className="flex items-center gap-3 rounded-xl cursor-pointer transition-colors duration-150 hover:bg-muted -mx-1 px-1 py-1">
-              <div
-                className="rounded-full flex items-center justify-center shrink-0"
-                style={{
-                  width: 32,
-                  height: 32,
-                  background: "linear-gradient(135deg, #EA580C, #F97316)",
-                  color: "white",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                }}
-              >
-                JS
-              </div>
-              <div>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="rounded-full object-cover shrink-0"
+                  style={{
+                    width: 32,
+                    height: 32,
+                  }}
+                />
+              ) : (
+                <div
+                  className="rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    background: "linear-gradient(135deg, #EA580C, #F97316)",
+                    color: "white",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {initials || "U"}
+                </div>
+              )}
+
+              <div className="min-w-0">
                 <p
+                  className="truncate"
                   style={{
                     fontSize: "0.8rem",
                     fontWeight: 600,
                     color: "#0F172A",
                   }}
                 >
-                  Jamie Smith
+                  {displayName}
                 </p>
-                <p style={{ fontSize: "0.7rem", color: "#64748B" }}>
-                  jamie@example.com
-                </p>
+
+                {displayEmail && (
+                  <p
+                    className="truncate"
+                    style={{ fontSize: "0.7rem", color: "#64748B" }}
+                  >
+                    {displayEmail}
+                  </p>
+                )}
               </div>
             </div>
           </NavLink>

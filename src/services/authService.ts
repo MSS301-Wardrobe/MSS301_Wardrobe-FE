@@ -1,5 +1,6 @@
 import { apiClient } from "./apiClient";
 import type { User } from "../types/user";
+import { ApiResponse } from "@/types/apiResonse";
 
 type LoginResponse = {
   message?: string;
@@ -34,9 +35,9 @@ export const authService = {
   },
 
   async me(): Promise<User> {
-    const { data } = await apiClient.get<User>("/users/me");
-    return data;
-  },
+  const { data } = await apiClient.get<ApiResponse<User>>("/users/me");
+  return data.data;
+},
 
   async register(payload: {
     email: string;

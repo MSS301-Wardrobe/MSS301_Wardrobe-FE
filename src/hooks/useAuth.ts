@@ -3,31 +3,58 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { authService } from "../services/authService";
 import { useAuthContext } from "../app/providers/AuthProvider";
-import type { LoginPayload, RegisterPayload } from "../types/user";
+import type {
+  LoginPayload,
+  RegisterPayload,
+  RoleName,
+  User,
+} from "../types/user";
 
 export function useAuth() {
-  const { user, isAuthenticated, isLoading, setUser, logout: ctxLogout } = useAuthContext();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    setUser,
+    logout: ctxLogout,
+  } = useAuthContext();
   const navigate = useNavigate();
 
   const loginMutation = useMutation({
-    mutationFn: (payload: LoginPayload) =>
-      authService.login(payload.email, payload.password),
-    onSuccess: (data) => {
-      const role = data.roles?.[0]?.roleName ?? data.role ?? "USER";
-      const normalizedRole = role === "ROLE_ADMIN" || role === "ADMIN" ? "ADMIN" : "USER";
+    mutationFn: async (payload: LoginPayload) => {
+      // Xóa user cũ trước, tránh màn hình còn hiện an5
+      setUser(null);
 
-      setUser({
-        id: data.id ?? data.userId ?? "",
-        email: data.email ?? "",
-        name: data.name,
-        avatarUrl: data.avatarUrl,
-        role: normalizedRole,
-      });
-      toast.success("Chào mừng trở lại!");
-      const dest = normalizedRole === "ADMIN" ? "/admin/dashboard" : "/app/dashboard";
-      navigate(dest);
+      // API login đã set cookie và trả về user mới
+      return await authService.login(payload.email, payload.password);
     },
+
+    onSuccess: (data) => {
+      const role = data.role ?? data.roles?.[0]?.roleName ?? "ROLE_USER";
+
+      const normalizedRole: RoleName =
+        role === "ROLE_ADMIN" || role === "ADMIN" ? "ADMIN" : "USER";
+
+      const currentUser: User = {
+        id: data.userId ?? data.id ?? "",
+        email: data.email ?? "",
+        fullName: data.fullName,
+        avatarUrl: data.avatarUrl ?? undefined,
+        role: normalizedRole,
+      };
+
+      setUser(currentUser);
+
+      toast.success("Chào mừng trở lại!");
+
+      navigate(
+        normalizedRole === "ADMIN" ? "/admin/dashboard" : "/app/dashboard",
+        { replace: true },
+      );
+    },
+
     onError: () => {
+      setUser(null);
       toast.error("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
     },
   });
@@ -35,11 +62,15 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: (payload: RegisterPayload) => authService.register(payload),
     onSuccess: (_data, variables) => {
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.");
+      toast.success(
+        "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.",
+      );
       navigate("/verify-otp", { state: { email: variables.email } });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || "Không thể tạo tài khoản. Email có thể đã được sử dụng.";
+      const message =
+        error?.response?.data?.message ||
+        "Không thể tạo tài khoản. Email có thể đã được sử dụng.";
       toast.error(message);
     },
   });
@@ -55,8 +86,11 @@ export function useAuth() {
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: (payload: { email: string; otp: string; newPassword: string }) =>
-      authService.resetPassword(payload),
+    mutationFn: (payload: {
+      email: string;
+      otp: string;
+      newPassword: string;
+    }) => authService.resetPassword(payload),
     onSuccess: () => {
       toast.success("Đặt lại mật khẩu thành công!");
       navigate("/login");
@@ -78,6 +112,7 @@ export function useAuth() {
     login: loginMutation.mutate,
     isLoginLoading: loginMutation.isPending,
     register: registerMutation.mutate,
+    registerAsync: registerMutation.mutateAsync,
     isRegisterLoading: registerMutation.isPending,
     forgotPassword: forgotPasswordMutation.mutate,
     isForgotLoading: forgotPasswordMutation.isPending,

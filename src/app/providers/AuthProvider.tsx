@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { User } from "../../types/user";
 import { authService } from "../../services/authService";
+import { userService } from "../../services/userService";
 
 interface AuthContextValue {
   user: User | null;
@@ -15,14 +16,16 @@ interface AuthContextValue {
   isLoading: boolean;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
+  uploadAvatar: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  setUser: () => {},
-  logout: async () => {},
+  setUser: () => { },
+  logout: async () => { },
+  uploadAvatar: async () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,6 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setUser = useCallback((user: User | null) => {
     setUserState(user);
   }, []);
+
+  const uploadAvatar = useCallback(async (file: File) => {
+    const updatedUser = await userService.uploadAvatar(file);
+    setUser(updatedUser);
+  }, [setUser]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         setUser,
         logout,
+        uploadAvatar,
       }}
     >
       {children}
