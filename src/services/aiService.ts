@@ -28,6 +28,58 @@ export class LowConfidenceDetectionError extends Error {
   }
 }
 
+/** 401 — chưa đăng nhập hoặc token hết hạn, gateway trả về AUTH_TOKEN_MISSING */
+export class AiUnauthorizedError extends Error {
+  constructor(message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.") {
+    super(message);
+    this.name = "AiUnauthorizedError";
+  }
+}
+
+/** 403 — đã đăng nhập nhưng không có quyền, gateway / service trả về AUTH_FORBIDDEN */
+export class AiForbiddenError extends Error {
+  constructor(message = "Bạn không có quyền sử dụng tính năng nhận diện AI.") {
+    super(message);
+    this.name = "AiForbiddenError";
+  }
+}
+
+type AxiosLikeError = {
+  response?: {
+    status?: number;
+    data?: {
+      error?: string;
+      message?: string;
+      detail?: string | { error?: string; message?: string };
+    };
+  };
+};
+
+/** Chuyển HTTP 401/403 từ gateway / ai-detection-service thành error class rõ ràng */
+function interpretAiError(error: unknown): never {
+  const axiosError = error as AxiosLikeError;
+  const status = axiosError?.response?.status;
+  const data = axiosError?.response?.data;
+
+  const detailMsg =
+    typeof data?.detail === "object" ? data.detail?.message : data?.detail;
+  const serverMsg = data?.message ?? detailMsg;
+
+  if (status === 401) {
+    throw new AiUnauthorizedError(
+      serverMsg ?? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+    );
+  }
+
+  if (status === 403) {
+    throw new AiForbiddenError(
+      serverMsg ?? "Bạn không có quyền sử dụng tính năng nhận diện AI."
+    );
+  }
+
+  throw error;
+}
+
 function normalizeColor(color: DominantColor | string): DominantColor {
   if (typeof color === "string") {
     return {
@@ -115,17 +167,21 @@ export const aiService = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const { data } = await apiClient.post<AIDetectionResult>(
-      AI_DETECT_PATH,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    try {
+      const { data } = await apiClient.post<AIDetectionResult>(
+        AI_DETECT_PATH,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    return data;
+      return data;
+    } catch (error: unknown) {
+      interpretAiError(error);
+    }
   },
 
   async detectForView(image: File | string): Promise<AIDetectionViewResult> {
