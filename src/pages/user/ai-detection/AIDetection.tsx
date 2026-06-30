@@ -161,10 +161,7 @@ export function AIDetection() {
 
       setProgress(100);
       setResult(detectionResult);
-<<<<<<< HEAD
-=======
       sessionStorage.setItem(SESSION_KEY_RESULT, JSON.stringify(detectionResult));
->>>>>>> 32b12dbfa3fa3241a43dfed3c872d41a3f615911
 
       toast.success(
         `Nhận diện hoàn tất! Độ tin cậy ${detectionResult.confidence}%`
