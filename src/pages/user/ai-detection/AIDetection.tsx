@@ -11,7 +11,10 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { ManualCropOverlay } from "../../../components/ai/ManualCropOverlay";
-import { aiService, LowConfidenceDetectionError } from "../../../services/aiService";
+import {
+  useAI,
+  LowConfidenceDetectionError,
+} from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
 import type { AIDetectionViewResult } from "../../../types/ai";
 import { SUPPORTED_CATEGORY_NAMES_VI } from "../../../utils/aiMappings";
@@ -34,6 +37,7 @@ const PREVIEW_MAX_HEIGHT = 640;
 
 export function AIDetection() {
   const navigate = useNavigate();
+  const { detectForView } = useAI();
   const fileRef = useRef<HTMLInputElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const previewImageRef = useRef<HTMLImageElement>(null);
@@ -198,10 +202,13 @@ export function AIDetection() {
 
     try {
       const croppedFile = await cropImageFile(sourceFile, cropArea);
-      const detectionResult = await aiService.detectForView(croppedFile);
+      const detectionResult = await detectForView(croppedFile);
+
+      // Auth error (401/403) đã được hook xử lý, trả null → dừng
+      if (!detectionResult) return;
+
       setProgress(100);
       setResult(detectionResult);
-      // Lưu kết quả AI vào sessionStorage để giữ khi chuyển tab
       sessionStorage.setItem(SESSION_KEY_RESULT, JSON.stringify(detectionResult));
 
       toast.success(
