@@ -11,15 +11,13 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { ManualCropOverlay } from "../../../components/ai/ManualCropOverlay";
-<<<<<<< HEAD
 import { aiService, LowConfidenceDetectionError } from "../../../services/aiService";
-=======
+
 import {
   useAI,
   LowConfidenceDetectionError,
 } from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
->>>>>>> 32b12dbfa3fa3241a43dfed3c872d41a3f615911
 import type { AIDetectionViewResult } from "../../../types/ai";
 import { SUPPORTED_CATEGORY_NAMES_VI } from "../../../utils/aiMappings";
 import {
