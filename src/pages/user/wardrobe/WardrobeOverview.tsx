@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Grid3X3, List, Heart, ChevronLeft, ChevronRight, ArrowLeft, Plus, Trash2, Edit3, X, Check } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
-import { clothingItemApi, wardrobeApi, wardrobeZoneApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import { storageService } from "../../../services/storageService";
 import { ClothingItem, Wardrobe, WardrobeZone } from "../../../types/wardrobe";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ export function WardrobeOverview() {
   const [searchParams] = useSearchParams();
   const zoneId = searchParams.get("zoneId");
   const zoneName = searchParams.get("zoneName") || "Ngăn Kéo";
+  const { clothingItemApi, wardrobeApi, wardrobeZoneApi } = useWardrobe();
 
   const [allItems, setAllItems] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);

@@ -62,21 +62,21 @@ export function useAI() {
     }
   }
 
-  /**
-   * Phân tích item đã lưu theo itemId.
-   * Auth error (401/403) → xử lý tự động, trả null.
-   */
-  async function analyze(itemId: string): Promise<AIAnalysisResult | null> {
+
+  const getAnalytics = async (type: 'stats' | 'daily' | 'monthly' | 'categories' | 'recent') => {
     try {
-      const result = await aiService.analyze(itemId);
-      return result ?? null;
+      if (type === 'stats') return await aiService.getStats();
+      if (type === 'daily') return await aiService.getDaily();
+      if (type === 'monthly') return await aiService.getMonthly();
+      if (type === 'categories') return await aiService.getCategories();
+      if (type === 'recent') return await aiService.getRecent();
     } catch (error: unknown) {
-      if (handleAuthError(error)) return null;
+      handleAuthError(error);
       throw error;
     }
-  }
+  };
 
-  return { detect, detectForView, analyze };
+  return { detect, detectForView, getAnalytics };
 }
 
 export default useAI;

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { clothingItemApi, categoryApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import type { ClothingItem, Category } from "../../../types/wardrobe";
 import { ArrowLeft, Heart, Edit2, Trash2, Share2, Tag, Info, Cpu } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ const similarItems = [
 export function ClothingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { clothingItemApi, categoryApi } = useWardrobe();
   const [favorite, setFavorite] = useState(true);
   const [activeTab, setActiveTab] = useState<"info" | "ai" | "notes">("info");
   const [itemData, setItemData] = useState<ClothingItem | null>(null);

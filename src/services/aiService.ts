@@ -208,6 +208,27 @@ export const aiService = {
     const { data } = await apiClient.get<AIAnalysisResult>(`/ai/analyze/${itemId}`);
     return data;
   },
+
+  async getStats(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/stats');
+    return data;
+  },
+  async getDaily(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/daily');
+    return data;
+  },
+  async getMonthly(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/monthly');
+    return data;
+  },
+  async getCategories(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/categories');
+    return data;
+  },
+  async getRecent(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/recent');
+    return data;
+  },
 };
 
 export default aiService;

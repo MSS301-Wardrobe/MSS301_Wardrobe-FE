@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, ChevronRight, X, Check, Box, Edit3, Trash2, ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { wardrobeZoneApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import { WardrobeZone } from "../../../types/wardrobe";
 
 const COLORS = [
@@ -18,6 +18,7 @@ export function WardrobeZones() {
   const [searchParams] = useSearchParams();
   const wardrobeId = searchParams.get("wardrobeId");
   const q = searchParams.get("q") || "";
+  const { wardrobeZoneApi } = useWardrobe();
 
   const [zones, setZones] = useState<WardrobeZone[]>([]);
   const [loading, setLoading] = useState(true);
