@@ -2,14 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { ArrowLeft, Upload, X, Cpu, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  clothingItemApi,
-  categoryApi,
-  ensureAiCategoryCatalog,
-  resolveCategoryFromAi,
-  wardrobeZoneApi,
-  wardrobeApi,
-} from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import { useAI } from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
 import {
@@ -42,6 +35,14 @@ export function AddClothing() {
   const initialZoneId = searchParams.get("zoneId");
   const location = useLocation();
   const navState = location.state as { prefillDetection?: any; previewImage?: string; sourceFile?: File; imageId?: string } | null;
+  const {
+    clothingItemApi,
+    categoryApi,
+    ensureAiCategoryCatalog,
+    resolveCategoryFromAi,
+    wardrobeZoneApi,
+    wardrobeApi,
+  } = useWardrobe();
 
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingAiRef = useRef<{

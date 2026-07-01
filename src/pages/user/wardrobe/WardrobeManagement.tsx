@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { wardrobeApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import type { Wardrobe } from "../../../types/wardrobe";
 
 const COLORS = [
@@ -29,6 +29,7 @@ export function WardrobeManagement() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const q = searchParams.get("q") || "";
+  const { wardrobeApi } = useWardrobe();
   
   const [wardrobes, setWardrobes] = useState<Wardrobe[]>([]);
   const [loading, setLoading] = useState(true);
