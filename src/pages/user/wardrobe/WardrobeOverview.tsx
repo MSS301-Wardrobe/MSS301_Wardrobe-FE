@@ -295,9 +295,6 @@ export function WardrobeOverview() {
                 >
                   <Heart size={15} fill={favorites.has(item.itemId) ? "#EF4444" : "none"} color={favorites.has(item.itemId) ? "#EF4444" : "#94A3B8"} />
                 </button>
-                <div style={{ position: "absolute", bottom: 8, left: 8, background: "#10B981", color: "white", borderRadius: 6, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
-                  {item.confidenceScore ?? 100}% AI
-                </div>
               </div>
               <div style={{ padding: "10px 14px" }}>
                 <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.itemName}</p>
@@ -344,7 +341,6 @@ export function WardrobeOverview() {
                   <span style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem" }}>{item.style}</span>
                 )}
               </div>
-              <span style={{ background: "#ECFDF5", color: "#10B981", borderRadius: 6, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{item.confidenceScore ?? 100}%</span>
               <div style={{ display: "flex", gap: 6 }} onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={(e) => openEdit(item, e)}

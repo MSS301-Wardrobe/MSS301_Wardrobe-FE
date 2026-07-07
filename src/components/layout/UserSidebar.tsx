@@ -13,6 +13,7 @@ import {
   Zap,
   Users,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthContext } from "../../app/providers/AuthProvider";
@@ -25,6 +26,7 @@ const navItems = [
   { icon: Sparkles, label: "Gợi Ý Trang Phục", path: "/app/recommendations" },
   { icon: Calendar, label: "Trang Phục Sự Kiện", path: "/app/event-outfits" },
   { icon: Images, label: "Thư Viện Ảnh", path: "/app/image-library" },
+  { icon: Trash2, label: "Thùng Rác", path: "/app/wardrobe/trash" },
 ];
 
 const bottomNavItems = [

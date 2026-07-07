@@ -76,6 +76,17 @@ export const wardrobeApi = {
     const { data } = await apiClient.get<ApiResponse<Wardrobe[]>>(`${W}/wardrobes/search?keyword=${encodeURIComponent(keyword)}`);
     return data.data ?? [];
   },
+
+  /** GET /wardrobes/trash */
+  async getDeleted(): Promise<Wardrobe[]> {
+    const { data } = await apiClient.get<ApiResponse<Wardrobe[]>>(`${W}/wardrobes/trash`);
+    return data.data ?? [];
+  },
+
+  /** POST /wardrobes/:id/restore */
+  async restore(id: string): Promise<void> {
+    await apiClient.post(`${W}/wardrobes/${id}/restore`);
+  },
 };
 
 // ─── Wardrobe Zone API ────────────────────────────────────────────────────────
@@ -127,6 +138,17 @@ export const wardrobeZoneApi = {
     if (wardrobeId) url += `&wardrobeId=${wardrobeId}`;
     const { data } = await apiClient.get<ApiResponse<WardrobeZone[]>>(url);
     return data.data ?? [];
+  },
+
+  /** GET /wardrobe-zones/trash */
+  async getDeleted(): Promise<WardrobeZone[]> {
+    const { data } = await apiClient.get<ApiResponse<WardrobeZone[]>>(`${W}/wardrobe-zones/trash`);
+    return data.data ?? [];
+  },
+
+  /** POST /wardrobe-zones/:id/restore */
+  async restore(id: string): Promise<void> {
+    await apiClient.post(`${W}/wardrobe-zones/${id}/restore`);
   },
 };
 

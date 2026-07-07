@@ -351,7 +351,7 @@ export function WardrobeManagement() {
             <p style={{ color: "#64748B", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: 24 }}>
               Tủ đồ <strong style={{ color: "#0F172A" }}>
                 {wardrobes.find((w) => w.wardrobeId === deleteId)?.wardrobeName}
-              </strong> sẽ bị xóa vĩnh viễn. Quần áo bên trong sẽ không bị xóa.
+              </strong> và tất cả dữ liệu bên trong sẽ được chuyển vào thùng rác trong 30 ngày.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button
