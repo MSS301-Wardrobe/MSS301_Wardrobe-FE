@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router";
-import { ArrowLeft, Upload, X, Cpu, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Cpu, Check, Loader2, Plus, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useWardrobe } from "../../../hooks/useWardrobe";
 import { useAI } from "../../../hooks/useAI";
@@ -65,6 +65,17 @@ export function AddClothing() {
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
+
+  // Create Wardrobe Modal
+  const [createWardrobeOpen, setCreateWardrobeOpen] = useState(false);
+  const [createWardrobeName, setCreateWardrobeName] = useState("");
+  const [creatingWardrobe, setCreatingWardrobe] = useState(false);
+
+  // Create Zone Modal
+  const [createZoneOpen, setCreateZoneOpen] = useState(false);
+  const [createZoneName, setCreateZoneName] = useState("");
+  const [createZoneDesc, setCreateZoneDesc] = useState("");
+  const [creatingZone, setCreatingZone] = useState(false);
 
   // Real data from API
   const [categories, setCategories] = useState<Category[]>([]);
@@ -144,14 +155,14 @@ export function AddClothing() {
   // Apply AI detection data from navigation state
   useEffect(() => {
     if (!navState?.prefillDetection) return;
-    
+
     if (navState.imageId) {
       setPreview(`http://localhost:8080/api/v1/storage/files/${navState.imageId}`);
       setUploadedImageId(navState.imageId);
     } else if (navState.previewImage) {
       setPreview(navState.previewImage);
     }
-    
+
     if (navState.sourceFile) setSelectedFile(navState.sourceFile);
     const primary = navState.prefillDetection;
     const colorLabel = primary.colorLabel || primary.color?.name || '';
@@ -165,7 +176,7 @@ export function AddClothing() {
     const detection = { classKey: primary.class_name || '', categoryName: catName, color: colorLabel, formStyle, confidence: confValue };
     pendingAiRef.current = detection;
     setForm(f => ({ ...f, dominantColor: colorLabel, style: styleLabel, confidenceScore: confValue }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navState]);
 
   useEffect(() => {
@@ -295,6 +306,41 @@ export function AddClothing() {
       toast.error(err?.response?.data?.message ?? "Thêm thất bại, vui lòng thử lại");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCreateWardrobe = async () => {
+    if (!createWardrobeName.trim()) return toast.error("Vui lòng nhập tên tủ đồ");
+    setCreatingWardrobe(true);
+    try {
+      const created = await wardrobeApi.create({ wardrobeName: createWardrobeName.trim() });
+      setWardrobes((prev) => [...prev, created]);
+      setForm(f => ({ ...f, wardrobeId: created.wardrobeId }));
+      toast.success(`Tủ đồ "${created.wardrobeName}" đã được tạo!`);
+      setCreateWardrobeOpen(false);
+      setCreateWardrobeName("");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Tạo tủ đồ thất bại");
+    } finally {
+      setCreatingWardrobe(false);
+    }
+  };
+
+  const handleCreateZone = async () => {
+    if (!createZoneName.trim()) return toast.error("Vui lòng nhập tên ngăn kéo");
+    setCreatingZone(true);
+    try {
+      const created = await wardrobeZoneApi.create({ wardrobeId: form.wardrobeId, zoneName: createZoneName.trim(), description: createZoneDesc.trim() });
+      setZones((prev) => [...prev, created]);
+      setForm(f => ({ ...f, zoneId: created.zoneId }));
+      toast.success(`Ngăn kéo "${created.zoneName}" đã được tạo!`);
+      setCreateZoneOpen(false);
+      setCreateZoneName("");
+      setCreateZoneDesc("");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Tạo ngăn kéo thất bại");
+    } finally {
+      setCreatingZone(false);
     }
   };
 
@@ -445,33 +491,55 @@ export function AddClothing() {
               {/* Wardrobe */}
               <div>
                 <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Tu Do</label>
-                <select
-                  value={form.wardrobeId}
-                  onChange={(e) => setForm({ ...form, wardrobeId: e.target.value, zoneId: "" })}
-                  style={{ ...inputStyle, cursor: initialZoneId ? "not-allowed" : "pointer", background: initialZoneId ? "#F8FAFC" : "white" }}
-                  disabled={!!initialZoneId}
-                >
-                  <option value="">Chon tu do</option>
-                  {wardrobes.map((w: any) => (
-                    <option key={w.wardrobeId} value={w.wardrobeId}>{w.wardrobeName}</option>
-                  ))}
-                </select>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <select
+                    value={form.wardrobeId}
+                    onChange={(e) => setForm({ ...form, wardrobeId: e.target.value, zoneId: "" })}
+                    style={{ ...inputStyle, flex: 1, cursor: initialZoneId ? "not-allowed" : "pointer", background: initialZoneId ? "#F8FAFC" : "white" }}
+                    disabled={!!initialZoneId}
+                  >
+                    <option value="">Chon tu do</option>
+                    {wardrobes.map((w: any) => (
+                      <option key={w.wardrobeId} value={w.wardrobeId}>{w.wardrobeName}</option>
+                    ))}
+                  </select>
+                  {wardrobes.length === 0 && !initialZoneId && (
+                    <button
+                      type="button"
+                      onClick={() => setCreateWardrobeOpen(true)}
+                      style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <Plus size={16} /> Tạo Tủ Đồ
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Zone */}
               <div>
                 <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Ngan Keo</label>
-                <select
-                  value={form.zoneId}
-                  onChange={(e) => setForm({ ...form, zoneId: e.target.value })}
-                  style={{ ...inputStyle, cursor: (!form.wardrobeId && !initialZoneId) ? "not-allowed" : "pointer", background: (!form.wardrobeId && !initialZoneId) ? "#F8FAFC" : "white" }}
-                  disabled={!form.wardrobeId && !initialZoneId}
-                >
-                  <option value="">Chon ngan keo</option>
-                  {zones.filter((z: any) => !form.wardrobeId || z.wardrobeId === form.wardrobeId).map((z) => (
-                    <option key={z.zoneId} value={z.zoneId}>{z.zoneName}</option>
-                  ))}
-                </select>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <select
+                    value={form.zoneId}
+                    onChange={(e) => setForm({ ...form, zoneId: e.target.value })}
+                    style={{ ...inputStyle, flex: 1, cursor: (!form.wardrobeId && !initialZoneId) ? "not-allowed" : "pointer", background: (!form.wardrobeId && !initialZoneId) ? "#F8FAFC" : "white" }}
+                    disabled={!form.wardrobeId && !initialZoneId}
+                  >
+                    <option value="">Chon ngan keo</option>
+                    {zones.filter((z: any) => !form.wardrobeId || z.wardrobeId === form.wardrobeId).map((z) => (
+                      <option key={z.zoneId} value={z.zoneId}>{z.zoneName}</option>
+                    ))}
+                  </select>
+                  {form.wardrobeId && zones.filter((z: any) => z.wardrobeId === form.wardrobeId).length === 0 && !initialZoneId && (
+                    <button
+                      type="button"
+                      onClick={() => setCreateZoneOpen(true)}
+                      style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #34D399)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <Plus size={16} /> Tạo Ngăn Kéo
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Color + Style */}
@@ -498,7 +566,7 @@ export function AddClothing() {
                 </div>
               </div>
 
-                            {/* Confidence Score */}
+              {/* Confidence Score */}
               {aiResult && (
                 <div>
                   <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
@@ -538,6 +606,137 @@ export function AddClothing() {
           </div>
         </div>
       </form>
+
+      {/* ── Create Wardrobe Modal ── */}
+      {createWardrobeOpen && (
+        <div
+          onClick={() => setCreateWardrobeOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "white", borderRadius: 24, padding: 36, maxWidth: 460, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Package size={18} color="#EA580C" />
+                </div>
+                <h3 style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.05rem" }}>Tạo Tủ Đồ Mới</h3>
+              </div>
+              <button onClick={() => setCreateWardrobeOpen(false)} style={{ background: "#F1F5F9", border: "none", borderRadius: 8, padding: 6, cursor: "pointer" }}>
+                <X size={16} color="#64748B" />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                  Tên Tủ Đồ <span style={{ color: "#EF4444" }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={createWardrobeName}
+                  onChange={(e) => setCreateWardrobeName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateWardrobe(); }}
+                  placeholder="Vd: Tủ Đồ Mùa Đông, Tủ Công Sở..."
+                  maxLength={100}
+                  style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #E2E8F0", borderRadius: 10, fontSize: "0.9rem", outline: "none", boxSizing: "border-box", color: "#0F172A" }}
+                />
+                <p style={{ fontSize: "0.72rem", color: "#94A3B8", marginTop: 4, textAlign: "right" }}>{createWardrobeName.length}/100</p>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                <button
+                  onClick={() => setCreateWardrobeOpen(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleCreateWardrobe}
+                  disabled={creatingWardrobe}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creatingWardrobe ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: creatingWardrobe ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  {creatingWardrobe ? (
+                    <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang tạo...</>
+                  ) : (
+                    <><Plus size={15} /> Tạo Tủ Đồ</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Create Zone Modal ── */}
+      {createZoneOpen && (
+        <div
+          onClick={() => setCreateZoneOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "white", borderRadius: 24, padding: 36, maxWidth: 460, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Package size={18} color="#10B981" />
+                </div>
+                <h3 style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.05rem" }}>Tạo Ngăn Kéo Mới</h3>
+              </div>
+              <button onClick={() => setCreateZoneOpen(false)} style={{ background: "#F1F5F9", border: "none", borderRadius: 8, padding: 6, cursor: "pointer" }}>
+                <X size={16} color="#64748B" />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                  Tên Ngăn Kéo <span style={{ color: "#EF4444" }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={createZoneName}
+                  onChange={(e) => setCreateZoneName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateZone(); }}
+                  placeholder="Vd: Áo Thun, Quần Jean..."
+                  maxLength={100}
+                  style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #E2E8F0", borderRadius: 10, fontSize: "0.9rem", outline: "none", boxSizing: "border-box", color: "#0F172A" }}
+                />
+                <p style={{ fontSize: "0.72rem", color: "#94A3B8", marginTop: 4, textAlign: "right" }}>{createZoneName.length}/100</p>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Mô Tả</label>
+                <textarea value={createZoneDesc} onChange={(e) => setCreateZoneDesc(e.target.value)} rows={2} placeholder="Mô tả về ngăn kéo này" style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #E2E8F0", borderRadius: 10, fontSize: "0.88rem", outline: "none", resize: "vertical", fontFamily: "Inter, sans-serif", boxSizing: "border-box" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                <button
+                  onClick={() => setCreateZoneOpen(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleCreateZone}
+                  disabled={creatingZone}
+                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creatingZone ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: creatingZone ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  {creatingZone ? (
+                    <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang tạo...</>
+                  ) : (
+                    <><Plus size={15} /> Tạo Ngăn Kéo</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
