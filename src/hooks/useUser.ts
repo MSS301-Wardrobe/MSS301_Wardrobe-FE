@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "../services/userService";
 import { useAuthContext } from "../app/providers/AuthProvider";
+import { stylePreferenceService } from "../services/style";
+
 import type {
   UpdateUserPayload,
   UserPreferences,
@@ -33,10 +35,10 @@ function buildDemoProfile(user: {
 }
 
 const DEMO_PREFERENCES: UserPreferences = {
-  favoriteColors: ["#000000", "#EA580C", "#FFFFFF"],
-  preferredStyles: ["minimal", "business"],
-  lifestyles: ["office", "social"],
-  clothingInterests: ["Áo Vest", "Đồ Denim", "Giày Dép"],
+  favoriteColors: ["BLACK", "ORANGE", "WHITE"],
+  preferredStyles: ["MINIMAL", "OFFICE"],
+  lifestyles: ["OFFICE_WORK", "SOCIAL_EVENTS"],
+  clothingInterests: ["VEST", "DENIM", "SHOES"],
 };
 
 export function useUser() {
@@ -61,7 +63,7 @@ export function useUser() {
     queryKey: ["user", "preferences", user?.id ?? user?.email],
     queryFn: async () => {
       try {
-        return await userService.getPreferences();
+        return await stylePreferenceService.getMyPreferences();
       } catch {
         return DEMO_PREFERENCES;
       }
@@ -84,7 +86,7 @@ export function useUser() {
 
   const updatePreferencesMutation = useMutation({
     mutationFn: (payload: UserPreferences) =>
-      userService.updatePreferences(payload),
+      stylePreferenceService.saveMyPreferences(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user", "preferences"] });
       toast.success(

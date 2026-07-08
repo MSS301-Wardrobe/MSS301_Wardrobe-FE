@@ -7,6 +7,15 @@ type LoginResponse = {
   user?: User;
 };
 
+type VerifyForgotPasswordOtpResponse = {
+  resetToken: string;
+};
+
+type ResetPasswordPayload = {
+  resetToken: string;
+  newPassword: string;
+};
+
 // Demo credentials — used when backend is not available
 const DEMO_USERS = [
   { email: "admin@gmail.com", password: "Admin@123", role: "ADMIN", name: "Admin" },
@@ -20,28 +29,40 @@ export const authService = {
         email,
         password,
       });
+
       if (data?.user) return data.user;
+
       return this.me();
     } catch {
-      // Demo fallback when backend is unavailable
       const demo = DEMO_USERS.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        (u) =>
+          u.email.toLowerCase() === email.toLowerCase() &&
+          u.password === password
       );
+
       if (demo) {
-        return { id: "demo-user", email: demo.email, name: demo.name, role: demo.role as "USER" | "ADMIN" };
+        return {
+          id: "demo-user",
+          email: demo.email,
+          name: demo.name,
+          role: demo.role as "USER" | "ADMIN",
+        };
       }
+
       throw new Error("Email hoặc mật khẩu không đúng");
     }
   },
 
   async me(): Promise<User> {
-  const { data } = await apiClient.get<ApiResponse<User>>("/users/me");
-  return data.data;
-},
+    const { data } = await apiClient.get<ApiResponse<User>>("/users/me");
+    return data.data;
+  },
 
   async register(payload: {
     email: string;
+    username: string;
     password: string;
+    fullName: string;
   }) {
     const { data } = await apiClient.post("/users/auth/register", payload);
     return data;
@@ -59,6 +80,7 @@ export const authService = {
     const { data } = await apiClient.post("/users/auth/resend-code", {
       email,
     });
+
     return data;
   },
 
@@ -66,14 +88,23 @@ export const authService = {
     const { data } = await apiClient.post("/users/auth/forgot-password", {
       email,
     });
+
     return data;
   },
 
-  async resetPassword(payload: {
+  async verifyForgotPasswordOtp(payload: {
     email: string;
     otp: string;
-    newPassword: string;
-  }) {
+  }): Promise<VerifyForgotPasswordOtpResponse> {
+    const { data } = await apiClient.post<ApiResponse<VerifyForgotPasswordOtpResponse>>(
+      "/users/auth/verify-forgot-password-otp",
+      payload
+    );
+
+    return data.data;
+  },
+
+  async resetPassword(payload: ResetPasswordPayload) {
     const { data } = await apiClient.post("/users/auth/reset-password", payload);
     return data;
   },
@@ -83,8 +114,8 @@ export const authService = {
   },
 
   async refresh(): Promise<void> {
-  await apiClient.post("/users/auth/refresh");
-}
+    await apiClient.post("/users/auth/refresh");
+  },
 };
 
 export default authService;

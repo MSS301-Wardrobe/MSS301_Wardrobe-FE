@@ -18,14 +18,12 @@ export function useAuth() {
     setUser,
     logout: ctxLogout,
   } = useAuthContext();
+
   const navigate = useNavigate();
 
   const loginMutation = useMutation({
     mutationFn: async (payload: LoginPayload) => {
-      // Xóa user cũ trước, tránh màn hình còn hiện an5
       setUser(null);
-
-      // API login đã set cookie và trả về user mới
       return await authService.login(payload.email, payload.password);
     },
 
@@ -80,23 +78,42 @@ export function useAuth() {
     onSuccess: () => {
       toast.success("Mã xác minh đã được gửi đến email của bạn.");
     },
-    onError: () => {
-      toast.error("Không tìm thấy tài khoản với email này.");
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        "Không thể gửi mã xác minh.";
+      toast.error(message);
+    },
+  });
+
+  const verifyForgotPasswordOtpMutation = useMutation({
+    mutationFn: (payload: { email: string; otp: string }) =>
+      authService.verifyForgotPasswordOtp(payload),
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        "Mã OTP không hợp lệ hoặc đã hết hạn.";
+      toast.error(message);
     },
   });
 
   const resetPasswordMutation = useMutation({
     mutationFn: (payload: {
-      email: string;
-      otp: string;
+      resetToken: string;
       newPassword: string;
     }) => authService.resetPassword(payload),
     onSuccess: () => {
       toast.success("Đặt lại mật khẩu thành công!");
       navigate("/login");
     },
-    onError: () => {
-      toast.error("Mã xác minh không hợp lệ hoặc đã hết hạn.");
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        "Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+      toast.error(message);
     },
   });
 
@@ -109,15 +126,23 @@ export function useAuth() {
     user,
     isAuthenticated,
     isLoading,
+
     login: loginMutation.mutate,
     isLoginLoading: loginMutation.isPending,
+
     register: registerMutation.mutate,
     registerAsync: registerMutation.mutateAsync,
     isRegisterLoading: registerMutation.isPending,
+
     forgotPassword: forgotPasswordMutation.mutate,
     isForgotLoading: forgotPasswordMutation.isPending,
+
+    verifyForgotPasswordOtp: verifyForgotPasswordOtpMutation.mutate,
+    isVerifyForgotPasswordOtpLoading: verifyForgotPasswordOtpMutation.isPending,
+
     resetPassword: resetPasswordMutation.mutate,
     isResetLoading: resetPasswordMutation.isPending,
+
     logout,
   };
 }
