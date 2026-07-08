@@ -34,7 +34,8 @@ export function FriendGroups() {
     description: "",
     emoji: "👗",
   });
-  const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
+  const [requestingGroupId, setRequestingGroupId] = useState<string | null>(null);
   const filteredDiscoverGroups = discoverGroups.filter((group) =>
     group.groupName.toLowerCase().includes(search.toLowerCase())
   );
@@ -46,20 +47,26 @@ export function FriendGroups() {
 
   const handleJoin = async (id: string, name: string) => {
     try {
-      const joinedGroup = await friendGroupService.joinGroup(id);
+      setRequestingGroupId(id);
 
-      setJoinedIds((prev) => new Set([...prev, id]));
+      await friendGroupService.requestToJoinGroup(id, {
+        message: `Mình muốn tham gia nhóm ${name}`,
+      });
 
-      setMyGroups((prev) => [joinedGroup, ...prev]);
-      setDiscoverGroups((prev) => prev.filter((group) => group.groupId !== id));
+      setRequestedIds((prev) => new Set([...prev, id]));
 
-      toast.success(`Đã tham gia nhóm "${name}"!`);
+      toast.success(
+        `Đã gửi yêu cầu tham gia nhóm "${name}". Vui lòng chờ chủ nhóm duyệt.`,
+      );
     } catch (err: any) {
       toast.error(
         err.response?.data?.message ||
+        err.response?.data?.data?.message ||
         err.message ||
-        "Tham gia nhóm thất bại"
+        "Gửi yêu cầu tham gia nhóm thất bại",
       );
+    } finally {
+      setRequestingGroupId(null);
     }
   };
 
@@ -242,7 +249,8 @@ export function FriendGroups() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {filteredDiscoverGroups.map((group) => {
-            const isJoined = joinedIds.has(group.groupId)
+            const isRequested = requestedIds.has(group.groupId);
+            const isRequesting = requestingGroupId === group.groupId;
             return (
               <div key={group.groupId} style={{ background: "white", borderRadius: 18, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
                 <div style={{ position: "relative" }}>
@@ -281,16 +289,39 @@ export function FriendGroups() {
                   </div>
                   <button
                     onClick={() => handleJoin(group.groupId, group.groupName)}
-                    disabled={isJoined}
+                    disabled={isRequested || isRequesting}
                     style={{
-                      width: "100%", padding: "9px", borderRadius: 10, border: `1.5px solid ${isJoined ? "#10B981" : defaultColor}`,
-                      background: isJoined ? "#ECFDF5" : defaultBg,
-                      color: isJoined ? "#10B981" : defaultColor,
-                      fontWeight: 700, cursor: isJoined ? "default" : "pointer", fontSize: "0.85rem",
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      width: "100%",
+                      padding: "9px",
+                      borderRadius: 10,
+                      border: `1.5px solid ${isRequested ? "#10B981" : defaultColor}`,
+                      background: isRequested ? "#ECFDF5" : defaultBg,
+                      color: isRequested ? "#10B981" : defaultColor,
+                      fontWeight: 700,
+                      cursor: isRequested || isRequesting ? "default" : "pointer",
+                      fontSize: "0.85rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
                     }}
                   >
-                    {isJoined ? <><Check size={14} /> Đã Tham Gia</> : <><UserPlus size={14} /> Tham Gia</>}
+                    {isRequesting ? (
+                      <>
+                        <UserPlus size={14} />
+                        Đang gửi yêu cầu...
+                      </>
+                    ) : isRequested ? (
+                      <>
+                        <Check size={14} />
+                        Đã gửi yêu cầu
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={14} />
+                        Tham Gia
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

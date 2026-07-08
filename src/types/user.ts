@@ -70,7 +70,7 @@ export interface RegisterPayload {
   username: string;
   email: string;
   password: string;
-  name?: string;
+  fullName: string;
 }
 
 export interface UpdateUserPayload {
