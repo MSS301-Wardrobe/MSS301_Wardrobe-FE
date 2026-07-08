@@ -48,10 +48,49 @@ const genderToFrontend = (gender?: string | null) => {
   }
 };
 
+const colorMap: Record<string, { name: string; hex: string }> = {
+  BLACK: { name: "Đen", hex: "#000000" },
+  WHITE: { name: "Trắng", hex: "#FFFFFF" },
+  NAVY: { name: "Xanh Đậm", hex: "#1E3A5F" },
+  CREAM: { name: "Chàm", hex: "#EA580C" },
+  PURPLE: { name: "Tím", hex: "#F97316" },
+  PINK: { name: "Hồng", hex: "#EC4899" },
+  RED: { name: "Đỏ", hex: "#EF4444" },
+  ORANGE: { name: "Cam", hex: "#F97316" },
+  YELLOW: { name: "Vàng", hex: "#F59E0B" },
+  GREEN: { name: "Xanh Lá", hex: "#10B981" },
+  TURQUOISE: { name: "Xanh Mòng Két", hex: "#14B8A6" },
+  GRAY: { name: "Xám", hex: "#94A3B8" },
+  BROWN: { name: "Nâu", hex: "#92400E" },
+  BEIGE: { name: "Be", hex: "#D4B896" },
+};
+
+const styleLabelMap: Record<string, string> = {
+  MINIMAL: "Tối Giản",
+  CASUAL: "Thường Ngày",
+  OFFICE: "Công Sở",
+  ELEGANT: "Trang Trọng",
+  STREET: "Đường Phố",
+  BOHEMIAN: "Bohemian",
+  SPORTY: "Thể Thao",
+  VINTAGE: "Cổ Điển",
+};
+
+const lifestyleLabelMap: Record<string, string> = {
+  OFFICE_WORK: "Văn Phòng",
+  STUDENT_LIFE: "Sinh Viên",
+  TRAVEL_EXPLORATION: "Du Lịch",
+  SOCIAL_EVENTS: "Sự Kiện Xã Hội",
+  SPORT_FITNESS: "Thể Thao",
+  DATING: "Hẹn Hò",
+};
+
 export function UserProfile() {
   const {
     profile,
     isProfileLoading,
+    preferences,
+    isPreferencesLoading,
     updateProfile,
     isUpdatingProfile,
     isUploadingAvatar,
@@ -383,12 +422,12 @@ export function UserProfile() {
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
           {[
-            { label: "Họ và Tên", key: "fullName", type: "text" },
-            { label: "Địa Chỉ Email", key: "email", type: "email" },
-            { label: "Số Điện Thoại", key: "phone", type: "tel" },
-            { label: "Địa Điểm", key: "location", type: "text" },
-            { label: "Ngày Sinh", key: "dob", type: "date" },
-          ].map(({ label, key, type }) => (
+            { label: "Họ và Tên", key: "fullName", type: "text", editable: true },
+            { label: "Địa Chỉ Email", key: "email", type: "email", editable: false },
+            { label: "Số Điện Thoại", key: "phone", type: "tel", editable: true },
+            { label: "Địa Điểm", key: "location", type: "text", editable: true },
+            { label: "Ngày Sinh", key: "dob", type: "date", editable: true },
+          ].map(({ label, key, type, editable }) => (
             <div key={key}>
               <label
                 style={{
@@ -401,11 +440,26 @@ export function UserProfile() {
               >
                 {label}
               </label>
+
               <input
                 type={type}
                 value={form[key as keyof typeof form]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                style={inputStyle}
+                readOnly={!editable}
+                tabIndex={editable ? 0 : -1}
+                onChange={(e) => {
+                  if (!editable) return;
+
+                  setForm({
+                    ...form,
+                    [key]: e.target.value,
+                  });
+                }}
+                style={{
+                  ...inputStyle,
+                  background: editable ? "white" : "#F8FAFC",
+                  color: editable ? "#0F172A" : "#64748B",
+                  cursor: editable ? "text" : "not-allowed",
+                }}
               />
             </div>
           ))}
@@ -617,106 +671,149 @@ export function UserProfile() {
             </p>
           </div>
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 16,
-          }}
-        >
-          <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748B",
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              Phong Cách Ưa Thích
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {["Tối Giản", "Công Sở", "Thanh Lịch"].map((s) => (
-                <span
-                  key={s}
-                  style={{
-                    background: "#FFEDD5",
-                    color: "#EA580C",
-                    borderRadius: 6,
-                    padding: "3px 10px",
-                    fontSize: "0.72rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {s}
-                </span>
-              ))}
+
+        {isPreferencesLoading ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: "#64748B",
+              fontSize: "0.85rem",
+            }}
+          >
+            <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+            Đang tải sở thích thời trang...
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 16,
+            }}
+          >
+            <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#64748B",
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Phong Cách Ưa Thích
+              </p>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {(preferences?.preferredStyles ?? []).length === 0 ? (
+                  <span style={{ fontSize: "0.78rem", color: "#94A3B8" }}>
+                    Chưa chọn
+                  </span>
+                ) : (
+                  preferences?.preferredStyles?.map((style) => (
+                    <span
+                      key={style}
+                      style={{
+                        background: "#FFEDD5",
+                        color: "#EA580C",
+                        borderRadius: 6,
+                        padding: "3px 10px",
+                        fontSize: "0.72rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {styleLabelMap[style] ?? style}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#64748B",
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Màu Yêu Thích
+              </p>
+
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {(preferences?.favoriteColors ?? []).length === 0 ? (
+                  <span style={{ fontSize: "0.78rem", color: "#94A3B8" }}>
+                    Chưa chọn
+                  </span>
+                ) : (
+                  preferences?.favoriteColors?.map((color) => {
+                    const mapped = colorMap[color];
+
+                    return (
+                      <div
+                        key={color}
+                        title={mapped?.name ?? color}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          background: mapped?.hex ?? "#CBD5E1",
+                          border: "1.5px solid #E2E8F0",
+                          boxShadow: "0 1px 4px rgba(15,23,42,0.12)",
+                        }}
+                      />
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#64748B",
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Lối Sống
+              </p>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {(preferences?.lifestyles ?? []).length === 0 ? (
+                  <span style={{ fontSize: "0.78rem", color: "#94A3B8" }}>
+                    Chưa chọn
+                  </span>
+                ) : (
+                  preferences?.lifestyles?.map((life) => (
+                    <span
+                      key={life}
+                      style={{
+                        background: "#FFFBEB",
+                        color: "#D97706",
+                        borderRadius: 6,
+                        padding: "3px 10px",
+                        fontSize: "0.72rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {lifestyleLabelMap[life] ?? life}
+                    </span>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-          <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748B",
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              Màu Yêu Thích
-            </p>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {["#0F172A", "#EA580C", "#FFFFFF", "#F59E0B", "#10B981"].map(
-                (c) => (
-                  <div
-                    key={c}
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      background: c,
-                      border: "1.5px solid #E2E8F0",
-                    }}
-                  />
-                ),
-              )}
-            </div>
-          </div>
-          <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16 }}>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748B",
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              Lối Sống
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {["Văn Phòng", "Thường Ngày"].map((s) => (
-                <span
-                  key={s}
-                  style={{
-                    background: "#FFFBEB",
-                    color: "#D97706",
-                    borderRadius: 6,
-                    padding: "3px 10px",
-                    fontSize: "0.72rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Save Button */}

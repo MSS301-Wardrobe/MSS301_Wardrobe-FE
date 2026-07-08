@@ -59,3 +59,4 @@ export interface FriendGroupDetail {
   activeMembers: GroupActiveMember[];
   members: GroupMember[];
 }
+

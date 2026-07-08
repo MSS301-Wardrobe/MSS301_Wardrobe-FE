@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Palette, Shirt, Heart, Star, Loader2 } from "lucide-react";
+import { Save, Palette, Shirt, Heart, Star, Loader2, Check } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
 
 const colorSwatches = [
@@ -149,23 +149,95 @@ export function PreferenceSettings() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
           {colorSwatches.map((c) => {
             const selected = selectedColors.includes(c.key);
+
+            const isLightColor = ["WHITE", "BEIGE", "YELLOW"].includes(c.key);
+
             return (
               <button
                 key={c.key}
                 onClick={() => toggleColor(c.key)}
                 title={c.name}
                 style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                  background: "none", border: "none", cursor: "pointer", padding: 4,
+                  width: 66,
+                  minHeight: 78,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 7,
+                  background: selected ? "#FFF7ED" : "transparent",
+                  border: selected ? "1.5px solid #FDBA74" : "1.5px solid transparent",
+                  borderRadius: 14,
+                  cursor: "pointer",
+                  padding: "8px 6px",
+                  transition: "all 0.15s",
+                  boxShadow: selected ? "0 4px 12px rgba(234,88,12,0.12)" : "none",
                 }}
               >
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%", background: c.hex,
-                  border: selected ? "3px solid #EA580C" : "2px solid #E2E8F0",
-                  boxShadow: selected ? "0 0 0 2px #FFEDD5" : "none",
-                  transition: "all 0.15s",
-                }} />
-                <span style={{ fontSize: "0.65rem", color: "#64748B", whiteSpace: "nowrap" }}>{c.name}</span>
+                <div
+                  style={{
+                    position: "relative",
+                    width: 42,
+                    height: 42,
+                    borderRadius: "50%",
+                    background: c.hex,
+                    border: selected
+                      ? "3px solid #EA580C"
+                      : "2px solid #CBD5E1",
+                    boxShadow: selected
+                      ? "0 0 0 3px #FFEDD5"
+                      : "0 2px 5px rgba(15,23,42,0.08)",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {selected && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: -5,
+                        bottom: -5,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "#EA580C",
+                        border: "2px solid white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 2px 6px rgba(234,88,12,0.35)",
+                      }}
+                    >
+                      <Check
+                        size={12}
+                        color="white"
+                        strokeWidth={3}
+                      />
+                    </div>
+                  )}
+
+                  {isLightColor && !selected && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 3,
+                        borderRadius: "50%",
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
+                </div>
+
+                <span
+                  style={{
+                    fontSize: "0.68rem",
+                    color: selected ? "#EA580C" : "#64748B",
+                    fontWeight: selected ? 800 : 500,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {c.name}
+                </span>
               </button>
             );
           })}

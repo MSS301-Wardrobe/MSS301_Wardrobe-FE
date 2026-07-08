@@ -105,6 +105,16 @@ export function FriendGroupDetails() {
   const [joinRequestsOpen, setJoinRequestsOpen] = useState(false);
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
 
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(false);
+  const [editGroupForm, setEditGroupForm] = useState({
+    groupName: "",
+    description: "",
+    emoji: "👗",
+  });
+
+
+
   const {
     data: group,
     isLoading,
@@ -297,6 +307,56 @@ export function FriendGroupDetails() {
       toast.error(message);
     } finally {
       setProcessingRequestId(null);
+    }
+  };
+
+  const openEditGroupModal = () => {
+    setEditGroupForm({
+      groupName: group.groupName ?? "",
+      description: group.description ?? "",
+      emoji: group.emoji ?? "👗",
+    });
+
+    setSettingsOpen(false);
+    setEditGroupOpen(true);
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!editGroupForm.groupName.trim()) {
+      toast.error("Vui lòng nhập tên nhóm");
+      return;
+    }
+
+    try {
+      setEditingGroup(true);
+
+      await friendGroupService.updateGroup(group.groupId, {
+        groupName: editGroupForm.groupName.trim(),
+        description: editGroupForm.description.trim(),
+        emoji: editGroupForm.emoji,
+      });
+
+      toast.success("Đã cập nhật thông tin nhóm");
+
+      setEditGroupOpen(false);
+
+      queryClient.invalidateQueries({
+        queryKey: ["friend-group-detail", id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["friend-groups"],
+      });
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        error?.message ||
+        "Cập nhật nhóm thất bại";
+
+      toast.error(message);
+    } finally {
+      setEditingGroup(false);
     }
   };
 
@@ -1136,6 +1196,243 @@ export function FriendGroupDetails() {
         </div>
       )}
 
+      {editGroupOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 460,
+              background: "white",
+              borderRadius: 18,
+              padding: 22,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 18,
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontSize: "1.05rem",
+                    fontWeight: 800,
+                    color: "#0F172A",
+                  }}
+                >
+                  Chỉnh sửa thông tin nhóm
+                </h3>
+
+                <p
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#64748B",
+                    marginTop: 3,
+                  }}
+                >
+                  Cập nhật tên, mô tả và biểu tượng nhóm.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEditGroupOpen(false)}
+                style={{
+                  border: "none",
+                  background: "#F8FAFC",
+                  borderRadius: 8,
+                  width: 32,
+                  height: 32,
+                  cursor: "pointer",
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.82rem",
+                    fontWeight: 700,
+                    color: "#374151",
+                    display: "block",
+                    marginBottom: 6,
+                  }}
+                >
+                  Biểu tượng nhóm
+                </label>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["👗", "👔", "🎯", "🔥", "👑", "⚡", "🌸", "🎞️", "💼", "🌊"].map(
+                    (emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() =>
+                          setEditGroupForm((prev) => ({
+                            ...prev,
+                            emoji,
+                          }))
+                        }
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 10,
+                          background:
+                            editGroupForm.emoji === emoji ? "#FFEDD5" : "#F8FAFC",
+                          border:
+                            editGroupForm.emoji === emoji
+                              ? "1.5px solid #EA580C"
+                              : "1.5px solid #E2E8F0",
+                          fontSize: "1.2rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {emoji}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.82rem",
+                    fontWeight: 700,
+                    color: "#374151",
+                    display: "block",
+                    marginBottom: 6,
+                  }}
+                >
+                  Tên nhóm *
+                </label>
+
+                <input
+                  type="text"
+                  value={editGroupForm.groupName}
+                  onChange={(e) =>
+                    setEditGroupForm((prev) => ({
+                      ...prev,
+                      groupName: e.target.value,
+                    }))
+                  }
+                  placeholder="Nhập tên nhóm"
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    border: "1.5px solid #E2E8F0",
+                    borderRadius: 12,
+                    fontSize: "0.9rem",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.82rem",
+                    fontWeight: 700,
+                    color: "#374151",
+                    display: "block",
+                    marginBottom: 6,
+                  }}
+                >
+                  Mô tả
+                </label>
+
+                <textarea
+                  rows={3}
+                  value={editGroupForm.description}
+                  onChange={(e) =>
+                    setEditGroupForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  placeholder="Nhập mô tả nhóm"
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    border: "1.5px solid #E2E8F0",
+                    borderRadius: 12,
+                    fontSize: "0.88rem",
+                    outline: "none",
+                    resize: "vertical",
+                    fontFamily: "inherit",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                marginTop: 20,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setEditGroupOpen(false)}
+                disabled={editingGroup}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: "1px solid #E2E8F0",
+                  background: "white",
+                  color: "#64748B",
+                  fontWeight: 700,
+                  cursor: editingGroup ? "default" : "pointer",
+                }}
+              >
+                Hủy
+              </button>
+
+              <button
+                type="button"
+                onClick={handleUpdateGroup}
+                disabled={editingGroup}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: editingGroup
+                    ? "#FED7AA"
+                    : "linear-gradient(135deg, #EA580C, #F97316)",
+                  color: "white",
+                  fontWeight: 800,
+                  cursor: editingGroup ? "default" : "pointer",
+                }}
+              >
+                {editingGroup ? "Đang lưu..." : "Lưu thay đổi"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {settingsOpen && (
         <div
           style={{
@@ -1284,10 +1581,7 @@ export function FriendGroupDetails() {
 
               <button
                 type="button"
-                onClick={() => {
-                  setSettingsOpen(false);
-                  toast.info("Chức năng chỉnh sửa nhóm sẽ làm sau");
-                }}
+                onClick={openEditGroupModal}
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
