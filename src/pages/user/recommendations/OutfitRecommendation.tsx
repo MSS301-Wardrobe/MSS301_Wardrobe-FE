@@ -4,8 +4,17 @@ import { useNavigate } from "react-router";
 import { recommendationService } from "../../../services/recommendationService";
 import { useAuth } from "../../../hooks/useAuth";
 import type { Recommendation } from "../../../types/recommendation";
-// ĐÃ CẬP NHẬT: Import hàm dynamic URL từ file vừa tạo
 import { getDynamicOutfitImage } from "../../../utils/imageHelpers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../../components/ui/alert-dialog";
 
 const OCCASIONS = [
   { id: "All", label: "Tất Cả" },
@@ -31,6 +40,8 @@ export function OutfitRecommendation() {
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showPreferenceAlert, setShowPreferenceAlert] = useState(false);
+  const [showGroupAlert, setShowGroupAlert] = useState(false);
 
   const userId = user?.id || user?.userId;
 
@@ -78,14 +89,26 @@ export function OutfitRecommendation() {
       setShowEventModal(false);
 
       if (activeRecType === 'personal') {
-        await recommendationService.generatePersonal(userId);
+        const response = await recommendationService.generatePersonal(userId);
+
+        if (response?.outfit?.outfitName === "Chưa thiết lập phong cách cá nhân") {
+          setIsGenerating(false);
+          setShowPreferenceAlert(true);
+          return;
+        }
       } else if (activeRecType === 'event') {
         const eventTypeToUse = specificEvent || activeTab;
         await recommendationService.generateEvent(userId, eventTypeToUse);
         if (specificEvent) setActiveTab(specificEvent);
       } else if (activeRecType === 'group') {
         const mockGroupId = "999e4567-e89b-12d3-a456-426614174999";
-        await recommendationService.generateGroup(userId, mockGroupId);
+        const response = await recommendationService.generateGroup(userId, mockGroupId);
+
+        if (response?.outfit?.outfitName === "Chưa tham gia nhóm bạn nào") {
+          setIsGenerating(false);
+          setShowGroupAlert(true);
+          return;
+        }
       }
 
       await fetchRecommendations();
@@ -259,6 +282,50 @@ export function OutfitRecommendation() {
               })}
             </div>
         )}
+
+        <AlertDialog open={showPreferenceAlert} onOpenChange={setShowPreferenceAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bạn chưa thiết lập sở thích cá nhân 🚨</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hệ thống chưa thể đưa ra gợi ý cá nhân hóa do bạn chưa chọn phong cách và màu sắc ưa thích. Hãy cập nhật gu thời trang của bạn để AI phân tích chuẩn xác nhất nhé!
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowPreferenceAlert(false)}>
+                Để sau
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setShowPreferenceAlert(false);
+                navigate('/app/preferences');
+              }}>
+                Cài đặt sở thích ngay
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showGroupAlert} onOpenChange={setShowGroupAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bạn chưa tham gia nhóm bạn nào 👥</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hệ thống chưa thể đưa ra gợi ý theo nhóm do bạn chưa kết nối hay tham gia vào bất kỳ nhóm bạn bè nào. Hãy kết nối và tham gia nhóm để cùng nhau chia sẻ phong cách thời trang nhé!
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowGroupAlert(false)}>
+                Để sau
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setShowGroupAlert(false);
+                navigate('/app/friend-groups');
+              }}>
+                Tham gia nhóm ngay
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
   );
 }
