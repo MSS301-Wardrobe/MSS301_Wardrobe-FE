@@ -22,6 +22,12 @@ export type FriendGroupInvitation = {
   createdAt: string;
 };
 
+export type UpdateFriendGroupRequest = {
+  groupName?: string;
+  description?: string;
+  emoji?: string;
+};
+
 export type FriendGroupJoinRequest = {
   requestId: string;
   groupId: string;
@@ -188,6 +194,19 @@ export const friendGroupService = {
 
     return data;
   },
+
+  async updateGroup(
+    groupId: string,
+    payload: UpdateFriendGroupRequest,
+  ): Promise<FriendGroup> {
+    const { data } = await apiClient.put<ApiResponse<FriendGroup>>(
+      `/users/friend-groups/${groupId}`,
+      payload,
+    );
+
+    return data.data;
+  },
 };
+
 
 export default friendGroupService;

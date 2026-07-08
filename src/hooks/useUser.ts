@@ -45,8 +45,11 @@ export function useUser() {
   const { isAuthenticated, user } = useAuthContext();
   const queryClient = useQueryClient();
 
+  const profileKey = ["user", "profile", user?.id ?? user?.email] as const;
+  const preferencesKey = ["user", "preferences", user?.id ?? user?.email] as const;
+
   const profileQuery = useQuery({
-    queryKey: ["user", "profile", user?.id ?? user?.email],
+    queryKey: profileKey,
     queryFn: async () => {
       try {
         return await userService.getCurrentUser();
@@ -60,13 +63,9 @@ export function useUser() {
   });
 
   const preferencesQuery = useQuery({
-    queryKey: ["user", "preferences", user?.id ?? user?.email],
+    queryKey: preferencesKey,
     queryFn: async () => {
-      try {
-        return await stylePreferenceService.getMyPreferences();
-      } catch {
-        return DEMO_PREFERENCES;
-      }
+      return await stylePreferenceService.getMyPreferences();
     },
     enabled: isAuthenticated && !!user,
     staleTime: 0,
@@ -85,18 +84,32 @@ export function useUser() {
   });
 
   const updatePreferencesMutation = useMutation({
-    mutationFn: (payload: UserPreferences) =>
-      stylePreferenceService.saveMyPreferences(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user", "preferences"] });
-      toast.success(
-        "Đã lưu sở thích! AI sẽ cá nhân hóa gợi ý theo sở thích của bạn.",
-      );
-    },
-    onError: () => {
-      toast.error("Không thể lưu sở thích. Vui lòng thử lại.");
-    },
-  });
+  mutationFn: (payload: UserPreferences) =>
+    stylePreferenceService.saveMyPreferences(payload),
+
+  onSuccess: async (savedPreferences, variables) => {
+    queryClient.setQueryData(
+      preferencesKey,
+      savedPreferences ?? variables,
+    );
+
+    await queryClient.invalidateQueries({
+      queryKey: preferencesKey,
+    });
+
+    toast.success(
+      "Đã lưu sở thích! AI sẽ cá nhân hóa gợi ý theo sở thích của bạn.",
+    );
+  },
+
+  onError: (error: any) => {
+    toast.error(
+      error?.response?.data?.message ||
+        error?.message ||
+        "Không thể lưu sở thích. Vui lòng thử lại.",
+    );
+  },
+});
 
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => userService.uploadAvatar(file),
