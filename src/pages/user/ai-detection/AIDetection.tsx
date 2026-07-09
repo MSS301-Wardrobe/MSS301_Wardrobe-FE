@@ -3,23 +3,23 @@ import {
   Upload,
   Cpu,
   X,
-  CheckCircle2,
-  ChevronRight,
   BarChart2,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import { DetectionBboxesOverlay } from "../../../components/ai/DetectionBboxesOverlay";
+import { DetectionResultsPanel } from "../../../components/ai/DetectionResultsPanel";
 import { ManualCropOverlay } from "../../../components/ai/ManualCropOverlay";
 import {
   useAI,
+  CropRegionEmptyError,
   LowConfidenceDetectionError,
 } from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
 import type { AIDetectionViewResult } from "../../../types/ai";
 import { SUPPORTED_CATEGORY_NAMES_VI } from "../../../utils/aiMappings";
 import {
-  cropImageFile,
   DEFAULT_CROP,
   type NormalizedCrop,
 } from "../../../utils/imageCrop";
@@ -37,31 +37,43 @@ const PREVIEW_MAX_HEIGHT = 640;
 
 export function AIDetection() {
   const navigate = useNavigate();
-  const { detectForView } = useAI();
+  const { detectAllForView } = useAI();
   const fileRef = useRef<HTMLInputElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const previewImageRef = useRef<HTMLImageElement>(null);
 
   const SESSION_KEY_IMG_ID = "ai_detection_image_id";
   const SESSION_KEY_RESULT = "ai_detection_result";
+  const SESSION_KEY_CROP = "ai_detection_crop";
 
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [detecting, setDetecting] = useState(false);
-  const [result, setResult] = useState<AIDetectionViewResult | null>(() => {
+  const [results, setResults] = useState<AIDetectionViewResult[]>(() => {
     try {
       const saved = sessionStorage.getItem(SESSION_KEY_RESULT);
-      return saved ? (JSON.parse(saved) as AIDetectionViewResult) : null;
+      if (!saved) return [];
+      const parsed = JSON.parse(saved) as AIDetectionViewResult | AIDetectionViewResult[];
+      return Array.isArray(parsed) ? parsed : [parsed];
     } catch {
-      return null;
+      return [];
     }
   });
+  const [activeResultIndex, setActiveResultIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
   const [detectionWarning, setDetectionWarning] = useState<string | null>(null);
   const [lowConfidence, setLowConfidence] = useState<number | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [cropArea, setCropArea] = useState<NormalizedCrop>(DEFAULT_CROP);
+  const [detectionCrop, setDetectionCrop] = useState<NormalizedCrop | null>(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY_CROP);
+      return saved ? (JSON.parse(saved) as NormalizedCrop) : null;
+    } catch {
+      return null;
+    }
+  });
   const [uploadedImageId, setUploadedImageId] = useState<string | null>(
     () => sessionStorage.getItem(SESSION_KEY_IMG_ID)
   );
@@ -75,14 +87,21 @@ export function AIDetection() {
       return;
     }
 
-    const containerRect = container.getBoundingClientRect();
-    const imageRect = image.getBoundingClientRect();
+    const containerWidth = container.clientWidth;
+    const scale = Math.min(
+      1,
+      containerWidth > 0 ? containerWidth / image.naturalWidth : 1,
+      PREVIEW_MAX_HEIGHT / image.naturalHeight
+    );
+
+    const displayWidth = Math.max(1, Math.round(image.naturalWidth * scale));
+    const displayHeight = Math.max(1, Math.round(image.naturalHeight * scale));
 
     setImageLayout({
-      offsetX: imageRect.left - containerRect.left,
-      offsetY: imageRect.top - containerRect.top,
-      displayWidth: imageRect.width,
-      displayHeight: imageRect.height,
+      offsetX: 0,
+      offsetY: 0,
+      displayWidth,
+      displayHeight,
       naturalWidth: image.naturalWidth,
       naturalHeight: image.naturalHeight,
     });
@@ -91,36 +110,41 @@ export function AIDetection() {
   const handlePreviewImageLoad = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       const image = event.currentTarget;
-      const container = previewContainerRef.current;
-
-      if (!container || image.naturalWidth === 0) {
+      if (image.naturalWidth === 0) {
         return;
       }
 
-      const containerWidth = container.clientWidth;
-      const scale = Math.min(
-        1,
-        containerWidth > 0 ? containerWidth / image.naturalWidth : 1,
-        PREVIEW_MAX_HEIGHT / image.naturalHeight
-      );
-
-      const displayWidth = Math.max(1, Math.round(image.naturalWidth * scale));
-      const displayHeight = Math.max(1, Math.round(image.naturalHeight * scale));
-
-      image.style.width = `${displayWidth}px`;
-      image.style.height = `${displayHeight}px`;
-
-      setCropArea(DEFAULT_CROP);
+      setCropArea((current) => detectionCrop ?? current ?? DEFAULT_CROP);
       updateImageLayout();
     },
-    [updateImageLayout]
+    [updateImageLayout, detectionCrop]
   );
 
   useEffect(() => {
-    if (result) {
+    if (!preview) {
+      return;
+    }
+
+    const container = previewContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateImageLayout();
+    });
+
+    observer.observe(container);
+    updateImageLayout();
+
+    return () => observer.disconnect();
+  }, [preview, results.length, updateImageLayout]);
+
+  useEffect(() => {
+    if (results.length > 0) {
       updateImageLayout();
     }
-  }, [result, updateImageLayout]);
+  }, [results, activeResultIndex, updateImageLayout]);
 
   // Khi khôi phục từ sessionStorage: lấy pre-signed URL rồi fetch blob để tạo lại sourceFile
   useEffect(() => {
@@ -150,24 +174,27 @@ export function AIDetection() {
 
     setPreview(null);
     setSourceFile(null);
-    setResult(null);
+    setResults([]);
+    setActiveResultIndex(0);
+    setDetectionCrop(null);
+    setCropArea(DEFAULT_CROP);
     setImageLayout(null);
     setDetectionWarning(null);
     setLowConfidence(null);
-    setCropArea(DEFAULT_CROP);
     setUploadedImageId(null);
     sessionStorage.removeItem(SESSION_KEY_IMG_ID);
     sessionStorage.removeItem(SESSION_KEY_RESULT);
+    sessionStorage.removeItem(SESSION_KEY_CROP);
   };
 
   const handleFile = async (file: File) => {
     resetPreview();
     setSourceFile(file);
     setPreview(URL.createObjectURL(file));
-    setResult(null);
+    setResults([]);
+    setActiveResultIndex(0);
     setDetectionWarning(null);
     setLowConfidence(null);
-    setCropArea(DEFAULT_CROP);
 
     try {
       toast.loading("Đang tải ảnh lên (tạm thời)...", { id: "upload-ai-toast" });
@@ -190,7 +217,13 @@ export function AIDetection() {
       return;
     }
 
-    setResult(null);
+    if (!imageLayout) {
+      toast.error("Ảnh chưa sẵn sàng, vui lòng đợi một chút");
+      return;
+    }
+
+    setResults([]);
+    setActiveResultIndex(0);
     setDetectionWarning(null);
     setLowConfidence(null);
     setDetecting(true);
@@ -201,20 +234,32 @@ export function AIDetection() {
     }, 200);
 
     try {
-      const croppedFile = await cropImageFile(sourceFile, cropArea);
-      const detectionResult = await detectForView(croppedFile);
+      const detectionResults = await detectAllForView(sourceFile, {
+        crop: cropArea,
+        naturalWidth: imageLayout.naturalWidth,
+        naturalHeight: imageLayout.naturalHeight,
+      });
 
-      // Auth error (401/403) đã được hook xử lý, trả null → dừng
-      if (!detectionResult) return;
+      if (!detectionResults?.length) return;
 
       setProgress(100);
-      setResult(detectionResult);
-      sessionStorage.setItem(SESSION_KEY_RESULT, JSON.stringify(detectionResult));
+      setResults(detectionResults);
+      setDetectionCrop(cropArea);
+      setActiveResultIndex(0);
+      sessionStorage.setItem(SESSION_KEY_RESULT, JSON.stringify(detectionResults));
+      sessionStorage.setItem(SESSION_KEY_CROP, JSON.stringify(cropArea));
 
       toast.success(
-        `Nhận diện hoàn tất! Độ tin cậy ${detectionResult.confidence}%`
+        `Nhận diện hoàn tất! Phát hiện ${detectionResults.length} trang phục`
       );
     } catch (error: unknown) {
+      if (error instanceof CropRegionEmptyError) {
+        setDetectionWarning(error.message);
+        setLowConfidence(null);
+        toast.error(error.message);
+        return;
+      }
+
       if (error instanceof LowConfidenceDetectionError) {
         setDetectionWarning(error.message);
         setLowConfidence(error.confidencePercent);
@@ -247,12 +292,19 @@ export function AIDetection() {
     }
   };
 
-  const colorName = result?.colorLabel ?? "-";
-  const colorHex = result?.color?.hex;
-  const categoryText = result?.category ?? "-";
-  const styleText = result?.style ?? "-";
+  const hasResults = results.length > 0;
+  const cropEditable = Boolean(preview && imageLayout && !detecting && !hasResults);
 
-  const cropEditable = Boolean(preview && imageLayout && !detecting && !result);
+  const navigateToAddClothing = (detection: AIDetectionViewResult) => {
+    navigate("/app/wardrobe/add", {
+      state: {
+        prefillDetection: detection,
+        previewImage: preview,
+        sourceFile,
+        imageId: uploadedImageId,
+      },
+    });
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -296,8 +348,17 @@ export function AIDetection() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: hasResults
+            ? "minmax(360px, 1.15fr) minmax(300px, 0.85fr)"
+            : "1fr 1fr",
+          gap: 24,
+          alignItems: "start",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
           <div
             style={{
               background: "white",
@@ -337,65 +398,71 @@ export function AIDetection() {
                   ref={previewContainerRef}
                   style={{
                     width: "100%",
-                    position: "relative",
-                    lineHeight: 0,
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
+                    padding: "8px 0",
                   }}
                 >
-                  <img
-                    ref={previewImageRef}
-                    src={preview}
-                    alt="Upload"
-                    decoding="sync"
-                    onLoad={handlePreviewImageLoad}
+                  <div
                     style={{
+                      position: "relative",
+                      width: imageLayout?.displayWidth ?? "100%",
+                      height: imageLayout?.displayHeight ?? "auto",
                       maxWidth: "100%",
-                      maxHeight: PREVIEW_MAX_HEIGHT,
-                      width: "auto",
-                      height: "auto",
-                      objectFit: "contain",
-                      objectPosition: "center",
-                      borderRadius: 14,
-                      display: "block",
-                      imageRendering: "auto",
+                      flexShrink: 0,
+                      lineHeight: 0,
                     }}
-                  />
-
-                  {imageLayout && (
-                    <ManualCropOverlay
-                      layout={imageLayout}
-                      crop={cropArea}
-                      onChange={setCropArea}
-                      editable={cropEditable}
-                      confirmed={Boolean(result)}
-                      label={
-                        result
-                          ? `${categoryText} — ${result.confidence}%`
-                          : undefined
-                      }
-                    />
-                  )}
-
-                  {detecting && imageLayout && (
-                    <div
+                  >
+                    <img
+                      ref={previewImageRef}
+                      src={preview}
+                      alt="Upload"
+                      decoding="sync"
+                      onLoad={handlePreviewImageLoad}
                       style={{
-                        position: "absolute",
-                        left: imageLayout.offsetX,
-                        top: imageLayout.offsetY,
-                        width: imageLayout.displayWidth,
-                        height: imageLayout.displayHeight,
-                        background: "rgba(234,88,12,0.85)",
+                        width: imageLayout ? imageLayout.displayWidth : "100%",
+                        height: imageLayout ? imageLayout.displayHeight : "auto",
+                        maxWidth: "100%",
+                        objectFit: "contain",
                         borderRadius: 14,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 16,
-                        zIndex: 20,
+                        display: "block",
                       }}
-                    >
+                    />
+
+                    {imageLayout && cropEditable && (
+                      <ManualCropOverlay
+                        layout={imageLayout}
+                        crop={cropArea}
+                        onChange={setCropArea}
+                        editable
+                      />
+                    )}
+
+                    {imageLayout && hasResults && (
+                      <DetectionBboxesOverlay
+                        layout={imageLayout}
+                        results={results}
+                        activeIndex={activeResultIndex}
+                        onSelect={setActiveResultIndex}
+                      />
+                    )}
+
+                    {detecting && imageLayout && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "rgba(234,88,12,0.85)",
+                          borderRadius: 14,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 16,
+                          zIndex: 20,
+                        }}
+                      >
                       <div
                         style={{
                           width: 50,
@@ -457,6 +524,7 @@ export function AIDetection() {
                   >
                     <X size={14} color="white" />
                   </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ textAlign: "center", padding: 40 }}>
@@ -500,7 +568,9 @@ export function AIDetection() {
             ) : (
               <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                 <p style={{ fontSize: "0.8rem", color: "#64748B", lineHeight: 1.5 }}>
-                  Kéo khung tím để chọn vùng trang phục cần nhận diện. Kéo góc dưới bên phải để đổi kích thước.
+                  {hasResults
+                    ? "Bấm \"Chọn lại vùng\" để kéo khung và nhận diện lại."
+                    : "Kéo khung cam để chọn vùng cần nhận diện. AI quét toàn ảnh và chỉ hiện kết quả trong vùng đó — nên bao trọn trang phục."}
                 </p>
                 <button
                   onClick={runDetection}
@@ -526,12 +596,19 @@ export function AIDetection() {
                   <Cpu size={16} />
                   {detecting ? "Đang nhận diện..." : "Nhận Diện Vùng Đã Chọn"}
                 </button>
-                {result && (
+                {hasResults && (
                   <button
                     onClick={() => {
-                      setResult(null);
+                      if (detectionCrop) {
+                        setCropArea(detectionCrop);
+                      }
+                      setResults([]);
+                      setActiveResultIndex(0);
+                      setDetectionCrop(null);
                       setDetectionWarning(null);
                       setLowConfidence(null);
+                      sessionStorage.removeItem(SESSION_KEY_RESULT);
+                      sessionStorage.removeItem(SESSION_KEY_CROP);
                     }}
                     style={{
                       width: "100%",
@@ -553,8 +630,8 @@ export function AIDetection() {
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {!result && !detecting && !detectionWarning ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+          {!hasResults && !detecting && !detectionWarning ? (
             <div
               style={{
                 background: "white",
@@ -597,211 +674,16 @@ export function AIDetection() {
               message={detectionWarning}
               confidence={lowConfidence}
             />
-          ) : result ? (
-            <>
-              <div
-                style={{
-                  background: "white",
-                  borderRadius: 20,
-                  padding: 24,
-                  border: "1px solid #E2E8F0",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                  <CheckCircle2 size={20} color="#10B981" />
-                  <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>
-                    Kết Quả Nhận Diện
-                  </h3>
-                </div>
-
-                <div
-                  style={{
-                    background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)",
-                    borderRadius: 14,
-                    padding: "16px 20px",
-                    marginBottom: 20,
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontWeight: 600, color: "#059669", fontSize: "0.9rem" }}>
-                      Độ Tin Cậy Tổng Thể
-                    </span>
-                    <span style={{ fontWeight: 800, color: "#059669", fontSize: "1.1rem" }}>
-                      {result.confidence}%
-                    </span>
-                  </div>
-
-                  <div style={{ background: "rgba(255,255,255,0.5)", borderRadius: 100, height: 8 }}>
-                    <div
-                      style={{
-                        width: `${result.confidence}%`,
-                        background: "#10B981",
-                        borderRadius: 100,
-                        height: "100%",
-                        transition: "width 0.6s",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <InfoCard label="Danh Mục" value={categoryText} />
-
-                  <div style={{ background: "#F8FAFC", borderRadius: 12, padding: "12px 14px" }}>
-                    <CardLabel label="Màu Sắc" />
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {colorHex && (
-                        <span
-                          style={{
-                            width: 14,
-                            height: 14,
-                            borderRadius: "50%",
-                            backgroundColor: colorHex,
-                            border: "1px solid #CBD5E1",
-                            display: "inline-block",
-                          }}
-                        />
-                      )}
-                      <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.88rem" }}>
-                        {colorName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <OccasionCard occasions={result.occasion || []} />
-                  <InfoCard label="Phong Cách" value={styleText} />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: "white",
-                  borderRadius: 20,
-                  padding: 24,
-                  border: "1px solid #E2E8F0",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                }}
-              >
-                <h4 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 16, fontSize: "0.95rem" }}>
-                  Phân Tích Thuộc Tính
-                </h4>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {(result.attributes || []).map((attr) => {
-                    const label = attr.label;
-                    const lower = label.toLowerCase();
-                    const value = attr.value;
-                    const attrColorHex = lower.includes("màu") ? colorHex : undefined;
-
-                    return (
-                      <div key={attr.label}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                          <div>
-                            <span style={{ fontSize: "0.78rem", color: "#64748B", fontWeight: 500 }}>
-                              {label}:{" "}
-                            </span>
-
-                            <span
-                              style={{
-                                fontSize: "0.82rem",
-                                fontWeight: 700,
-                                color: "#0F172A",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              {attrColorHex && (
-                                <span
-                                  style={{
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: "50%",
-                                    backgroundColor: attrColorHex,
-                                    border: "1px solid #CBD5E1",
-                                    display: "inline-block",
-                                  }}
-                                />
-                              )}
-                              {value}
-                            </span>
-                          </div>
-
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              color: attr.score >= 90 ? "#10B981" : "#F59E0B",
-                            }}
-                          >
-                            {attr.score}%
-                          </span>
-                        </div>
-
-                        <div style={{ background: "#F1F5F9", borderRadius: 100, height: 5 }}>
-                          <div
-                            style={{
-                              width: `${attr.score}%`,
-                              background: attr.score >= 90 ? "#10B981" : "#F59E0B",
-                              borderRadius: 100,
-                              height: "100%",
-                              transition: "width 0.5s",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <button
-                onClick={() => navigate("/app/wardrobe/add", {
-                  state: {
-                    prefillDetection: result,
-                    previewImage: preview,
-                    sourceFile: sourceFile,
-                    imageId: uploadedImageId
-                  }
-                })}
-                style={{ width: "100%", padding: "13px", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              >
-                Thêm Vào Tủ Đồ
-                <ChevronRight size={16} />
-              </button>
-            </>
+          ) : hasResults ? (
+            <DetectionResultsPanel
+              results={results}
+              activeIndex={activeResultIndex}
+              onSelect={setActiveResultIndex}
+              onAdd={navigateToAddClothing}
+            />
           ) : null}
         </div>
       </div>
-    </div>
-  );
-}
-
-function CardLabel({ label }: { label: string }) {
-  return (
-    <p
-      style={{
-        fontSize: "0.72rem",
-        color: "#64748B",
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.04em",
-        marginBottom: 4,
-      }}
-    >
-      {label}
-    </p>
-  );
-}
-
-function InfoCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ background: "#F8FAFC", borderRadius: 12, padding: "12px 14px" }}>
-      <CardLabel label={label} />
-      <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.88rem" }}>
-        {value}
-      </p>
     </div>
   );
 }
@@ -858,35 +740,6 @@ function UnsupportedDetectionPanel({
             {name}
           </span>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function OccasionCard({ occasions }: { occasions: string[] }) {
-  return (
-    <div style={{ background: "#F8FAFC", borderRadius: 12, padding: "12px 14px" }}>
-      <CardLabel label="Dịp Phù Hợp Gợi Ý" />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {occasions.length > 0 ? (
-          occasions.map((occ) => (
-            <span
-              key={occ}
-              style={{
-                background: "#FFEDD5",
-                color: "#EA580C",
-                borderRadius: 20,
-                padding: "4px 10px",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-              }}
-            >
-              {occ}
-            </span>
-          ))
-        ) : (
-          <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.88rem" }}>-</p>
-        )}
       </div>
     </div>
   );

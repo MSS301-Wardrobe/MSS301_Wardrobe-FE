@@ -12,6 +12,63 @@ export const DEFAULT_CROP: NormalizedCrop = {
   height: 0.9,
 };
 
+type PixelBBox = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+function cropToPixels(
+  crop: NormalizedCrop,
+  naturalWidth: number,
+  naturalHeight: number
+): PixelBBox {
+  return {
+    x1: crop.x * naturalWidth,
+    y1: crop.y * naturalHeight,
+    x2: (crop.x + crop.width) * naturalWidth,
+    y2: (crop.y + crop.height) * naturalHeight,
+  };
+}
+
+function intersectionArea(a: PixelBBox, b: PixelBBox): number {
+  const x1 = Math.max(a.x1, b.x1);
+  const y1 = Math.max(a.y1, b.y1);
+  const x2 = Math.min(a.x2, b.x2);
+  const y2 = Math.min(a.y2, b.y2);
+
+  if (x2 <= x1 || y2 <= y1) {
+    return 0;
+  }
+
+  return (x2 - x1) * (y2 - y1);
+}
+
+/** Kiểm tra bbox detection có nằm trong vùng crop người dùng chọn hay không */
+export function detectionOverlapsCrop(
+  bbox: PixelBBox,
+  crop: NormalizedCrop,
+  naturalWidth: number,
+  naturalHeight: number,
+  minOverlapRatio = 0.2
+): boolean {
+  const cropPx = cropToPixels(crop, naturalWidth, naturalHeight);
+  const bboxArea = Math.max(1, (bbox.x2 - bbox.x1) * (bbox.y2 - bbox.y1));
+  const overlap = intersectionArea(bbox, cropPx);
+  const overlapRatio = overlap / bboxArea;
+
+  const centerX = (bbox.x1 + bbox.x2) / 2;
+  const centerY = (bbox.y1 + bbox.y2) / 2;
+  const centerInside =
+    centerX >= cropPx.x1 &&
+    centerX <= cropPx.x2 &&
+    centerY >= cropPx.y1 &&
+    centerY <= cropPx.y2;
+
+  return centerInside || overlapRatio >= minOverlapRatio;
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
