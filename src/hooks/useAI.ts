@@ -4,12 +4,14 @@ import {
   aiService,
   AiForbiddenError,
   AiUnauthorizedError,
+  CropRegionEmptyError,
   LowConfidenceDetectionError,
 } from "../services/aiService";
 import type { AIDetectionResult, AIDetectionViewResult, AIAnalysisResult } from "../types/ai";
+import type { NormalizedCrop } from "../utils/imageCrop";
 
 // Re-export để các page chỉ cần import từ hook
-export { LowConfidenceDetectionError };
+export { CropRegionEmptyError, LowConfidenceDetectionError };
 
 export function useAI() {
   const navigate = useNavigate();
@@ -76,7 +78,23 @@ export function useAI() {
     }
   };
 
-  return { detect, detectForView, getAnalytics };
+  async function detectAllForView(
+    image: File | string,
+    options?: {
+      crop?: NormalizedCrop;
+      naturalWidth?: number;
+      naturalHeight?: number;
+    }
+  ): Promise<AIDetectionViewResult[] | null> {
+    try {
+      return await aiService.detectAllForView(image, options);
+    } catch (error: unknown) {
+      if (handleAuthError(error)) return null;
+      throw error;
+    }
+  }
+
+  return { detect, detectForView, detectAllForView, getAnalytics };
 }
 
 export default useAI;

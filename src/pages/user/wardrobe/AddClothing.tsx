@@ -167,13 +167,19 @@ export function AddClothing() {
     const primary = navState.prefillDetection;
     const colorLabel = primary.colorLabel || primary.color?.name || '';
     const styleLabel = primary.style || '';
-    const formStyle = mapAiStyleToFormStyle(styleLabel);
+    const formStyle = mapAiStyleToFormStyle(primary.styleKeys || []);
     const catName = primary.category || '';
     const confValue = typeof primary.confidence === 'number'
       ? (primary.confidence > 1 ? primary.confidence / 100 : primary.confidence)
       : 0;
     setAiResult({ categoryName: catName, confidence: confValue, color: colorLabel, style: styleLabel });
-    const detection = { classKey: primary.class_name || '', categoryName: catName, color: colorLabel, formStyle, confidence: confValue };
+    const detection = {
+      classKey: primary.classKey || '',
+      categoryName: catName,
+      color: colorLabel,
+      formStyle,
+      confidence: confValue,
+    };
     pendingAiRef.current = detection;
     setForm(f => ({ ...f, dominantColor: colorLabel, style: styleLabel, confidenceScore: confValue }));
     // eslint-disable-next-line react-hooks/exhaustive-deps

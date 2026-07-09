@@ -15,6 +15,10 @@ import {
   translateOccasions,
   translateStyle,
 } from "../utils/aiMappings";
+import {
+  detectionOverlapsCrop,
+  type NormalizedCrop,
+} from "../utils/imageCrop";
 
 const AI_DETECT_PATH = "/ai/detect";
 
@@ -27,6 +31,21 @@ export class LowConfidenceDetectionError extends Error {
     this.confidencePercent = confidencePercent;
   }
 }
+
+export class CropRegionEmptyError extends Error {
+  constructor(
+    message = "Không có trang phục nào trong vùng bạn chọn. Hãy mở rộng khung hoặc kéo sang vùng khác."
+  ) {
+    super(message);
+    this.name = "CropRegionEmptyError";
+  }
+}
+
+type DetectAllOptions = {
+  crop?: NormalizedCrop;
+  naturalWidth?: number;
+  naturalHeight?: number;
+};
 
 /** 401 — chưa đăng nhập hoặc token hết hạn, gateway trả về AUTH_TOKEN_MISSING */
 export class AiUnauthorizedError extends Error {
@@ -128,6 +147,7 @@ export function mapDetectionToViewResult(
     color,
     colorLabel,
     style,
+    styleKeys: detection.style,
     occasion,
     gender,
     bbox: detection.bbox,
@@ -185,23 +205,62 @@ export const aiService = {
   },
 
   async detectForView(image: File | string): Promise<AIDetectionViewResult> {
-    const response = await this.detect(image);
-    const primary = response.detections[0];
+    const results = await this.detectAllForView(image);
+    return results[0];
+  },
 
-    if (!primary) {
+  async detectAllForView(
+    image: File | string,
+    options?: DetectAllOptions
+  ): Promise<AIDetectionViewResult[]> {
+    const response = await this.detect(image);
+
+    if (!response?.detections?.length) {
       throw new Error("Không phát hiện trang phục nào trong ảnh");
     }
 
-    const confidencePercent = Math.round(primary.confidence * 1000) / 10;
+    const { crop, naturalWidth, naturalHeight } = options ?? {};
+    const hasCropFilter =
+      crop &&
+      naturalWidth &&
+      naturalHeight &&
+      naturalWidth > 0 &&
+      naturalHeight > 0;
 
-    if (primary.confidence < MIN_DETECTION_CONFIDENCE) {
+    const inRegion = hasCropFilter
+      ? response.detections.filter((item) =>
+          item.bbox
+            ? detectionOverlapsCrop(
+                item.bbox,
+                crop,
+                naturalWidth,
+                naturalHeight
+              )
+            : false
+        )
+      : response.detections;
+
+    if (hasCropFilter && !inRegion.length) {
+      throw new CropRegionEmptyError();
+    }
+
+    const qualified = inRegion.filter(
+      (item) => item.confidence >= MIN_DETECTION_CONFIDENCE
+    );
+
+    if (!qualified.length) {
+      const best = inRegion[0];
+      const confidencePercent = Math.round(best.confidence * 1000) / 10;
+      const cropHint = hasCropFilter
+        ? " Hãy mở rộng khung để bao trọn trang phục, hoặc chọn vùng có trang phục rõ hơn."
+        : "";
       throw new LowConfidenceDetectionError(
         confidencePercent,
-        buildLowConfidenceMessage(confidencePercent)
+        buildLowConfidenceMessage(confidencePercent) + cropHint
       );
     }
 
-    return mapDetectionToViewResult(primary);
+    return qualified.map(mapDetectionToViewResult);
   },
 
   async analyze(itemId: string): Promise<AIAnalysisResult | void> {
