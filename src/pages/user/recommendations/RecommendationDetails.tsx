@@ -94,8 +94,10 @@ export function RecommendationDetails() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {clothingItems.map((item: any) => {
-                  // ĐÃ CẬP NHẬT: Gọi hàm phân tách ảnh vật phẩm chi tiết
-                  const dynamicItemImg = getDynamicItemImage(item.itemId, item.itemName);
+                  console.log("Dữ liệu item từ API:", item); // <--- XEM LOG NÀY Ở F12 (CONSOLE)
+                  const realImageUrl = item.imageId
+                      ? `http://localhost:8080/api/v1/storage/files/${item.imageId}`
+                      : getDynamicItemImage(item.itemId, item.itemName);
 
                   return (
                       <div
@@ -103,7 +105,12 @@ export function RecommendationDetails() {
                           onClick={() => navigate(`/app/wardrobe/${item.itemId}`)}
                           style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: "#F8FAFC", border: "1px solid #E2E8F0", cursor: "pointer" }}
                       >
-                        <img src={item.img || dynamicItemImg} alt={item.itemName} style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} />
+                        <img
+                            src={realImageUrl}
+                            alt={item.itemName}
+                            style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }}
+                            onError={(e) => { (e.target as HTMLImageElement).src = getDynamicItemImage(item.itemId, item.itemName); }}
+                        />
                         <div style={{ flex: 1 }}>
                           <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.88rem" }}>{item.itemName}</p>
                           <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 2 }}>Màu sắc: {item.dominantColor}</p>
