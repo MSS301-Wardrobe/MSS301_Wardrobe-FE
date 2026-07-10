@@ -88,6 +88,28 @@ export interface UpdateClothingItemPayload {
   confidenceScore?: number;
 }
 
+// ─── Group Shared Clothing Item ───────────────────────────────────────────────
+
+export interface SharedClothingItem {
+  shareId: string;
+  itemId: string;
+  itemName: string;
+  imageId?: string;
+  dominantColor?: string;
+  style?: string;
+  confidenceScore?: number;
+  groupId: string;
+  sharedByUserId: string;
+  sharedAt: string;
+  likeCount: number;
+  likedByMe: boolean;
+}
+
+export interface ShareClothingItemPayload {
+  clothingItemId: string;
+  groupId: string;
+}
+
 // ─── API wrapper ─────────────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

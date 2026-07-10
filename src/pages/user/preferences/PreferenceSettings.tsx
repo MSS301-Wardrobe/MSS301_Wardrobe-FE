@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { Save, Palette, Shirt, Heart, Star, Loader2, Check } from "lucide-react";
+import { Save, Palette, Shirt, Heart, Star, Loader2, Check, AlertTriangle, X } from "lucide-react";
 import { useUser } from "../../../hooks/useUser";
+import { friendGroupService } from "../../../services/friendGroupService";
+import type { FriendGroup } from "../../../types/group";
+
 
 const colorSwatches = [
   { key: "BLACK", name: "Đen", hex: "#000000" },
@@ -106,13 +109,72 @@ export function PreferenceSettings() {
     setSelectedInterests((prev) => prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]);
   };
 
-  const handleSave = () => {
-    updatePreferences({
+  // --- Confirm dialog state ---
+  const [conflictGroups, setConflictGroups] = useState<FriendGroup[]>([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isCheckingConflict, setIsCheckingConflict] = useState(false);
+  // Payload cần lưu sau khi user xác nhận
+  const [pendingPayload, setPendingPayload] = useState<null | {
+    favoriteColors: string[];
+    preferredStyles: string[];
+    lifestyles: string[];
+    clothingInterests: string[];
+  }>(null);
+
+  const handleSave = async () => {
+    const payload = {
       favoriteColors: selectedColors,
       preferredStyles: selectedStyles,
       lifestyles: selectedLifestyles,
       clothingInterests: selectedInterests,
-    });
+    };
+
+    // Kiểm tra xem style có thay đổi so với hiện tại không
+    const currentStyles = preferences?.preferredStyles ?? [];
+    const stylesChanged =
+      selectedStyles.length !== currentStyles.length ||
+      selectedStyles.some((s) => !currentStyles.includes(s));
+
+    if (!stylesChanged) {
+      // Không đổi style → lưu luôn
+      updatePreferences(payload);
+      return;
+    }
+
+    // Có đổi style → kiểm tra conflict
+    setIsCheckingConflict(true);
+    try {
+      const conflicts = await friendGroupService.getStyleConflictGroups(selectedStyles);
+      if (conflicts.length === 0) {
+        // Không có conflict → lưu luôn
+        updatePreferences(payload);
+      } else {
+        // Có conflict → hiện dialog cảnh báo
+        setConflictGroups(conflicts);
+        setPendingPayload(payload);
+        setShowConfirmDialog(true);
+      }
+    } catch {
+      // Nếu API conflict thất bại, vẫn lưu bình thường
+      updatePreferences(payload);
+    } finally {
+      setIsCheckingConflict(false);
+    }
+  };
+
+  const handleConfirmSave = () => {
+    if (pendingPayload) {
+      updatePreferences(pendingPayload);
+    }
+    setShowConfirmDialog(false);
+    setPendingPayload(null);
+    setConflictGroups([]);
+  };
+
+  const handleCancelSave = () => {
+    setShowConfirmDialog(false);
+    setPendingPayload(null);
+    setConflictGroups([]);
   };
 
   if (isPreferencesLoading) {
@@ -126,6 +188,7 @@ export function PreferenceSettings() {
   }
 
   return (
+    <>
     <div style={{ maxWidth: 860, display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", borderRadius: 20, padding: "28px 32px", color: "white" }}>
@@ -364,22 +427,121 @@ export function PreferenceSettings() {
         </button>
         <button
           onClick={handleSave}
-          disabled={isUpdatingPreferences}
+          disabled={isUpdatingPreferences || isCheckingConflict}
           style={{
             display: "flex", alignItems: "center", gap: 8,
             padding: "11px 24px", borderRadius: 12,
-            background: isUpdatingPreferences ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
+            background: (isUpdatingPreferences || isCheckingConflict) ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
             color: "white", border: "none", fontWeight: 700,
-            cursor: isUpdatingPreferences ? "default" : "pointer", fontSize: "0.9rem",
+            cursor: (isUpdatingPreferences || isCheckingConflict) ? "default" : "pointer", fontSize: "0.9rem",
           }}
         >
-          {isUpdatingPreferences
-            ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Đang lưu...</>
+          {(isUpdatingPreferences || isCheckingConflict)
+            ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Đang kiểm tra...</>
             : <><Save size={15} /> Lưu Sở Thích</>
           }
         </button>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
+
+    {/* ====== Confirm Dialog: cảnh báo rời nhóm ====== */}
+    {showConfirmDialog && (
+      <div
+        style={{
+          position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999, padding: 20,
+        }}
+      >
+        <div
+          style={{
+            width: "100%", maxWidth: 460,
+            background: "white", borderRadius: 20, padding: 28,
+            boxShadow: "0 24px 80px rgba(0,0,0,0.2)",
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <AlertTriangle size={22} color="#D97706" />
+            </div>
+            <div>
+              <h3 style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.05rem", marginBottom: 6 }}>
+                Bạn sẽ rời khỏi {conflictGroups.length} nhóm
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "#64748B", lineHeight: 1.6 }}>
+                Các nhóm dưới đây có phong cách chủ đạo không còn phù hợp với sở thích mới của bạn.
+                Bạn sẽ tự động bị xóa khỏi các nhóm này sau khi lưu.
+              </p>
+            </div>
+          </div>
+
+          {/* Danh sách nhóm bị ảnh hưởng */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, maxHeight: 220, overflowY: "auto" }}>
+            {conflictGroups.map((g) => (
+              <div
+                key={g.groupId}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  background: "#FFF7ED", borderRadius: 12, padding: "10px 14px",
+                  border: "1px solid #FED7AA",
+                }}
+              >
+                <span style={{ fontSize: "1.3rem" }}>{g.emoji ?? "\uD83D\uDC57"}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {g.groupName}
+                  </p>
+                  {g.primaryStyleLabels && g.primaryStyleLabels.length > 0 && (
+                    <span style={{ fontSize: "0.8rem", color: "#64748B", background: "#F1F5F9", padding: "2px 8px", borderRadius: 12 }}>
+                      Phong cách: {g.primaryStyleLabels.join(", ")}
+                    </span>
+                  )}
+                </div>
+                <span style={{ fontSize: "0.7rem", color: "#64748B", whiteSpace: "nowrap" }}>
+                  {g.memberCount} thành viên
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              type="button"
+              onClick={handleCancelSave}
+              style={{
+                flex: 1, padding: "11px", borderRadius: 12,
+                border: "1.5px solid #E2E8F0", background: "white",
+                color: "#374151", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              <X size={14} /> Giữ Nguyên
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmSave}
+              disabled={isUpdatingPreferences}
+              style={{
+                flex: 2, padding: "11px", borderRadius: 12,
+                border: "none",
+                background: isUpdatingPreferences ? "#FED7AA" : "linear-gradient(135deg, #EA580C, #F97316)",
+                color: "white", fontWeight: 700, cursor: isUpdatingPreferences ? "default" : "pointer",
+                fontSize: "0.88rem",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              {isUpdatingPreferences
+                ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Đang lưu...</>
+                : <><Check size={14} /> Đổi Phong Cách &amp; Rời Nhóm</>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
