@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, Loader2, Wand2, Calendar, Users, X } from "lucide-react";
+import { Star, Loader2, Wand2, Users, X, User } from "lucide-react";
 import { useNavigate } from "react-router";
 import { recommendationService } from "../../../services/recommendationService";
 import { friendGroupService } from "../../../services/friendGroupService";
@@ -8,13 +8,13 @@ import type { Recommendation } from "../../../types/recommendation";
 import { getDynamicOutfitImage } from "../../../utils/imageHelpers";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
 } from "../../../components/ui/alert-dialog";
 
 export function OutfitRecommendation() {
@@ -24,25 +24,20 @@ export function OutfitRecommendation() {
   const [activeRecType, setActiveRecType] = useState<'personal' | 'group'>(
       () => (sessionStorage.getItem("activeRecType") as any) || 'personal'
   );
-  const [activeTab, setActiveTab] = useState(
-      () => sessionStorage.getItem("activeTab") || 'All'
-  );
 
   const [outfits, setOutfits] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
   const [showPreferenceAlert, setShowPreferenceAlert] = useState(false);
   const [showGroupAlert, setShowGroupAlert] = useState(false);
+  const [myGroups, setMyGroups] = useState<any[]>([]);
 
   const userId = user?.id || user?.userId;
 
   useEffect(() => {
     sessionStorage.setItem("activeRecType", activeRecType);
   }, [activeRecType]);
-
-  useEffect(() => {
-    sessionStorage.setItem("activeTab", activeTab);
-  }, [activeTab]);
 
   const fetchRecommendations = async () => {
     if (!userId) return;
@@ -64,14 +59,34 @@ export function OutfitRecommendation() {
     }
   }, [userId]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (specificGroupId?: string) => {
     if (!userId) {
       alert("Vui lòng đăng nhập để sử dụng tính năng AI!");
       return;
     }
 
+    if (activeRecType === 'group' && !specificGroupId) {
+      try {
+        setIsGenerating(true);
+        const groups = await friendGroupService.getMyGroups();
+        if (!groups || groups.length === 0) {
+          setIsGenerating(false);
+          setShowGroupAlert(true);
+          return;
+        }
+        setMyGroups(groups);
+        setShowGroupModal(true);
+      } catch (err) {
+        console.error("Lỗi lấy danh sách nhóm bạn:", err);
+      } finally {
+        setIsGenerating(false);
+      }
+      return;
+    }
+
     try {
       setIsGenerating(true);
+      setShowGroupModal(false);
 
       if (activeRecType === 'personal') {
         const response = await recommendationService.generatePersonal(userId);
@@ -80,20 +95,8 @@ export function OutfitRecommendation() {
           setShowPreferenceAlert(true);
           return;
         }
-      } else if (activeRecType === 'group') {
-
-        const myGroups = await friendGroupService.getMyGroups();
-
-        if (!myGroups || myGroups.length === 0) {
-          setIsGenerating(false);
-          setShowGroupAlert(true);
-          return;
-        }
-
-        const realGroupId = myGroups[0].groupId || myGroups[0].groupId || (myGroups[0] as any).friendGroupId;
-
-        const response = await recommendationService.generateGroup(userId, realGroupId);
-
+      } else if (activeRecType === 'group' && specificGroupId) {
+        const response = await recommendationService.generateGroup(userId, specificGroupId);
         if (response?.outfit?.outfitName === "Chưa tham gia nhóm bạn nào") {
           setIsGenerating(false);
           setShowGroupAlert(true);
@@ -137,10 +140,35 @@ export function OutfitRecommendation() {
       <div style={{ display: "flex", flexDirection: "column", gap: 24, position: "relative" }}>
 
         {isGenerating && (
-            <div style={{ position: "absolute", zIndex: 50, inset: 0, background: "rgba(255,255,255,0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 20 }}>
+            <div style={{ position: "absolute", zIndex: 50, inset: 0, background: "rgba(255,255,255,0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", borderRadius: 20 }}>
               <div style={{ background: "white", padding: "30px", borderRadius: 20, boxShadow: "0 10px 25px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 15 }}>
                 <Wand2 size={40} color="#EA580C" style={{ animation: "bounce 1s infinite" }} />
                 <h3 style={{ fontWeight: 700, color: "#0F172A" }}>AI Đang Phân Tích...</h3>
+              </div>
+            </div>
+        )}
+
+        {showGroupModal && (
+            <div style={{ position: "fixed", zIndex: 100, inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ background: "white", borderRadius: 20, padding: 24, width: "100%", maxWidth: 440, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <h3 style={{ fontWeight: 800, fontSize: "1.1rem", color: "#0F172A" }}>Chọn Nhóm Bạn Phối Đồ</h3>
+                  <button onClick={() => setShowGroupModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8" }}><X size={20} /></button>
+                </div>
+                <p style={{ color: "#64748B", fontSize: "0.875rem", marginBottom: 20 }}>Vui lòng lựa chọn cụ thể một nhóm bạn bên dưới để AI tiến hành phân tích và phối đồ tối ưu nhất.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "260px", overflowY: "auto" }}>
+                  {myGroups.map(group => (
+                      <button
+                          key={group.groupId || group.id}
+                          onClick={() => handleGenerate(group.groupId || group.id)}
+                          style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: 12, border: "1px solid #E2E8F0", background: "#F8FAFC", cursor: "pointer", fontWeight: 600, color: "#334155" }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "#FFF7ED"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "#F8FAFC"}
+                      >
+                        👥 {group.groupName || "Nhóm bạn thời trang"}
+                      </button>
+                  ))}
+                </div>
               </div>
             </div>
         )}
@@ -154,13 +182,13 @@ export function OutfitRecommendation() {
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", borderTop: "1px solid rgba(255,255,255,0.2)", paddingTop: 20, paddingBottom: 20 }}>
             <button
-                onClick={() => { setActiveRecType('personal'); setActiveTab('All'); }}
+                onClick={() => setActiveRecType('personal')}
                 style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 12, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s", background: activeRecType === 'personal' ? "white" : "rgba(255,255,255,0.15)", color: activeRecType === 'personal' ? "#EA580C" : "white" }}
             >
-              <Wand2 size={16} /> Cá Nhân
+              <User size={16} /> Cá Nhân
             </button>
             <button
-                onClick={() => { setActiveRecType('group'); setActiveTab('All'); }}
+                onClick={() => setActiveRecType('group')}
                 style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 12, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s", background: activeRecType === 'group' ? "white" : "rgba(255,255,255,0.15)", color: activeRecType === 'group' ? "#EA580C" : "white" }}
             >
               <Users size={16} /> Cho Nhóm Bạn
@@ -183,8 +211,6 @@ export function OutfitRecommendation() {
               {filtered.map((item) => {
                 const outfit = item.outfit;
                 const score = item.recommendationScore ? Math.round(item.recommendationScore * 10) : 0;
-
-                // ĐÃ CẬP NHẬT: Gọi hàm từ imageHelpers bóc tách theo ID
                 const dynamicCoverImg = getDynamicOutfitImage(item.recommendationId, outfit?.outfitName, item.eventType);
 
                 return (
