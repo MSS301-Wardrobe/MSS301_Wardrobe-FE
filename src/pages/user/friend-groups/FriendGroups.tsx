@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-
+import { useUser } from "../../../hooks/useUser";
 
 import {
   friendGroupService,
@@ -22,6 +22,7 @@ import {
 
 export function FriendGroups() {
   const navigate = useNavigate();
+  const { preferences } = useUser();
 
   const [myGroups, setMyGroups] = useState<FriendGroup[]>([]);
   const [discoverGroups, setDiscoverGroups] = useState<FriendGroup[]>([]);
@@ -29,10 +30,16 @@ export function FriendGroups() {
 
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [newGroup, setNewGroup] = useState({
+  const [newGroup, setNewGroup] = useState<{
+    name: string;
+    description: string;
+    emoji: string;
+    primaryStyles: string[];
+  }>({
     name: "",
     description: "",
     emoji: "👗",
+    primaryStyles: [],
   });
   const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
   const [requestingGroupId, setRequestingGroupId] = useState<string | null>(null);
@@ -70,9 +77,23 @@ export function FriendGroups() {
     }
   };
 
+  const openCreateModal = () => {
+    setNewGroup({
+      name: "",
+      description: "",
+      emoji: "👗",
+      primaryStyles: preferences?.preferredStyles || [],
+    });
+    setCreateOpen(true);
+  };
+
   const handleCreate = async () => {
     if (!newGroup.name.trim()) {
       toast.error("Vui lòng nhập tên nhóm");
+      return;
+    }
+    if (!newGroup.primaryStyles || newGroup.primaryStyles.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một phong cách chủ đạo cho nhóm");
       return;
     }
 
@@ -81,6 +102,7 @@ export function FriendGroups() {
         groupName: newGroup.name.trim(),
         description: newGroup.description,
         emoji: newGroup.emoji,
+        primaryStyles: newGroup.primaryStyles,
       });
 
       setMyGroups((prev) => [createdGroup, ...prev]);
@@ -88,7 +110,7 @@ export function FriendGroups() {
       toast.success(`Nhóm "${createdGroup.groupName}" đã được tạo!`);
 
       setCreateOpen(false);
-      setNewGroup({ name: "", description: "", emoji: "👗" });
+      setNewGroup({ name: "", description: "", emoji: "👗", primaryStyles: [] });
     } catch (err: any) {
       toast.error(
         err.response?.data?.message ||
@@ -143,7 +165,7 @@ export function FriendGroups() {
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button
-              onClick={() => setCreateOpen(true)}
+              onClick={openCreateModal}
               style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "white", color: "#EA580C", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
             >
               <Plus size={15} />
@@ -383,6 +405,50 @@ export function FriendGroups() {
                   placeholder="Nhóm này về chủ đề gì?"
                   style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #E2E8F0", borderRadius: 10, fontSize: "0.88rem", color: "#0F172A", background: "white", outline: "none", resize: "vertical", fontFamily: "Inter, sans-serif", boxSizing: "border-box" }}
                 />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Phong Cách Chủ Đạo *</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {[
+                    { id: "MINIMAL", label: "Tối Giản" },
+                    { id: "CASUAL", label: "Thường Ngày" },
+                    { id: "OFFICE", label: "Công Sở" },
+                    { id: "ELEGANT", label: "Trang Trọng" },
+                    { id: "STREET", label: "Đường Phố" },
+                    { id: "BOHEMIAN", label: "Bohemian" },
+                    { id: "SPORTY", label: "Thể Thao" },
+                    { id: "VINTAGE", label: "Cổ Điển" },
+                  ].map((style) => {
+                    const isSelected = newGroup.primaryStyles.includes(style.id);
+                    return (
+                      <button
+                        key={style.id}
+                        onClick={() => {
+                          setNewGroup(prev => ({
+                            ...prev,
+                            primaryStyles: isSelected
+                              ? prev.primaryStyles.filter(s => s !== style.id)
+                              : [...prev.primaryStyles, style.id]
+                          }));
+                        }}
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: 20,
+                          fontSize: "0.85rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          background: isSelected ? "#FFF7ED" : "#F8FAFC",
+                          color: isSelected ? "#EA580C" : "#64748B",
+                          border: `1.5px solid ${isSelected ? "#F97316" : "#E2E8F0"}`,
+                        }}
+                      >
+                        {style.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div style={{ display: "flex", gap: 10 }}>

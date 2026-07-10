@@ -9,12 +9,18 @@ export interface FriendGroup {
   myRole?: "OWNER" | "ADMIN" | "MEMBER" | null;
   active: boolean;
   createdAt?: string | null;
+  /** Phong cách chủ đạo của nhóm (e.g. ["MINIMAL", "OFFICE"]) */
+  primaryStyles?: string[] | null;
+  /** Nhãn tiếng Việt (e.g. ["Tối Giản", "Công Sở"]) */
+  primaryStyleLabels?: string[] | null;
 }
 
 export interface CreateFriendGroupRequest {
   groupName: string;
   description?: string;
   emoji?: string;
+  /** Các phong cách chủ đạo của nhóm. Bắt buộc từ BE, nhưng FE có thể tuỳ chọn lúc init. */
+  primaryStyles?: string[];
 }
 
 export interface GroupStyleStat {
@@ -50,8 +56,8 @@ export interface FriendGroupDetail {
   emoji?: string;
   myRole: string;
   memberCount: number;
-  primaryStyle?: string | null;
-  primaryStyleLabel?: string | null;
+  primaryStyles?: string[] | null;
+  primaryStyleLabels?: string[] | null;
   status: string;
   createdAt: string;
   commonStyles: GroupStyleStat[];

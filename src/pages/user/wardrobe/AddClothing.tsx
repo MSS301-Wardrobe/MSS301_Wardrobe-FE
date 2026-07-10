@@ -540,7 +540,7 @@ export function AddClothing() {
                     <button
                       type="button"
                       onClick={() => setCreateZoneOpen(true)}
-                      style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #34D399)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
+                      style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
                     >
                       <Plus size={16} /> Tạo Ngăn Kéo
                     </button>
@@ -688,8 +688,8 @@ export function AddClothing() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Package size={18} color="#10B981" />
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Package size={18} color="#EA580C" />
                 </div>
                 <h3 style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.05rem" }}>Tạo Ngăn Kéo Mới</h3>
               </div>

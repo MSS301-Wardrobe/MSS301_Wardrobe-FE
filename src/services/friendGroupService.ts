@@ -206,7 +206,20 @@ export const friendGroupService = {
 
     return data.data;
   },
+
+  /**
+   * Preview danh sách nhóm có primaryStyle không nằm trong styles mới.
+   * Dùng để hiển thị confirm dialog trước khi user lưu sở thích.
+   */
+  async getStyleConflictGroups(styles: string[]): Promise<FriendGroup[]> {
+    const params = styles.join(",");
+    const { data } = await apiClient.get<ApiResponse<FriendGroup[]>>(
+      `/users/friend-groups/style-conflict?styles=${params}`,
+    );
+    return data.data;
+  },
 };
+
 
 
 export default friendGroupService;

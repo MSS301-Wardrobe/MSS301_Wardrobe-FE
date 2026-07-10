@@ -17,8 +17,10 @@ import {
   UserCheck,
   UserX,
   Clock,
+  Package,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { toast } from "sonner";
 import {
   RadarChart,
@@ -30,21 +32,18 @@ import {
 } from "recharts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { friendGroupService } from "@/services/friendGroupService";
+import { groupSharedApi } from "@/services/wardrobeService";
+import { storageService } from "@/services/storageService";
+import { ShareOutfitModal } from "@/components/common/ShareOutfitModal";
+import type { SharedClothingItem } from "@/types/wardrobe";
+import { useAuthContext } from "@/app/providers/AuthProvider";
 
 
 
-const trendingOutfits = [
-  { id: "1", title: "Đơn Sắc Trắng Tinh", likes: 8, img: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=200&h=240&fit=crop", postedBy: "JS" },
-  { id: "2", title: "Phong Cách Công Sở Tối", likes: 6, img: "https://images.unsplash.com/photo-1731589802956-b4693dae884b?w=200&h=240&fit=crop", postedBy: "AC" },
-  { id: "3", title: "Tối Giản Văn Phòng", likes: 11, img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=200&h=240&fit=crop", postedBy: "SR" },
-];
 
-const influenceBreakdown = [
-  { source: "Bảng Màu Nhóm", pct: 42, color: "#EA580C" },
-  { source: "Phong Cách Chung", pct: 31, color: "#F97316" },
-  { source: "Trang Phục Phổ Biến", pct: 18, color: "#F59E0B" },
-  { source: "Hoạt Động Thành Viên", pct: 9, color: "#10B981" },
-];
+
+
+
 
 function getInitials(name?: string | null) {
   if (!name) return "?";
@@ -94,9 +93,12 @@ export function FriendGroupDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuthContext();
+  const currentUserId = currentUser?.id ?? "";
   const [activeTab, setActiveTab] = useState<
     "overview" | "members" | "trends" | "influence"
   >("overview");
+
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -104,6 +106,7 @@ export function FriendGroupDetails() {
   const [deletingGroup, setDeletingGroup] = useState(false);
   const [joinRequestsOpen, setJoinRequestsOpen] = useState(false);
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const [editGroupOpen, setEditGroupOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState(false);
@@ -133,6 +136,16 @@ export function FriendGroupDetails() {
     queryKey: ["friend-group-join-requests", id],
     queryFn: () => friendGroupService.getGroupJoinRequests(id!),
     enabled: !!id && group?.myRole === "OWNER",
+  });
+
+  // Shared outfits trong nhóm — chỉ load khi ở tab trends
+  const {
+    data: sharedItems = [],
+    isLoading: isSharedLoading,
+  } = useQuery({
+    queryKey: ["group-shared-items", id],
+    queryFn: () => groupSharedApi.getSharedItemsByGroup(id!),
+    enabled: !!id && activeTab === "trends",
   });
 
   if (isLoading) {
@@ -395,7 +408,7 @@ export function FriendGroupDetails() {
             <div style={{ display: "flex", gap: 24, marginTop: 16 }}>
               {[
                 { label: "Thành Viên", value: group.memberCount },
-                { label: "Phong Cách Chủ Đạo", value: group.primaryStyleLabel ?? "Chưa rõ" },
+                { label: "Phong Cách Chủ Đạo", value: group.primaryStyleLabels?.length ? group.primaryStyleLabels.join(", ") : "Chưa rõ" },
                 { label: "Trạng Thái", value: group.status ?? "Hoạt Động" },
                 { label: "Thành Lập", value: formatMonthYear(group.createdAt) },
               ].map(({ label, value }) => (
@@ -847,29 +860,50 @@ export function FriendGroupDetails() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => toast.info("Chức năng chia sẻ outfit sẽ làm tiếp")}
-              style={{
-                padding: "10px 14px",
-                borderRadius: 12,
-                border: "none",
-                background: "linear-gradient(135deg, #EA580C, #F97316)",
-                color: "white",
-                fontWeight: 700,
-                fontSize: "0.82rem",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 7,
-              }}
-            >
-              <Share2 size={15} />
-              Chia sẻ outfit
-            </button>
+            {/* Chỉ hiện nút Share nếu user đã là member của nhóm (có myRole) */}
+            {group.myRole && (
+              <button
+                type="button"
+                onClick={() => setShareModalOpen(true)}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "none",
+                  background: "linear-gradient(135deg, #EA580C, #F97316)",
+                  color: "white",
+                  fontWeight: 700,
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                }}
+              >
+                <Share2 size={15} />
+                Chia sẻ outfit
+              </button>
+            )}
           </div>
 
-          {trendingOutfits.length === 0 ? (
+          {isSharedLoading ? (
+            <div
+              style={{
+                background: "white",
+                borderRadius: 18,
+                padding: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                color: "#64748B",
+                border: "1px solid #E2E8F0",
+              }}
+            >
+              <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              Đang tải...
+            </div>
+          ) : sharedItems.length === 0 ? (
             <div
               style={{
                 background: "white",
@@ -905,144 +939,24 @@ export function FriendGroupDetails() {
                 gap: 18,
               }}
             >
-              {trendingOutfits.map((outfit) => (
-                <div
-                  key={outfit.id}
-                  style={{
-                    background: "white",
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    border: "1px solid #E2E8F0",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              {sharedItems.map((outfit) => (
+                <SharedOutfitCard
+                  key={outfit.shareId}
+                  outfit={outfit}
+                  isOwner={outfit.sharedByUserId === currentUserId}
+                  onUnshare={async () => {
+                    try {
+                      await groupSharedApi.unshareItem(outfit.shareId);
+                      queryClient.invalidateQueries({ queryKey: ["group-shared-items", id] });
+                      toast.success("Đã hủy chia sẻ");
+                    } catch (err: any) {
+                      toast.error(err?.response?.data?.message || "Hủy chia sẻ thất bại");
+                    }
                   }}
-                >
-                  <div style={{ position: "relative" }}>
-                    <img
-                      src={outfit.img}
-                      alt={outfit.title}
-                      style={{
-                        width: "100%",
-                        height: 210,
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
-
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(to top, rgba(15,23,42,0.28), transparent 55%)",
-                      }}
-                    />
-
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 10,
-                        right: 10,
-                        background: "white",
-                        borderRadius: 999,
-                        padding: "5px 10px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 5,
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-                      }}
-                    >
-                      <Heart size={13} fill="#EF4444" color="#EF4444" />
-                      <span
-                        style={{
-                          fontSize: "0.75rem",
-                          fontWeight: 800,
-                          color: "#0F172A",
-                        }}
-                      >
-                        {outfit.likes}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ padding: "15px 16px" }}>
-                    <p
-                      style={{
-                        fontWeight: 800,
-                        color: "#0F172A",
-                        fontSize: "0.92rem",
-                        marginBottom: 10,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {outfit.title}
-                    </p>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          minWidth: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: "50%",
-                            background: "linear-gradient(135deg, #EA580C, #F97316)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "white",
-                            fontSize: "0.65rem",
-                            fontWeight: 800,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {outfit.postedBy}
-                        </div>
-
-                        <span
-                          style={{
-                            fontSize: "0.74rem",
-                            color: "#64748B",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          bởi thành viên
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => toast.success("Đã lưu vào cảm hứng tủ đồ!")}
-                        style={{
-                          background: "#FFEDD5",
-                          border: "none",
-                          borderRadius: 10,
-                          padding: "7px 12px",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          color: "#EA580C",
-                          fontWeight: 800,
-                          flexShrink: 0,
-                        }}
-                      >
-                        Lưu
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  onLikeToggled={(_shareId, _liked) => {
+                    // Không cần invalidate vì optimistic update đã handle trong component
+                  }}
+                />
               ))}
             </div>
           )}
@@ -1051,6 +965,8 @@ export function FriendGroupDetails() {
 
       {activeTab === "influence" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* Banner giải thích */}
           <div style={{ background: "linear-gradient(135deg, #FFEDD5, #F5F3FF)", borderRadius: 18, padding: 24, border: "1px solid #FED7AA" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <Sparkles size={18} color="#EA580C" />
@@ -1059,31 +975,81 @@ export function FriendGroupDetails() {
             <p style={{ color: "#64748B", fontSize: "0.875rem", lineHeight: 1.7 }}>
               AI phân tích sở thích chung, trang phục phổ biến và mẫu hoạt động trong nhóm để tinh chỉnh gợi ý trang phục cá nhân của bạn. Nhóm có độ phù hợp phong cách cao hơn sẽ có mức độ ảnh hưởng mạnh hơn.
             </p>
-            <div style={{ marginTop: 16, background: "white", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div>
-                <p style={{ fontSize: "0.78rem", color: "#64748B", fontWeight: 500 }}>Mức Độ Ảnh Hưởng Nhóm</p>
-                <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "#EA580C" }}>23%</p>
-              </div>
-              <div style={{ flex: 1, background: "#F1F5F9", borderRadius: 100, height: 10 }}>
-                <div style={{ width: "23%", background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%" }} />
-              </div>
-              <span style={{ fontSize: "0.75rem", color: "#64748B", whiteSpace: "nowrap" }}>trên tổng trọng số AI</span>
-            </div>
+
+            {/* Tổng ảnh hưởng: tính từ commonStyles */}
+            {(() => {
+              const styles = group.commonStyles ?? [];
+              // Tổng % là trung bình các style, tối đa 100
+              const total = styles.length > 0
+                ? Math.min(Math.round(styles.reduce((s, x) => s + (x.percentage ?? 0), 0) / styles.length), 100)
+                : 0;
+              return (
+                <div style={{ marginTop: 16, background: "white", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <div>
+                    <p style={{ fontSize: "0.78rem", color: "#64748B", fontWeight: 500 }}>Mức Độ Ảnh Hưởng Nhóm</p>
+                    <p style={{ fontSize: "1.4rem", fontWeight: 800, color: "#EA580C" }}>
+                      {styles.length === 0 ? "--" : `${total}%`}
+                    </p>
+                  </div>
+                  <div style={{ flex: 1, background: "#F1F5F9", borderRadius: 100, height: 10 }}>
+                    <div style={{ width: `${total}%`, background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%", transition: "width 0.8s ease" }} />
+                  </div>
+                  <span style={{ fontSize: "0.75rem", color: "#64748B", whiteSpace: "nowrap" }}>trên tổng trọng số AI</span>
+                </div>
+              );
+            })()}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-            {influenceBreakdown.map((item) => (
-              <div key={item.source} style={{ background: "white", borderRadius: 16, padding: "18px 20px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0F172A" }}>{item.source}</p>
-                  <span style={{ fontSize: "0.9rem", fontWeight: 800, color: item.color }}>{item.pct}%</span>
-                </div>
-                <div style={{ background: "#F1F5F9", borderRadius: 100, height: 8 }}>
-                  <div style={{ width: `${item.pct}%`, background: item.color, borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
-                </div>
+          {/* Phân tích theo từng phong cách từ API */}
+          {(group.commonStyles ?? []).length === 0 ? (
+            <div style={{ background: "white", borderRadius: 18, padding: 36, border: "1px dashed #CBD5E1", textAlign: "center", color: "#64748B" }}>
+              <TrendingUp size={28} color="#EA580C" style={{ marginBottom: 10, opacity: 0.5 }} />
+              <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0F172A", marginBottom: 4 }}>Chưa có dữ liệu phân tích</p>
+              <p style={{ fontSize: "0.82rem" }}>Nhóm cần có ít nhất 2 thành viên để bắt đầu phân tích xu hướng phong cách.</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+              {(group.commonStyles ?? []).map((item, idx) => {
+                const PALETTE = ["#EA580C", "#F97316", "#F59E0B", "#10B981", "#6366F1", "#EC4899"];
+                const color = PALETTE[idx % PALETTE.length];
+                return (
+                  <div key={item.styleName} style={{ background: "white", borderRadius: 16, padding: "18px 20px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0F172A" }}>{item.label ?? item.styleName}</p>
+                      <span style={{ fontSize: "0.9rem", fontWeight: 800, color }}>{item.percentage ?? 0}%</span>
+                    </div>
+                    <div style={{ background: "#F1F5F9", borderRadius: 100, height: 8 }}>
+                      <div style={{ width: `${item.percentage ?? 0}%`, background: color, borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Màu sắc nhóm nếu có */}
+          {(group.colorPalette ?? []).length > 0 && (
+            <div style={{ background: "white", borderRadius: 18, padding: "18px 22px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0F172A", marginBottom: 12 }}>Bảng Màu Đặc Trưng Nhóm</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {(group.colorPalette ?? []).map((color) => (
+                  <div
+                    key={color}
+                    title={color}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: color,
+                      border: "2px solid white",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                      cursor: "default",
+                    }}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1920,6 +1886,306 @@ export function FriendGroupDetails() {
           </div>
         </div>
       )}
+
+      {/* Share Outfit Modal */}
+      {shareModalOpen && id && (
+        <ShareOutfitModal
+          groupId={id}
+          onClose={() => setShareModalOpen(false)}
+          onShared={() => {
+            queryClient.invalidateQueries({ queryKey: ["group-shared-items", id] });
+          }}
+        />
+      )}
     </div>
   );
 }
+
+
+
+function SharedOutfitCard({
+  outfit,
+  isOwner,
+  onUnshare,
+  onLikeToggled,
+}: {
+  outfit: SharedClothingItem;
+  isOwner: boolean;
+  onUnshare: () => void;
+  onLikeToggled: (shareId: string, liked: boolean) => void;
+}) {
+  const [imgUrl, setImgUrl] = useState<string | undefined>(undefined);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Optimistic like state
+  const [liked, setLiked] = useState(outfit.likedByMe);
+  const [likeCount, setLikeCount] = useState(outfit.likeCount ?? 0);
+  const [liking, setLiking] = useState(false);
+
+  useEffect(() => {
+    if (outfit.imageId) {
+      storageService
+        .getPresignedUrl(outfit.imageId)
+        .then(setImgUrl)
+        .catch(() => {});
+    }
+  }, [outfit.imageId]);
+
+  // Sync khi data refresh từ server
+  useEffect(() => {
+    setLiked(outfit.likedByMe);
+    setLikeCount(outfit.likeCount ?? 0);
+  }, [outfit.likedByMe, outfit.likeCount]);
+
+  const handleLike = async () => {
+    if (liking) return;
+    // Optimistic update
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikeCount((c) => c + (newLiked ? 1 : -1));
+    setLiking(true);
+    try {
+      const res = await groupSharedApi.toggleLike(outfit.shareId);
+      setLiked(res.liked);
+      setLikeCount((c) => {
+        // Correct nếu server trả về khác optimistic
+        const optimisticChange = newLiked ? 1 : -1;
+        const actualChange = res.liked ? 1 : -1;
+        return c - optimisticChange + actualChange;
+      });
+      onLikeToggled(outfit.shareId, res.liked);
+    } catch {
+      // Rollback
+      setLiked(!newLiked);
+      setLikeCount((c) => c + (newLiked ? -1 : 1));
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  const sharedDate = outfit.sharedAt
+    ? new Date(outfit.sharedAt).toLocaleDateString("vi-VN", {
+        day: "numeric",
+        month: "short",
+      })
+    : "";
+
+  return (
+    <div
+      style={{
+        background: "white",
+        borderRadius: 18,
+        overflow: "hidden",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+        transition: "transform 0.15s ease, box-shadow 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = "";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.05)";
+      }}
+    >
+      {/* Image */}
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: 200,
+          background: outfit.dominantColor ? `${outfit.dominantColor}33` : "#F1F5F9",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={outfit.itemName}
+            onLoad={() => setImgLoaded(true)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              opacity: imgLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
+          />
+        ) : (
+          <Package size={36} color="#CBD5E1" />
+        )}
+
+        {/* Gradient overlay */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to top, rgba(15,23,42,0.3), transparent 55%)",
+          }}
+        />
+
+        {/* Color dot */}
+        {outfit.dominantColor && (
+          <div
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              background: outfit.dominantColor,
+              border: "2px solid white",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+            }}
+          />
+        )}
+
+        {/* ❤️ Like button — nổi trên ảnh góc phải */}
+        <button
+          type="button"
+          onClick={handleLike}
+          disabled={liking}
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 10,
+            background: liked ? "#FEF2F2" : "rgba(255,255,255,0.92)",
+            border: liked ? "1.5px solid #FCA5A5" : "1.5px solid rgba(255,255,255,0.6)",
+            borderRadius: 999,
+            padding: "6px 12px",
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            cursor: liking ? "default" : "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            transition: "all 0.18s ease",
+            transform: liking ? "scale(0.9)" : "scale(1)",
+          }}
+        >
+          <style>{`
+            @keyframes heartPop {
+              0% { transform: scale(1); }
+              40% { transform: scale(1.4); }
+              70% { transform: scale(0.9); }
+              100% { transform: scale(1); }
+            }
+            .heart-icon-liked {
+              animation: heartPop 0.35s ease;
+            }
+          `}</style>
+          <Heart
+            size={13}
+            fill={liked ? "#EF4444" : "none"}
+            color={liked ? "#EF4444" : "#64748B"}
+            className={liked ? "heart-icon-liked" : ""}
+          />
+          <span
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              color: liked ? "#DC2626" : "#64748B",
+              minWidth: 8,
+              transition: "color 0.18s ease",
+            }}
+          >
+            {likeCount}
+          </span>
+        </button>
+
+        {/* Date badge */}
+        {sharedDate && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 10,
+              left: 10,
+              background: "rgba(255,255,255,0.9)",
+              borderRadius: 8,
+              padding: "3px 8px",
+              fontSize: "0.68rem",
+              fontWeight: 600,
+              color: "#64748B",
+            }}
+          >
+            {sharedDate}
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: "14px 16px" }}>
+        <p
+          style={{
+            fontWeight: 700,
+            color: "#0F172A",
+            fontSize: "0.9rem",
+            marginBottom: 6,
+            lineHeight: 1.4,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {outfit.itemName}
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {/* Style tag */}
+          {outfit.style && (
+            <span
+              style={{
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                color: "#F97316",
+                background: "#FFF7ED",
+                borderRadius: 6,
+                padding: "3px 8px",
+                textTransform: "capitalize",
+              }}
+            >
+              {outfit.style}
+            </span>
+          )}
+
+          {/* Unshare button (chỉ người share mới thấy) */}
+          {isOwner && (
+            <button
+              type="button"
+              onClick={onUnshare}
+              style={{
+                background: "#FEF2F2",
+                border: "1px solid #FECACA",
+                borderRadius: 8,
+                padding: "5px 10px",
+                cursor: "pointer",
+                fontSize: "0.7rem",
+                color: "#DC2626",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                marginLeft: "auto",
+              }}
+            >
+              <X size={11} />
+              Hủy share
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
