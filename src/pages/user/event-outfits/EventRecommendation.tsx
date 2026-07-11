@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { recommendationService } from "../../../services/recommendationService";
 import { useAuth } from "../../../hooks/useAuth";
+import { OutfitGrid } from "../../../components/common/OutfitGrid";
 
 const events = [
   { id: "work", label: "Công Sở", icon: "💼", desc: "Văn Phòng & Kinh Doanh", color: "#EA580C", bg: "#FFEDD5" },
@@ -25,6 +26,7 @@ type Outfit = {
   items: number;
   tags: string[];
   favorites: number;
+  clothingItems?: any[];
 };
 
 const sourceIcons: Record<string, React.ElementType> = {
@@ -108,11 +110,12 @@ export function EventRecommendation() {
           id: r.recommendationId,
           title: r.outfit?.outfitName || "Trang Phục Tốt Nhất",
           score: r.recommendationScore ? Math.round(r.recommendationScore * 10) : 85,
-          source: sources[index % 4], // Random nhẹ source cho giao diện đẹp như cũ
+          source: sources[index % 4],
           sourceColor: colors[index % 4],
           reason: r.outfit?.description || "Trí tuệ nhân tạo tối ưu hóa tổ hợp vật phẩm này dựa trên sự kiện.",
-          img: r.outfit?.img || "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=400&h=500&fit=crop", // Ảnh mặc định nếu backend chưa nhả ảnh
+          img: r.outfit?.img || "",
           items: r.outfit?.items || 3,
+          clothingItems: r.outfit?.clothingItems || [],
           tags: r.outfit?.tags && r.outfit.tags.length > 0 ? r.outfit.tags : [activeEventData.label, "AI Phối"],
           favorites: 0
         };
@@ -213,7 +216,7 @@ export function EventRecommendation() {
                 >
                   {/* Image */}
                   <div style={{ position: "relative" }}>
-                    <img src={outfit.img} alt={outfit.title} style={{ width: "100%", height: 260, objectFit: "cover" }} />
+                    <OutfitGrid items={outfit.clothingItems || []} />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.7), transparent)" }} />
 
                     {/* Rank badge */}

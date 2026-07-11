@@ -5,7 +5,8 @@ import { recommendationService } from "../../../services/recommendationService";
 import { friendGroupService } from "../../../services/friendGroupService";
 import { useAuth } from "../../../hooks/useAuth";
 import type { Recommendation } from "../../../types/recommendation";
-import { getDynamicOutfitImage } from "../../../utils/imageHelpers";
+import { OutfitGrid } from "@/components/common/OutfitGrid.tsx";
+
 import {
   AlertDialog,
   AlertDialogContent,
@@ -211,7 +212,6 @@ export function OutfitRecommendation() {
               {filtered.map((item) => {
                 const outfit = item.outfit;
                 const score = item.recommendationScore ? Math.round(item.recommendationScore * 10) : 0;
-                const dynamicCoverImg = getDynamicOutfitImage(item.recommendationId, outfit?.outfitName, item.eventType);
 
                 return (
                     <div
@@ -220,7 +220,7 @@ export function OutfitRecommendation() {
                         style={{ background: "white", borderRadius: 20, overflow: "hidden", border: "1px solid #E2E8F0", cursor: "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                     >
                       <div style={{ position: "relative" }}>
-                        <img src={outfit?.img || dynamicCoverImg} alt={outfit?.outfitName} style={{ width: "100%", height: 260, objectFit: "cover" }} />
+                        <OutfitGrid items={(outfit as any)?.clothingItems || []} />
                         <div style={{ position: "absolute", top: 12, left: 12, display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.95)", borderRadius: 20, padding: "4px 12px" }}>
                           <Star size={12} fill="#F59E0B" color="#F59E0B" />
                           <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0F172A" }}>{score}% phù hợp</span>

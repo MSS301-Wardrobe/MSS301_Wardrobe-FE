@@ -6,6 +6,7 @@ import { recommendationService } from "../../../services/recommendationService";
 import type { Recommendation } from "../../../types/recommendation";
 // ĐÃ CẬP NHẬT: Import các hàm nội suy ảnh thông minh tập trung
 import { getDynamicOutfitImage, getDynamicItemImage } from "../../../utils/imageHelpers";
+import {OutfitGrid} from "@/components/common/OutfitGrid.tsx";
 
 export function RecommendationDetails() {
   const navigate = useNavigate();
@@ -61,9 +62,18 @@ export function RecommendationDetails() {
 
         <div style={{ display: "grid", gridTemplateColumns: "400px 1fr", gap: 24 }}>
           <div>
-            <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid #E2E8F0", boxShadow: "0 8px 32px rgba(0,0,0,0.1)", position: "relative" }}>
-              <img src={outfit.img || dynamicCoverImg} alt={outfit.outfitName} style={{ width: "100%", height: 480, objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.5), transparent)" }} />
+            <div style={{
+              borderRadius: 20,
+              overflow: "hidden",
+              border: "1px solid #E2E8F0",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+              position: "relative",
+              backgroundColor: "white"
+            }}>
+
+              <OutfitGrid items={clothingItems} />
+
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.3), transparent)" }} />
 
               <div style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.95)", borderRadius: 20, padding: "6px 14px", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
                 <Star size={14} fill="#F59E0B" color="#F59E0B" />
