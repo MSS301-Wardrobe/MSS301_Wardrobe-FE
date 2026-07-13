@@ -95,7 +95,7 @@ export function PreferenceSettings() {
   }
 
   return (
-    <div style={{ maxWidth: 860, display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg, #EA580C, #F97316)", borderRadius: 20, padding: "28px 32px", color: "white" }}>
         <h2 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: 6 }}>Sở Thích Phong Cách</h2>
@@ -105,7 +105,7 @@ export function PreferenceSettings() {
       </div>
 
       {/* Favorite Colors */}
-      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFEDD5", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Palette size={18} color="#EA580C" />
@@ -115,7 +115,7 @@ export function PreferenceSettings() {
             <p style={{ fontSize: "0.78rem", color: "#64748B" }}>Chọn màu bạn thích mặc ({selectedColors.length} đã chọn)</p>
           </div>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, overflowX: "hidden" }}>
           {colorSwatches.map((c) => {
             const selected = selectedColors.includes(c.hex);
             return (
@@ -142,7 +142,7 @@ export function PreferenceSettings() {
       </div>
 
       {/* Preferred Styles */}
-      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Shirt size={18} color="#F97316" />
@@ -152,7 +152,7 @@ export function PreferenceSettings() {
             <p style={{ fontSize: "0.78rem", color: "#64748B" }}>Phong cách nào định hình tủ đồ của bạn?</p>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
           {styleOptions.map((style) => {
             const selected = selectedStyles.includes(style.id);
             return (
@@ -175,7 +175,7 @@ export function PreferenceSettings() {
       </div>
 
       {/* Lifestyle Selection */}
-      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFFBEB", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Heart size={18} color="#F59E0B" />
@@ -185,7 +185,7 @@ export function PreferenceSettings() {
             <p style={{ fontSize: "0.78rem", color: "#64748B" }}>Bạn thường dành thời gian ở đâu nhất?</p>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
           {lifestyles.map((life) => {
             const selected = selectedLifestyles.includes(life.id);
             return (
@@ -207,7 +207,7 @@ export function PreferenceSettings() {
       </div>
 
       {/* Clothing Interests */}
-      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+      <div style={{ background: "white", borderRadius: 20, padding: 28, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Star size={18} color="#10B981" />
@@ -217,7 +217,7 @@ export function PreferenceSettings() {
             <p style={{ fontSize: "0.78rem", color: "#64748B" }}>Bạn quan tâm đến loại trang phục nào?</p>
           </div>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, overflowX: "hidden" }}>
           {clothingInterests.map((interest) => {
             const selected = selectedInterests.includes(interest);
             return (

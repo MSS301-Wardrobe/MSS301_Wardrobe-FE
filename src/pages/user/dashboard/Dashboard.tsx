@@ -1,59 +1,23 @@
-import { Shirt, Cpu, Sparkles, Upload, Eye, Layers, Users, Calendar } from "lucide-react";
+import { Shirt, Cpu, Sparkles, Upload, Eye, Layers, Users, Calendar, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import { useAuthContext } from "../../../app/providers/AuthProvider";
-
-const stats = [
-  { label: "Tổng Trang Phục", value: "247", change: "+12 tuần này", icon: Shirt, color: "#EA580C", bg: "#FFEDD5" },
-  { label: "Khu Vực Tủ Đồ", value: "5", change: "4 mặc định + 1 tùy chỉnh", icon: Layers, color: "#F97316", bg: "#F5F3FF" },
-  { label: "Nhận Diện AI", value: "1.843", change: "+38 hôm nay", icon: Cpu, color: "#F59E0B", bg: "#FFFBEB" },
-  { label: "Bộ Đã Tạo", value: "92", change: "+5 tuần này", icon: Sparkles, color: "#10B981", bg: "#ECFDF5" },
-];
-
-const pieData = [
-  { name: "Áo", value: 72, color: "#EA580C" },
-  { name: "Quần", value: 54, color: "#F97316" },
-  { name: "Váy", value: 38, color: "#F59E0B" },
-  { name: "Áo Khoác", value: 45, color: "#10B981" },
-  { name: "Phụ Kiện", value: 38, color: "#EF4444" },
-];
-
-const barData = [
-  { month: "T1", items: 18, outfits: 12 },
-  { month: "T2", items: 22, outfits: 15 },
-  { month: "T3", items: 31, outfits: 20 },
-  { month: "T4", items: 28, outfits: 18 },
-  { month: "T5", items: 35, outfits: 24 },
-  { month: "T6", items: 42, outfits: 31 },
-];
-
-const recentUploads = [
-  { id: "1", name: "Áo Sơ Mi Trắng Cotton", category: "Áo", time: "2 giờ trước", img: "https://images.unsplash.com/photo-1467043237213-65f2da53396f?w=80&h=80&fit=crop" },
-  { id: "2", name: "Quần Slim Jeans Tối", category: "Quần", time: "5 giờ trước", img: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=80&h=80&fit=crop" },
-  { id: "3", name: "Thắt Lưng Da Nâu", category: "Phụ Kiện", time: "1 ngày trước", img: "https://images.unsplash.com/photo-1614676471928-2ed0ad1061a4?w=80&h=80&fit=crop" },
-  { id: "4", name: "Giày Thể Thao Trắng", category: "Giày", time: "1 ngày trước", img: "https://images.unsplash.com/photo-1544441893-675973e31985?w=80&h=80&fit=crop" },
-  { id: "5", name: "Mũ Len", category: "Phụ Kiện", time: "2 ngày trước", img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=80&h=80&fit=crop" },
-];
-
-const aiStats = [
-  { category: "Áo", count: 72, accuracy: 97 },
-  { category: "Quần", count: 54, accuracy: 95 },
-  { category: "Váy", count: 38, accuracy: 98 },
-  { category: "Áo Khoác", count: 45, accuracy: 94 },
-  { category: "Phụ Kiện", count: 38, accuracy: 92 },
-];
-
-const recommendations = [
-  { title: "Phong Cách Công Sở", score: 94, tags: ["Công Sở", "Tối Giản"], img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=120&h=120&fit=crop" },
-  { title: "Phong Cách Cuối Tuần", score: 89, tags: ["Thường Ngày", "Xu Hướng"], img: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=120&h=120&fit=crop" },
-  { title: "Trang Phục Dạ Tiệc", score: 91, tags: ["Tiệc Tùng", "Thanh Lịch"], img: "https://images.unsplash.com/photo-1617690033147-ce6b332d677b?w=120&h=120&fit=crop" },
-];
+import { useDashboard } from "../../../hooks/useDashboard";
 
 export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const {
+    stats,
+    clothingDistribution,
+    growthData,
+    recentUploads,
+    aiAccuracyStats,
+    outfitRecommendations,
+    isLoading,
+  } = useDashboard();
 
   const displayName = user?.name ?? user?.email?.split("@")[0] ?? "bạn";
 
@@ -63,6 +27,23 @@ export function Dashboard() {
     if (h < 18) return "Chào buổi chiều";
     return "Chào buổi tối";
   };
+
+  const statCards = [
+    { label: "Tổng Trang Phục", value: String(stats?.totalClothing ?? "--"), change: "+12 tuần này", icon: Shirt, color: "#EA580C", bg: "#FFEDD5" },
+    { label: "Khu Vực Tủ Đồ", value: String(stats?.totalZones ?? "--"), change: "4 mặc định + 1 tùy chỉnh", icon: Layers, color: "#F97316", bg: "#F5F3FF" },
+    { label: "Nhận Diện AI", value: stats ? stats.aiDetections.toLocaleString() : "--", change: "+38 hôm nay", icon: Cpu, color: "#F59E0B", bg: "#FFFBEB" },
+    { label: "Bộ Đã Tạo", value: String(stats?.outfitsCreated ?? "--"), change: "+5 tuần này", icon: Sparkles, color: "#10B981", bg: "#ECFDF5" },
+  ];
+
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#64748B", gap: 10 }}>
+        <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        Đang tải dashboard...
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -83,7 +64,7 @@ export function Dashboard() {
 
       {/* Stats Row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-        {stats.map((s) => (
+        {statCards.map((s) => (
           <div key={s.label} style={{ background: "white", borderRadius: 16, padding: "20px 22px", border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
@@ -107,8 +88,8 @@ export function Dashboard() {
           <p style={{ fontSize: "0.8rem", color: "#64748B", marginBottom: 16 }}>Theo danh mục</p>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart key="clothing-distribution-pie">
-              <Pie key="pie-clothing" data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" nameKey="name">
-                {pieData.map((entry) => (
+              <Pie key="pie-clothing" data={clothingDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" nameKey="name">
+                {clothingDistribution.map((entry) => (
                   <Cell key={`pie-cell-${entry.name}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -116,7 +97,7 @@ export function Dashboard() {
             </PieChart>
           </ResponsiveContainer>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-            {pieData.map((item) => (
+            {clothingDistribution.map((item) => (
               <div key={item.name} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: item.color }} />
                 <span style={{ fontSize: "0.75rem", color: "#64748B" }}>{item.name}</span>
@@ -130,7 +111,7 @@ export function Dashboard() {
           <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 4, fontSize: "1rem" }}>Tăng Trưởng Tủ Đồ</h3>
           <p style={{ fontSize: "0.8rem", color: "#64748B", marginBottom: 16 }}>Trang phục thêm và bộ tạo hàng tháng</p>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart key="wardrobe-growth-bar" data={barData} barSize={14}>
+            <BarChart key="wardrobe-growth-bar" data={growthData} barSize={14}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
@@ -176,7 +157,7 @@ export function Dashboard() {
           <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 4, fontSize: "1rem" }}>Thống Kê Nhận Diện AI</h3>
           <p style={{ fontSize: "0.78rem", color: "#64748B", marginBottom: 16 }}>Độ chính xác phân loại theo danh mục</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {aiStats.map((s) => (
+            {aiAccuracyStats.map((s) => (
               <div key={s.category}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "#374151" }}>{s.category}</span>
@@ -242,7 +223,7 @@ export function Dashboard() {
           <button onClick={() => navigate("/app/recommendations")} style={{ fontSize: "0.8rem", color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-          {recommendations.map((r, i) => (
+          {outfitRecommendations.map((r, i) => (
             <div key={i} style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0", cursor: "pointer" }} onClick={() => navigate("/app/recommendations")}>
               <div style={{ position: "relative" }}>
                 <img src={r.img} alt={r.title} style={{ width: "100%", height: 120, objectFit: "cover" }} />
