@@ -23,9 +23,9 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  setUser: () => { },
-  logout: async () => { },
-  uploadAvatar: async () => { },
+  setUser: () => {},
+  logout: async () => {},
+  uploadAvatar: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -36,13 +36,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserState(user);
   }, []);
 
-  const uploadAvatar = useCallback(async (file: File) => {
-    const updatedUser = await userService.uploadAvatar(file);
-    setUser(updatedUser);
-  }, [setUser]);
+  const uploadAvatar = useCallback(
+    async (file: File) => {
+      const updatedUser = await userService.uploadAvatar(file);
+      setUser(updatedUser);
+    },
+    [setUser]
+  );
 
   useEffect(() => {
     let cancelled = false;
+
+    const currentPath = window.location.pathname;
+
+    // Không gọi /users/me khi đang xử lý Google callback.
+    if (currentPath === "/authenticate") {
+      setIsLoading(false);
+
+      return () => {
+        cancelled = true;
+      };
+    }
 
     authService
       .me()

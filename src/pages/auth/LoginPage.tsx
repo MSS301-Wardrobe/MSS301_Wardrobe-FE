@@ -16,6 +16,20 @@ export function Login() {
     e.preventDefault();
     login({ email: email.trim(), password });
   };
+
+  const handleGoogleLogin = () => {
+    const params = new URLSearchParams({
+      client_id: "smart-wardrobe-app",
+      redirect_uri: "http://localhost:5173/authenticate",
+      response_type: "code",
+      scope: "openid profile email",
+      kc_idp_hint: "google",
+    });
+
+    window.location.href =
+      `http://localhost:8180/realms/smart-wardrobe/protocol/openid-connect/auth?${params.toString()}`;
+  };
+
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px 12px 42px",
@@ -65,6 +79,7 @@ export function Login() {
       {/* Google */}
       <button
         type="button"
+        onClick={handleGoogleLogin}
         style={{
           width: "100%",
           padding: "12px 20px",
@@ -80,12 +95,6 @@ export function Login() {
           fontWeight: 600,
           color: "#0F172A",
           transition: "background 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "#F8FAFC";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "white";
         }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24">
