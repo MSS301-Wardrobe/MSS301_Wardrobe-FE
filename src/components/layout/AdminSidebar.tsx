@@ -4,6 +4,8 @@ import {
   LogOut, ChevronLeft, ChevronRight, Zap
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthContext } from "../../app/providers/AuthProvider";
+
 
 const navItems = [
   { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admin/dashboard" },
@@ -21,11 +23,20 @@ interface SidebarProps {
 
 export function AdminSidebar({ collapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
+  const { logout  } = useAuthContext();
 
-  const handleLogout = () => {
-    localStorage.removeItem("role");
-    toast.success("Đăng xuất thành công");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+
+      toast.success("Đăng xuất thành công");
+
+      navigate("/login", { replace: true });
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message || err.message || "Đăng xuất thất bại",
+      );
+    }
   };
 
   return (

@@ -116,6 +116,23 @@ export const authService = {
   async refresh(): Promise<void> {
     await apiClient.post("/users/auth/refresh");
   },
+
+  async googleCallback(code: string): Promise<void> {
+  const redirectUri = `${window.location.origin}/authenticate`;
+
+  await apiClient.post("/users/auth/google/callback", {
+    code,
+    redirectUri,
+  });
+},
+
+async syncCurrentUser(): Promise<User> {
+  const { data } = await apiClient.post<ApiResponse<User>>(
+    "/users/auth/me/sync"
+  );
+
+  return data.data;
+},
 };
 
 export default authService;
