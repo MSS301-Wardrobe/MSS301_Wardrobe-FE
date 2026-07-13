@@ -154,7 +154,7 @@ export function FriendGroups() {
       <div style={{ background: "linear-gradient(135deg, #EA580C 0%, #F97316 60%, #FB923C 100%)", borderRadius: 20, padding: "28px 32px", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -50, right: -50, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
         <div style={{ position: "absolute", bottom: -30, right: 120, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <Users size={18} color="rgba(255,255,255,0.75)" />
@@ -173,7 +173,7 @@ export function FriendGroups() {
             </button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 28, marginTop: 24 }}>
+        <div style={{ display: "flex", gap: 28, marginTop: 24, position: "relative", zIndex: 1 }}>
           {[
             { label: "Nhóm Của Tôi", value: myGroups.length },
             { label: "Tổng Thành Viên", value: myGroups.reduce((s, g) => s + g.memberCount, 0) },
