@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { clothingItemApi, categoryApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import type { ClothingItem, Category } from "../../../types/wardrobe";
 import { ArrowLeft, Heart, Edit2, Trash2, Share2, Tag, Info, Cpu } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ const similarItems = [
 export function ClothingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { clothingItemApi, categoryApi } = useWardrobe();
   const [favorite, setFavorite] = useState(true);
   const [activeTab, setActiveTab] = useState<"info" | "ai" | "notes">("info");
   const [itemData, setItemData] = useState<ClothingItem | null>(null);
@@ -82,7 +83,7 @@ export function ClothingDetail() {
     size: "-",
     purchaseDate: new Date(itemData.createdAt).toLocaleDateString("vi-VN"),
     purchasePrice: "-",
-    condition: "-",
+    condition: itemData.zoneId ? "Trong Tủ Đồ" : "Chưa Thêm Vào Tủ Đồ",
     wearCount: 0,
     lastWorn: "-",
     img: getImageUrl(itemData.imageId),
@@ -140,26 +141,10 @@ export function ClothingDetail() {
               <div>
                 <span style={{ background: "#FFEDD5", color: "#EA580C", borderRadius: 20, padding: "3px 12px", fontSize: "0.75rem", fontWeight: 600 }}>{item.category}</span>
                 <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0F172A", marginTop: 10, marginBottom: 4 }}>{item.name}</h2>
-                <p style={{ color: "#64748B", fontSize: "0.85rem" }}>{item.brand} · {item.size} · {item.material}</p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: "0.75rem", color: "#64748B" }}>Giá Mua</p>
-                <p style={{ fontWeight: 800, color: "#0F172A", fontSize: "1.1rem" }}>{item.purchasePrice}</p>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
-              {[
-                { label: "Số Lần Mặc", value: item.wearCount },
-                { label: "Lần Cuối Mặc", value: item.lastWorn },
-                { label: "Tình Trạng", value: item.condition },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ background: "#F8FAFC", borderRadius: 12, padding: "12px 14px" }}>
-                  <p style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 500 }}>{label}</p>
-                  <p style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.9rem", marginTop: 3 }}>{value}</p>
-                </div>
-              ))}
-            </div>
+
           </div>
 
           {/* Tabs */}
@@ -194,13 +179,8 @@ export function ClothingDetail() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   {[
                     { label: "Danh Mục", value: item.category },
-                    { label: "Danh Mục Con", value: item.subcategory },
                     { label: "Màu Sắc", value: item.color },
-                    { label: "Chất Liệu", value: item.material },
-                    { label: "Thương Hiệu", value: item.brand },
-                    { label: "Kích Thước", value: item.size },
-                    { label: "Ngày Mua", value: item.purchaseDate },
-                    { label: "Tình Trạng", value: item.condition },
+                    { label: "Ngày Thêm Vào Tủ Đồ", value: item.purchaseDate },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <p style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{label}</p>

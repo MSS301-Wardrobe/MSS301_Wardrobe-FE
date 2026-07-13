@@ -1,6 +1,7 @@
 import { Bell, Search, Plus } from "lucide-react";
 import { useNavigate, useLocation, useSearchParams } from "react-router";
 import { useState } from "react";
+import { useAuthContext } from "../../app/providers/AuthProvider";
 
 const routeTitles: Record<string, string> = {
   "/app/dashboard": "Tổng Quan",
@@ -29,12 +30,24 @@ export function Topbar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const searchParams = new URLSearchParams(location.search);
   const customTitle = searchParams.get("wardrobeName") || searchParams.get("zoneName");
+  const { user } = useAuthContext();
+
+  const displayName = user?.fullName || user?.username || "Người dùng";
+  const avatarUrl = user?.avatarUrl;
+
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   const title = customTitle || (routeTitles[location.pathname] ??
     (location.pathname.startsWith("/app/wardrobe/") ? "Chi Tiết Trang Phục" :
-     location.pathname.startsWith("/app/recommendations/") ? "Chi Tiết Gợi Ý" :
-     location.pathname.startsWith("/app/friend-groups/") ? "Chi Tiết Nhóm" :
-     "StyleAI"));
+      location.pathname.startsWith("/app/recommendations/") ? "Chi Tiết Gợi Ý" :
+        location.pathname.startsWith("/app/friend-groups/") ? "Chi Tiết Nhóm" :
+          "StyleAI"));
 
   const notifications = [
     { id: 1, text: "AI đã nhận diện 3 trang phục mới", time: "2 phút trước", color: "#EA580C" },
@@ -126,15 +139,29 @@ export function Topbar() {
 
         {/* Avatar */}
         <div
-          className="rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+          className="rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
           style={{
-            width: 38, height: 38,
-            background: "linear-gradient(135deg, #EA580C, #F97316)",
-            color: "white", fontSize: "0.8rem", fontWeight: 700
+            width: 38,
+            height: 38,
+            background: avatarUrl
+              ? "transparent"
+              : "linear-gradient(135deg, #EA580C, #F97316)",
+            color: "white",
+            fontSize: "0.8rem",
+            fontWeight: 700,
           }}
           onClick={() => navigate("/app/profile")}
+          title={displayName}
         >
-          JS
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            initials || "U"
+          )}
         </div>
       </div>
     </header>

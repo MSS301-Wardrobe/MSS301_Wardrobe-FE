@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, ChevronRight, X, Check, Box, Edit3, Trash2, ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { wardrobeZoneApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import { WardrobeZone } from "../../../types/wardrobe";
 
 const COLORS = [
@@ -18,6 +18,7 @@ export function WardrobeZones() {
   const [searchParams] = useSearchParams();
   const wardrobeId = searchParams.get("wardrobeId");
   const q = searchParams.get("q") || "";
+  const { wardrobeZoneApi } = useWardrobe();
 
   const [zones, setZones] = useState<WardrobeZone[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,8 +273,8 @@ export function WardrobeZones() {
               <Trash2 size={24} color="#EF4444" />
             </div>
             <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Xóa Ngăn Kéo?</h3>
-            <p style={{ color: "#64748B", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: 24 }}>
-              Ngăn kéo <strong style={{ color: "#0F172A" }}>{zones.find((z) => z.zoneId === deleteId)?.zoneName}</strong> sẽ bị xóa vĩnh viễn. Quần áo bên trong sẽ không bị xóa.
+            <p style={{ color: "#475569", fontSize: "0.95rem", lineHeight: 1.5, marginBottom: 24 }}>
+              Ngăn kéo <strong style={{ color: "#0F172A" }}>{zones.find((z) => z.zoneId === deleteId)?.zoneName}</strong> sẽ được chuyển vào thùng rác trong 30 ngày. Quần áo bên trong cũng sẽ được chuyển vào thùng rác.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setDeleteId(null)} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1.5px solid #E2E8F0", background: "white", color: "#374151", fontWeight: 600, cursor: "pointer" }}>Hủy</button>

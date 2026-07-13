@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { wardrobeApi } from "../../../services/wardrobeService";
+import { useWardrobe } from "../../../hooks/useWardrobe";
 import type { Wardrobe } from "../../../types/wardrobe";
 
 const COLORS = [
@@ -29,6 +29,7 @@ export function WardrobeManagement() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const q = searchParams.get("q") || "";
+  const { wardrobeApi } = useWardrobe();
   
   const [wardrobes, setWardrobes] = useState<Wardrobe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -350,7 +351,7 @@ export function WardrobeManagement() {
             <p style={{ color: "#64748B", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: 24 }}>
               Tủ đồ <strong style={{ color: "#0F172A" }}>
                 {wardrobes.find((w) => w.wardrobeId === deleteId)?.wardrobeName}
-              </strong> sẽ bị xóa vĩnh viễn. Quần áo bên trong sẽ không bị xóa.
+              </strong> và tất cả dữ liệu bên trong sẽ được chuyển vào thùng rác trong 30 ngày.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button

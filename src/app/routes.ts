@@ -10,6 +10,7 @@ import { Login } from "../pages/auth/LoginPage";
 import { Register } from "../pages/auth/RegisterPage";
 import { ForgotPassword } from "../pages/auth/ForgotPasswordPage";
 import { VerifyOtp } from "../pages/auth/VerifyOtp";
+import { AuthenticatePage } from "../pages/auth/AuthenticatePage";
 
 // End user pages
 import { Dashboard } from "../pages/user/dashboard/Dashboard";
@@ -18,6 +19,7 @@ import { ClothingDetail } from "../pages/user/wardrobe/ClothingDetail";
 import { AddClothing } from "../pages/user/wardrobe/AddClothing";
 import { WardrobeZones } from "../pages/user/wardrobe/WardrobeZones";
 import { WardrobeManagement } from "../pages/user/wardrobe/WardrobeManagement";
+import { Trash } from "../pages/user/wardrobe/Trash";
 import { FriendGroups } from "../pages/user/friend-groups/FriendGroups";
 import { FriendGroupDetails } from "../pages/user/friend-groups/FriendGroupDetails";
 import { AIDetection } from "../pages/user/ai-detection/AIDetection";
@@ -44,6 +46,7 @@ export const router = createBrowserRouter([
       // Public routes
       { path: "/", Component: Landing },
       { path: "/login", Component: Login },
+      { path: "/authenticate", Component: AuthenticatePage },
       { path: "/register", Component: Register },
       { path: "/forgot-password", Component: ForgotPassword },
       { path: "/verify-otp", Component: VerifyOtp },
@@ -61,6 +64,7 @@ export const router = createBrowserRouter([
               { path: "wardrobe/items", Component: WardrobeOverview },
               { path: "wardrobe/add", Component: AddClothing },
               { path: "wardrobe/zones", Component: WardrobeZones },
+              { path: "wardrobe/trash", Component: Trash },
               { path: "wardrobe/:id", Component: ClothingDetail },
               { path: "friend-groups", Component: FriendGroups },
               { path: "friend-groups/:id", Component: FriendGroupDetails },

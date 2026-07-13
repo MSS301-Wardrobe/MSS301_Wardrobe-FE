@@ -49,6 +49,7 @@ export interface AIDetectionViewResult {
   color: DominantColor;
   colorLabel: string;
   style: string;
+  styleKeys?: string[];
   occasion: string[];
   gender: string;
   bbox?: DetectionBBox;

@@ -3,10 +3,22 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { authService } from "../services/authService";
 import { useAuthContext } from "../app/providers/AuthProvider";
-import type { LoginPayload, RegisterPayload } from "../types/user";
+import type {
+  LoginPayload,
+  RegisterPayload,
+  RoleName,
+  User,
+} from "../types/user";
 
 export function useAuth() {
-  const { user, isAuthenticated, isLoading, setUser, logout: ctxLogout } = useAuthContext();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    setUser,
+    logout: ctxLogout,
+  } = useAuthContext();
+
   const navigate = useNavigate();
 
   // Demo accounts - used when backend is unavailable
@@ -18,6 +30,9 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (payload: LoginPayload) => {
+      setUser(null);
+      return await authService.login(payload.email, payload.password);
+
       // Try real backend first
       try {
         return await authService.login(payload.email, payload.password);
@@ -40,22 +55,33 @@ export function useAuth() {
         throw err;
       }
     },
-    onSuccess: (data) => {
-      const role = data.roles?.[0]?.roleName ?? data.role ?? "USER";
-      const normalizedRole = role === "ROLE_ADMIN" || role === "ADMIN" ? "ADMIN" : "USER";
 
-      setUser({
-        id: data.id ?? data.userId ?? "",
+    onSuccess: (data) => {
+      const role = data.role ?? data.roles?.[0]?.roleName ?? "ROLE_USER";
+
+      const normalizedRole: RoleName =
+        role === "ROLE_ADMIN" || role === "ADMIN" ? "ADMIN" : "USER";
+
+      const currentUser: User = {
+        id: data.userId ?? data.id ?? "",
         email: data.email ?? "",
-        name: data.name,
-        avatarUrl: data.avatarUrl,
+        fullName: data.fullName,
+        avatarUrl: data.avatarUrl ?? undefined,
         role: normalizedRole,
-      });
+      };
+
+      setUser(currentUser);
+
       toast.success("Chào mừng trở lại!");
-      const dest = normalizedRole === "ADMIN" ? "/admin/dashboard" : "/app/dashboard";
-      navigate(dest);
+
+      navigate(
+        normalizedRole === "ADMIN" ? "/admin/dashboard" : "/app/dashboard",
+        { replace: true },
+      );
     },
+
     onError: () => {
+      setUser(null);
       toast.error("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
     },
   });
@@ -63,11 +89,15 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: (payload: RegisterPayload) => authService.register(payload),
     onSuccess: (_data, variables) => {
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.");
+      toast.success(
+        "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.",
+      );
       navigate("/verify-otp", { state: { email: variables.email } });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || "Không thể tạo tài khoản. Email có thể đã được sử dụng.";
+      const message =
+        error?.response?.data?.message ||
+        "Không thể tạo tài khoản. Email có thể đã được sử dụng.";
       toast.error(message);
     },
   });
@@ -77,20 +107,42 @@ export function useAuth() {
     onSuccess: () => {
       toast.success("Mã xác minh đã được gửi đến email của bạn.");
     },
-    onError: () => {
-      toast.error("Không tìm thấy tài khoản với email này.");
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        "Không thể gửi mã xác minh.";
+      toast.error(message);
+    },
+  });
+
+  const verifyForgotPasswordOtpMutation = useMutation({
+    mutationFn: (payload: { email: string; otp: string }) =>
+      authService.verifyForgotPasswordOtp(payload),
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        "Mã OTP không hợp lệ hoặc đã hết hạn.";
+      toast.error(message);
     },
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: (payload: { email: string; otp: string; newPassword: string }) =>
-      authService.resetPassword(payload),
+    mutationFn: (payload: {
+      resetToken: string;
+      newPassword: string;
+    }) => authService.resetPassword(payload),
     onSuccess: () => {
       toast.success("Đặt lại mật khẩu thành công!");
       navigate("/login");
     },
-    onError: () => {
-      toast.error("Mã xác minh không hợp lệ hoặc đã hết hạn.");
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.message ||
+        "Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+      toast.error(message);
     },
   });
 
@@ -103,14 +155,23 @@ export function useAuth() {
     user,
     isAuthenticated,
     isLoading,
+
     login: loginMutation.mutate,
     isLoginLoading: loginMutation.isPending,
+
     register: registerMutation.mutate,
+    registerAsync: registerMutation.mutateAsync,
     isRegisterLoading: registerMutation.isPending,
+
     forgotPassword: forgotPasswordMutation.mutate,
     isForgotLoading: forgotPasswordMutation.isPending,
+
+    verifyForgotPasswordOtp: verifyForgotPasswordOtpMutation.mutate,
+    isVerifyForgotPasswordOtpLoading: verifyForgotPasswordOtpMutation.isPending,
+
     resetPassword: resetPasswordMutation.mutate,
     isResetLoading: resetPasswordMutation.isPending,
+
     logout,
   };
 }

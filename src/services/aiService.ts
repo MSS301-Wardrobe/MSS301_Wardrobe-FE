@@ -15,6 +15,10 @@ import {
   translateOccasions,
   translateStyle,
 } from "../utils/aiMappings";
+import {
+  detectionOverlapsCrop,
+  type NormalizedCrop,
+} from "../utils/imageCrop";
 
 const AI_DETECT_PATH = "/ai/detect";
 
@@ -26,6 +30,73 @@ export class LowConfidenceDetectionError extends Error {
     this.name = "LowConfidenceDetectionError";
     this.confidencePercent = confidencePercent;
   }
+}
+
+export class CropRegionEmptyError extends Error {
+  constructor(
+    message = "Không có trang phục nào trong vùng bạn chọn. Hãy mở rộng khung hoặc kéo sang vùng khác."
+  ) {
+    super(message);
+    this.name = "CropRegionEmptyError";
+  }
+}
+
+type DetectAllOptions = {
+  crop?: NormalizedCrop;
+  naturalWidth?: number;
+  naturalHeight?: number;
+};
+
+/** 401 — chưa đăng nhập hoặc token hết hạn, gateway trả về AUTH_TOKEN_MISSING */
+export class AiUnauthorizedError extends Error {
+  constructor(message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.") {
+    super(message);
+    this.name = "AiUnauthorizedError";
+  }
+}
+
+/** 403 — đã đăng nhập nhưng không có quyền, gateway / service trả về AUTH_FORBIDDEN */
+export class AiForbiddenError extends Error {
+  constructor(message = "Bạn không có quyền sử dụng tính năng nhận diện AI.") {
+    super(message);
+    this.name = "AiForbiddenError";
+  }
+}
+
+type AxiosLikeError = {
+  response?: {
+    status?: number;
+    data?: {
+      error?: string;
+      message?: string;
+      detail?: string | { error?: string; message?: string };
+    };
+  };
+};
+
+/** Chuyển HTTP 401/403 từ gateway / ai-detection-service thành error class rõ ràng */
+function interpretAiError(error: unknown): never {
+  const axiosError = error as AxiosLikeError;
+  const status = axiosError?.response?.status;
+  const data = axiosError?.response?.data;
+
+  const detailMsg =
+    typeof data?.detail === "object" ? data.detail?.message : data?.detail;
+  const serverMsg = data?.message ?? detailMsg;
+
+  if (status === 401) {
+    throw new AiUnauthorizedError(
+      serverMsg ?? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+    );
+  }
+
+  if (status === 403) {
+    throw new AiForbiddenError(
+      serverMsg ?? "Bạn không có quyền sử dụng tính năng nhận diện AI."
+    );
+  }
+
+  throw error;
 }
 
 function normalizeColor(color: DominantColor | string): DominantColor {
@@ -76,6 +147,7 @@ export function mapDetectionToViewResult(
     color,
     colorLabel,
     style,
+    styleKeys: detection.style,
     occasion,
     gender,
     bbox: detection.bbox,
@@ -115,41 +187,105 @@ export const aiService = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const { data } = await apiClient.post<AIDetectionResult>(
-      AI_DETECT_PATH,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    try {
+      const { data } = await apiClient.post<AIDetectionResult>(
+        AI_DETECT_PATH,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    return data;
+      return data;
+    } catch (error: unknown) {
+      interpretAiError(error);
+    }
   },
 
   async detectForView(image: File | string): Promise<AIDetectionViewResult> {
-    const response = await this.detect(image);
-    const primary = response.detections[0];
+    const results = await this.detectAllForView(image);
+    return results[0];
+  },
 
-    if (!primary) {
+  async detectAllForView(
+    image: File | string,
+    options?: DetectAllOptions
+  ): Promise<AIDetectionViewResult[]> {
+    const response = await this.detect(image);
+
+    if (!response?.detections?.length) {
       throw new Error("Không phát hiện trang phục nào trong ảnh");
     }
 
-    const confidencePercent = Math.round(primary.confidence * 1000) / 10;
+    const { crop, naturalWidth, naturalHeight } = options ?? {};
+    const hasCropFilter =
+      crop &&
+      naturalWidth &&
+      naturalHeight &&
+      naturalWidth > 0 &&
+      naturalHeight > 0;
 
-    if (primary.confidence < MIN_DETECTION_CONFIDENCE) {
+    const inRegion = hasCropFilter
+      ? response.detections.filter((item) =>
+          item.bbox
+            ? detectionOverlapsCrop(
+                item.bbox,
+                crop,
+                naturalWidth,
+                naturalHeight
+              )
+            : false
+        )
+      : response.detections;
+
+    if (hasCropFilter && !inRegion.length) {
+      throw new CropRegionEmptyError();
+    }
+
+    const qualified = inRegion.filter(
+      (item) => item.confidence >= MIN_DETECTION_CONFIDENCE
+    );
+
+    if (!qualified.length) {
+      const best = inRegion[0];
+      const confidencePercent = Math.round(best.confidence * 1000) / 10;
+      const cropHint = hasCropFilter
+        ? " Hãy mở rộng khung để bao trọn trang phục, hoặc chọn vùng có trang phục rõ hơn."
+        : "";
       throw new LowConfidenceDetectionError(
         confidencePercent,
-        buildLowConfidenceMessage(confidencePercent)
+        buildLowConfidenceMessage(confidencePercent) + cropHint
       );
     }
 
-    return mapDetectionToViewResult(primary);
+    return qualified.map(mapDetectionToViewResult);
   },
 
   async analyze(itemId: string): Promise<AIAnalysisResult | void> {
     const { data } = await apiClient.get<AIAnalysisResult>(`/ai/analyze/${itemId}`);
+    return data;
+  },
+
+  async getStats(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/stats');
+    return data;
+  },
+  async getDaily(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/daily');
+    return data;
+  },
+  async getMonthly(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/monthly');
+    return data;
+  },
+  async getCategories(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/categories');
+    return data;
+  },
+  async getRecent(): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/recent');
     return data;
   },
 };

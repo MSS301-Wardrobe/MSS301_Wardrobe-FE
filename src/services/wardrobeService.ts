@@ -18,6 +18,8 @@ import type {
   ClothingItem,
   CreateClothingItemPayload,
   UpdateClothingItemPayload,
+  SharedClothingItem,
+  ShareClothingItemPayload,
 } from "../types/wardrobe";
 
 /**
@@ -76,6 +78,17 @@ export const wardrobeApi = {
     const { data } = await apiClient.get<ApiResponse<Wardrobe[]>>(`${W}/wardrobes/search?keyword=${encodeURIComponent(keyword)}`);
     return data.data ?? [];
   },
+
+  /** GET /wardrobes/trash */
+  async getDeleted(): Promise<Wardrobe[]> {
+    const { data } = await apiClient.get<ApiResponse<Wardrobe[]>>(`${W}/wardrobes/trash`);
+    return data.data ?? [];
+  },
+
+  /** POST /wardrobes/:id/restore */
+  async restore(id: string): Promise<void> {
+    await apiClient.post(`${W}/wardrobes/${id}/restore`);
+  },
 };
 
 // ─── Wardrobe Zone API ────────────────────────────────────────────────────────
@@ -127,6 +140,17 @@ export const wardrobeZoneApi = {
     if (wardrobeId) url += `&wardrobeId=${wardrobeId}`;
     const { data } = await apiClient.get<ApiResponse<WardrobeZone[]>>(url);
     return data.data ?? [];
+  },
+
+  /** GET /wardrobe-zones/trash */
+  async getDeleted(): Promise<WardrobeZone[]> {
+    const { data } = await apiClient.get<ApiResponse<WardrobeZone[]>>(`${W}/wardrobe-zones/trash`);
+    return data.data ?? [];
+  },
+
+  /** POST /wardrobe-zones/:id/restore */
+  async restore(id: string): Promise<void> {
+    await apiClient.post(`${W}/wardrobe-zones/${id}/restore`);
   },
 };
 
@@ -265,7 +289,55 @@ export const clothingItemApi = {
   },
 };
 
-// ─── Legacy compat ────────────────────────────────────────────────────────────
+// ─── Group Shared Clothing Item API ─────────────────────────────────────────────────────────────────────────────
+
+export const groupSharedApi = {
+  /**
+   * POST /clothing-items/shared
+   * Chia sẻ một ClothingItem vào group.
+   * Idempotent: nếu đã share rồi sẽ trả về record cũ.
+   */
+  async shareItem(payload: ShareClothingItemPayload): Promise<SharedClothingItem> {
+    const { data } = await apiClient.post<ApiResponse<SharedClothingItem>>(
+      `${W}/clothing-items/shared`,
+      payload
+    );
+    return data.data;
+  },
+
+  /**
+   * GET /clothing-items/shared/group/:groupId
+   * Lấy danh sách trang phục đã share vào một nhóm.
+   */
+  async getSharedItemsByGroup(groupId: string): Promise<SharedClothingItem[]> {
+    const { data } = await apiClient.get<ApiResponse<SharedClothingItem[]>>(
+      `${W}/clothing-items/shared/group/${groupId}`
+    );
+    return data.data ?? [];
+  },
+
+  /**
+   * DELETE /clothing-items/shared/:shareId
+   * Hủy chia sẻ — chỉ người đã share mới được thực hiện.
+   */
+  async unshareItem(shareId: string): Promise<void> {
+    await apiClient.delete(`${W}/clothing-items/shared/${shareId}`);
+  },
+
+  /**
+   * POST /clothing-items/shared/:shareId/like
+   * Toggle like/unlike — trả về { liked: boolean }
+   */
+  async toggleLike(shareId: string): Promise<{ liked: boolean }> {
+    const { data } = await apiClient.post<ApiResponse<{ liked: boolean }>>(
+      `${W}/clothing-items/shared/${shareId}/like`
+    );
+    return data.data;
+  },
+};
+
+
+// ─── Legacy compat ─────────────────────────────────────────────────────────────────────────────
 
 export const wardrobeService = {
   getItems: () => clothingItemApi.getAll(),
