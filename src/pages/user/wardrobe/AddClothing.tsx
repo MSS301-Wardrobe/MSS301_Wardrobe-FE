@@ -528,7 +528,7 @@ export function AddClothing() {
                       <option key={w.wardrobeId} value={w.wardrobeId}>{w.wardrobeName}</option>
                     ))}
                   </select>
-                  {wardrobes.length === 0 && !initialZoneId && (
+                  {!initialZoneId && (
                     <button
                       type="button"
                       onClick={() => setCreateWardrobeOpen(true)}
@@ -555,7 +555,7 @@ export function AddClothing() {
                       <option key={z.zoneId} value={z.zoneId}>{z.zoneName}</option>
                     ))}
                   </select>
-                  {form.wardrobeId && zones.filter((z: any) => z.wardrobeId === form.wardrobeId).length === 0 && !initialZoneId && (
+                  {form.wardrobeId && !initialZoneId && (
                     <button
                       type="button"
                       onClick={() => setCreateZoneOpen(true)}
