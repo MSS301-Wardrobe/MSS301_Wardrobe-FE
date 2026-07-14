@@ -20,6 +20,8 @@ import type {
   UpdateClothingItemPayload,
   SharedClothingItem,
   ShareClothingItemPayload,
+  CategoryAnalyticsResponse,
+  CategoryUsersResponse,
 } from "../types/wardrobe";
 
 /**
@@ -184,6 +186,40 @@ export const categoryApi = {
   /** DELETE /categories/:id */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${W}/categories/${id}`);
+  },
+
+  /**
+   * GET /categories/analytics?granularity=day|month|year&date=YYYY-MM-DD
+   * Chỉ ROLE_ADMIN. date mặc định hôm nay.
+   */
+  async getAnalytics(
+    granularity: "day" | "month" | "year",
+    date: string
+  ): Promise<CategoryAnalyticsResponse> {
+    const { data } = await apiClient.get<ApiResponse<CategoryAnalyticsResponse>>(
+      `${W}/categories/analytics`,
+      { params: { granularity, date } }
+    );
+    return data.data;
+  },
+
+  /**
+   * GET /categories/analytics/users?categoryName=&granularity=&date=
+   * Chỉ ROLE_ADMIN — danh sách user có đồ thuộc danh mục.
+   */
+  async getUsersByCategory(
+    categoryName: string,
+    granularity: "day" | "month" | "year",
+    date: string
+  ): Promise<CategoryUsersResponse> {
+    const { data } = await apiClient.get<ApiResponse<CategoryUsersResponse>>(
+      `${W}/categories/analytics/users`,
+      { params: { categoryName, granularity, date } }
+    );
+    if (!data.success || !data.data) {
+      throw new Error(data.message || "Không thể tải danh sách user theo danh mục");
+    }
+    return data.data;
   },
 };
 

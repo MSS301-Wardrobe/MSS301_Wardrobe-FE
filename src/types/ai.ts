@@ -20,6 +20,7 @@ export interface DetectionItem {
   style: string[];
   occasion: string[];
   gender: string;
+  logId?: number;
   editable_fields: {
     material: string | null;
     brand: string | null;
@@ -52,6 +53,57 @@ export interface AIDetectionViewResult {
   styleKeys?: string[];
   occasion: string[];
   gender: string;
+  logId?: number;
   bbox?: DetectionBBox;
   attributes: { label: string; value: string; score: number }[];
+}
+
+export type DetectionHistoryTab = "not_added" | "added";
+export type DetectionHistorySort = "newest" | "oldest";
+
+export interface DetectionHistoryItem {
+  id: number;
+  userId: string;
+  className: string;
+  category: string;
+  confidence: number;
+  dominantColor?: DominantColor | string | null;
+  style?: string[] | string | null;
+  gender?: string | null;
+  occasion?: string[] | string | null;
+  imageId?: string | null;
+  itemName?: string | null;
+  wardrobeStatus: "NOT_ADDED" | "ADDED";
+  clothingItemId?: string | null;
+  isPinned: boolean;
+  recordStatus: "ACTIVE" | "INACTIVE" | "DELETED";
+  createdAt: string;
+  addedAt?: string | null;
+  deactivatedAt?: string | null;
+  daysUntilDeletion?: number | null;
+}
+
+export interface DetectionHistoryDetail extends DetectionHistoryItem {
+  status?: string;
+  pinnedAt?: string | null;
+}
+
+export interface DetectionHistoryPageResponse {
+  items: DetectionHistoryItem[];
+  page: number;
+  size: number;
+  totalItems: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  notAddedCount: number;
+  addedCount: number;
+}
+
+export interface MarkDetectionAddedPayload {
+  clothingItemId: string;
+  itemName: string;
+  imageId?: string;
 }

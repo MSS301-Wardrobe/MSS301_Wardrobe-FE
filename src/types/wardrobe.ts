@@ -110,6 +110,41 @@ export interface ShareClothingItemPayload {
   groupId: string;
 }
 
+// ─── Category Analytics ───────────────────────────────────────────────────────
+
+export interface CategoryAnalyticsItem {
+  categoryId: string;
+  categoryName: string;
+  description?: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CategoryAnalyticsResponse {
+  granularity: "day" | "month" | "year";
+  from: string;
+  to: string;
+  totalItems: number;
+  categories: CategoryAnalyticsItem[];
+}
+
+export interface CategoryUserItem {
+  userId: string;
+  itemCount: number;
+  firstAddedAt?: string;
+  lastAddedAt?: string;
+}
+
+export interface CategoryUsersResponse {
+  categoryName: string;
+  granularity: "day" | "month" | "year";
+  from: string;
+  to: string;
+  totalUsers: number;
+  totalItems: number;
+  users: CategoryUserItem[];
+}
+
 // ─── API wrapper ─────────────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {
