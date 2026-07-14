@@ -84,6 +84,7 @@ export function useAI() {
       crop?: NormalizedCrop;
       naturalWidth?: number;
       naturalHeight?: number;
+      imageId?: string;
     }
   ): Promise<AIDetectionViewResult[] | null> {
     try {
