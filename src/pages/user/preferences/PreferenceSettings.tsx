@@ -48,15 +48,9 @@ const clothingInterests = [
   { id: "DENIM", label: "Đồ Denim" },
   { id: "WOOL", label: "Đồ Len" },
   { id: "OUTERWEAR", label: "Áo Ngoài" },
-  { id: "SHOES", label: "Giày Dép" },
-  { id: "BAG", label: "Túi Xách" },
-  { id: "JEWELRY", label: "Trang Sức" },
-  { id: "WATCH", label: "Đồng Hồ" },
-  { id: "SUNGLASSES", label: "Kính Mát" },
   { id: "SPORTSWEAR", label: "Đồ Thể Thao" },
   { id: "HOMEWEAR", label: "Đồ Nhà" },
   { id: "SWIMWEAR", label: "Đồ Bơi" },
-  { id: "UNDERWEAR", label: "Đồ Lót" },
   { id: "SUIT", label: "Bộ Vest" },
 ];
 

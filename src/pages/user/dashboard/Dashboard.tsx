@@ -29,9 +29,8 @@ export function Dashboard() {
   };
 
   const statCards = [
-    { label: "Tổng Trang Phục", value: String(stats?.totalClothing ?? "--"), change: "+12 tuần này", icon: Shirt, color: "#EA580C", bg: "#FFEDD5" },
+    { label: "Tổng Trang Phục", value: String(stats?.totalClothing ?? "--"), change: "", icon: Shirt, color: "#EA580C", bg: "#FFEDD5" },
     { label: "Số Tủ Đồ Hiện Có", value: String(stats?.totalWardrobes ?? "--"), change: "Tủ đồ của bạn", icon: Layers, color: "#F97316", bg: "#F5F3FF" },
-    { label: "Nhận Diện AI", value: stats ? stats.aiDetections.toLocaleString() : "--", change: "+38 hôm nay", icon: Cpu, color: "#F59E0B", bg: "#FFFBEB" },
     { label: "Bộ Đã Tạo", value: String(stats?.outfitsCreated ?? "--"), change: "+5 tuần này", icon: Sparkles, color: "#10B981", bg: "#ECFDF5" },
   ];
 

@@ -929,7 +929,7 @@ export function AIRequestsLog() {
               <tr style={{ background: "#F8FAFC" }}>
                 <th style={tableHeaderStyle}>#</th>
                 <th style={tableHeaderStyle}>Ghim</th>
-                <th style={tableHeaderStyle}>User</th>
+                <th style={tableHeaderStyle}>Người dùng</th>
                 <th style={tableHeaderStyle}>Danh mục</th>
                 {activeTab === "added" && <th style={tableHeaderStyle}>Tên đồ đã lưu</th>}
                 <th style={tableHeaderStyle}>Độ tin cậy</th>

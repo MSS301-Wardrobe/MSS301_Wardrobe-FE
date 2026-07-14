@@ -21,7 +21,8 @@ import type {
 } from "../../../types/wardrobe";
 import type { UserManagementResponse } from "../../../types/admin";
 import { SUPPORTED_CATEGORY_NAMES_VI } from "../../../utils/aiMappings";
-import { BarChart2, Package, FolderTree, TrendingUp, Users, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart2, Package, FolderTree, TrendingUp, Users, X, Loader2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../components/ui/popover";
 
 // ─── Palette — 13 màu phân biệt, thứ tự khớp DB ─────────────────────────────
 const COLORS = [
@@ -312,12 +313,7 @@ export function CategoriesManagement() {
           />
         )}
         {granularity === "month" && (
-          <input
-            type="month"
-            value={inputVal}
-            onChange={(e) => handleDateChange(e.target.value)}
-            style={inputStyle}
-          />
+          <CustomMonthPicker value={inputVal} onChange={handleDateChange} />
         )}
         {granularity === "year" && (
           <select
@@ -873,3 +869,111 @@ const modalPaginationButtonStyle: React.CSSProperties = {
   fontSize: "0.82rem",
   fontWeight: 600,
 };
+
+// ─── Custom Month Picker ──────────────────────────────────────────────────────
+function CustomMonthPicker({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [currentYear, setCurrentYear] = useState(() => {
+    if (value) return parseInt(value.split("-")[0], 10);
+    return new Date().getFullYear();
+  });
+
+  useEffect(() => {
+    if (open && value) {
+      setCurrentYear(parseInt(value.split("-")[0], 10));
+    } else if (open && !value) {
+      setCurrentYear(new Date().getFullYear());
+    }
+  }, [open, value]);
+
+  const months = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+  
+  const handleSelectMonth = (monthIndex: number) => {
+    const mm = String(monthIndex + 1).padStart(2, "0");
+    onChange(`${currentYear}-${mm}`);
+    setOpen(false);
+  };
+
+  const handleClear = () => {
+    onChange("");
+    setOpen(false);
+  };
+
+  const handleThisMonth = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    onChange(`${yyyy}-${mm}`);
+    setOpen(false);
+  };
+
+  let selectedYear = -1;
+  let selectedMonthIndex = -1;
+  if (value) {
+    const parts = value.split("-");
+    selectedYear = parseInt(parts[0], 10);
+    selectedMonthIndex = parseInt(parts[1], 10) - 1;
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          style={{
+            ...inputStyle,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            minWidth: 140,
+            cursor: "pointer",
+          }}
+        >
+          <span>
+            {value ? (() => {
+              const [y, m] = value.split("-");
+              return `${parseInt(m, 10)}/${y}`;
+            })() : "Chọn tháng"}
+          </span>
+          <Calendar size={16} color="#64748B" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent style={{ width: 220, padding: 12, borderRadius: 12, background: "white", zIndex: 1050 }} align="start">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <button onClick={() => setCurrentYear(y => y - 1)} style={{ background: "#F1F5F9", borderRadius: 6, border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}><ChevronLeft size={16} color="#475569" /></button>
+          <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#0F172A" }}>{currentYear}</span>
+          <button onClick={() => setCurrentYear(y => y + 1)} style={{ background: "#F1F5F9", borderRadius: 6, border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}><ChevronRight size={16} color="#475569" /></button>
+        </div>
+        
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 16 }}>
+          {months.map((m, i) => {
+            const isSelected = selectedYear === currentYear && selectedMonthIndex === i;
+            return (
+              <button
+                key={m}
+                onClick={() => handleSelectMonth(i)}
+                style={{
+                  padding: "6px 0",
+                  borderRadius: 6,
+                  border: "none",
+                  background: isSelected ? "#3B82F6" : "transparent",
+                  color: isSelected ? "white" : "#334155",
+                  fontWeight: isSelected ? 600 : 400,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                }}
+              >
+                {m}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #E2E8F0", paddingTop: 10 }}>
+          <button onClick={handleClear} style={{ background: "transparent", border: "none", color: "#3B82F6", fontSize: "0.82rem", cursor: "pointer", fontWeight: 500, padding: "4px 8px" }}>Xóa</button>
+          <button onClick={handleThisMonth} style={{ background: "transparent", border: "none", color: "#3B82F6", fontSize: "0.82rem", cursor: "pointer", fontWeight: 500, padding: "4px 8px" }}>Tháng này</button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
