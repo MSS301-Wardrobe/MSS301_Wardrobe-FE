@@ -1,15 +1,15 @@
 /**
  * dashboardService.ts
- * Mock API service for Dashboard data.
- * Simulates calls to each microservice independently.
- * Does NOT modify or import from any other service file.
+ * Dashboard data service. Wardrobe count uses real API; other stats remain mocked.
  */
+import { wardrobeApi } from "./wardrobeService";
 
 // ---------- Types ----------
 
 export interface DashboardStats {
   totalClothing: number;
   totalZones: number;
+  totalWardrobes: number;
   aiDetections: number;
   outfitsCreated: number;
 }
@@ -61,12 +61,13 @@ const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 // ---------- Mock data per service ----------
 
-/** Wardrobe Service mock */
-async function fetchWardrobeStats(): Promise<Pick<DashboardStats, "totalClothing" | "totalZones">> {
-  await delay(300);
+/** Wardrobe Service - real API for wardrobe count by user */
+async function fetchWardrobeStats(userId: string): Promise<Pick<DashboardStats, "totalClothing" | "totalZones" | "totalWardrobes">> {
+  const wardrobes = await wardrobeApi.getByUserId(userId);
   return {
     totalClothing: 247,
     totalZones: 5,
+    totalWardrobes: wardrobes.length,
   };
 }
 
@@ -153,7 +154,7 @@ async function fetchRecommendations(): Promise<{ outfitsCreated: number; recomme
  * Fetches all dashboard data in parallel from each mock service.
  * Replace each fetch function with a real API call when backend is ready.
  */
-export async function fetchDashboardData(): Promise<DashboardData> {
+export async function fetchDashboardData(userId: string): Promise<DashboardData> {
   const [
     wardrobeStats,
     clothingDistribution,
@@ -162,7 +163,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     aiResult,
     recommendationResult,
   ] = await Promise.all([
-    fetchWardrobeStats(),
+    fetchWardrobeStats(userId),
     fetchClothingDistribution(),
     fetchGrowthData(),
     fetchRecentUploads(),
@@ -174,6 +175,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     stats: {
       totalClothing: wardrobeStats.totalClothing,
       totalZones: wardrobeStats.totalZones,
+      totalWardrobes: wardrobeStats.totalWardrobes,
       aiDetections: aiResult.aiDetections,
       outfitsCreated: recommendationResult.outfitsCreated,
     },

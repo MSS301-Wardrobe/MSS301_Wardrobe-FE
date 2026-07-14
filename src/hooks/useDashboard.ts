@@ -1,18 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "../services/dashboardService";
+import { useAuthContext } from "../app/providers/AuthProvider";
 
 export const DASHBOARD_QUERY_KEY = ["dashboard"] as const;
 
 /**
  * useDashboard
- * Fetches all dashboard data from mock services in parallel.
- * Replace dashboardService internals with real API calls when backend is ready.
+ * Fetches all dashboard data. Wardrobe count uses real API by userId.
  */
 export function useDashboard() {
+  const { user } = useAuthContext();
+  const userId = user?.userId ?? user?.id ?? "";
+
   const query = useQuery({
-    queryKey: DASHBOARD_QUERY_KEY,
-    queryFn: () => dashboardService.fetchDashboardData(),
+    queryKey: [...DASHBOARD_QUERY_KEY, userId],
+    queryFn: () => dashboardService.fetchDashboardData(userId),
     staleTime: 2 * 60 * 1000, // 2 minutes cache
+    enabled: !!userId,
   });
 
   return {
