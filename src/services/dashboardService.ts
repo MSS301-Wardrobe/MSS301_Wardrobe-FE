@@ -2,7 +2,7 @@
  * dashboardService.ts
  * Dashboard data service. Wardrobe count uses real API; other stats remain mocked.
  */
-import { wardrobeApi } from "./wardrobeService";
+import { wardrobeApi, clothingItemApi } from "./wardrobeService";
 
 // ---------- Types ----------
 
@@ -64,8 +64,16 @@ const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 /** Wardrobe Service - real API for wardrobe count by user */
 async function fetchWardrobeStats(userId: string): Promise<Pick<DashboardStats, "totalClothing" | "totalZones" | "totalWardrobes">> {
   const wardrobes = await wardrobeApi.getByUserId(userId);
+  let totalClothing = 0;
+  try {
+    const clothes = await clothingItemApi.getAll();
+    totalClothing = clothes.length;
+  } catch (error) {
+    console.error("Failed to fetch clothing count", error);
+  }
+  
   return {
-    totalClothing: 247,
+    totalClothing,
     totalZones: 5,
     totalWardrobes: wardrobes.length,
   };

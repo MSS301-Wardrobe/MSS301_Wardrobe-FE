@@ -490,8 +490,8 @@ export function UsersManagement() {
                             display: "inline-flex",
                             padding: "5px 10px",
                             borderRadius: 999,
-                            background: "#EFF6FF",
-                            color: "#1D4ED8",
+                            background: user.role === "ROLE_ADMIN" ? "#FFEDD5" : "#EFF6FF",
+                            color: user.role === "ROLE_ADMIN" ? "#EA580C" : "#1D4ED8",
                             fontSize: "0.75rem",
                             fontWeight: 700,
                           }}
@@ -550,13 +550,17 @@ export function UsersManagement() {
 
                           <select
                             value={user.status || "ACTIVE"}
-                            disabled={isUpdating}
+                            disabled={isUpdating || user.role === "ROLE_ADMIN"}
                             onChange={(event) =>
                               void handleUpdateUser(user, {
                                 status: event.target.value,
                               })
                             }
-                            style={selectStyle}
+                            style={{
+                              ...selectStyle,
+                              cursor: (isUpdating || user.role === "ROLE_ADMIN") ? "not-allowed" : "pointer",
+                              opacity: (isUpdating || user.role === "ROLE_ADMIN") ? 0.6 : 1,
+                            }}
                           >
                             {STATUS_OPTIONS.map((status) => (
                               <option key={status} value={status}>

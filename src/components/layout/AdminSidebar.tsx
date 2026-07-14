@@ -8,7 +8,7 @@ import { useAuthContext } from "../../app/providers/AuthProvider";
 
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admin/dashboard" },
+  { icon: LayoutDashboard, label: "Tổng Quan", path: "/admin/dashboard" },
   { icon: Users, label: "Quản Lý Người Dùng", path: "/admin/users" },
   { icon: FolderTree, label: "Quản Lý Danh Mục", path: "/admin/categories" },
   { icon: Cpu, label: "Lịch Sử Nhận Diện AI", path: "/admin/ai-requests" },
