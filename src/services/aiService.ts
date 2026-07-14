@@ -45,6 +45,7 @@ type DetectAllOptions = {
   crop?: NormalizedCrop;
   naturalWidth?: number;
   naturalHeight?: number;
+  imageId?: string;
 };
 
 /** 401 — chưa đăng nhập hoặc token hết hạn, gateway trả về AUTH_TOKEN_MISSING */
@@ -150,6 +151,7 @@ export function mapDetectionToViewResult(
     styleKeys: detection.style,
     occasion,
     gender,
+    logId: detection.logId,
     bbox: detection.bbox,
     attributes: [
       {
@@ -182,10 +184,13 @@ export function mapDetectionToViewResult(
 }
 
 export const aiService = {
-  async detect(image: File | string): Promise<AIDetectionResult> {
+  async detect(image: File | string, imageId?: string): Promise<AIDetectionResult> {
     const file = await toUploadFile(image);
     const formData = new FormData();
     formData.append("file", file);
+    if (imageId) {
+      formData.append("image_id", imageId);
+    }
 
     try {
       const { data } = await apiClient.post<AIDetectionResult>(
@@ -213,19 +218,19 @@ export const aiService = {
     image: File | string,
     options?: DetectAllOptions
   ): Promise<AIDetectionViewResult[]> {
-    const response = await this.detect(image);
-
-    if (!response?.detections?.length) {
-      throw new Error("Không phát hiện trang phục nào trong ảnh");
-    }
-
-    const { crop, naturalWidth, naturalHeight } = options ?? {};
+    const { crop, naturalWidth, naturalHeight, imageId } = options ?? {};
     const hasCropFilter =
       crop &&
       naturalWidth &&
       naturalHeight &&
       naturalWidth > 0 &&
       naturalHeight > 0;
+
+    const response = await this.detect(image, imageId);
+
+    if (!response?.detections?.length) {
+      throw new Error("Không phát hiện trang phục nào trong ảnh");
+    }
 
     const inRegion = hasCropFilter
       ? response.detections.filter((item) =>

@@ -238,6 +238,7 @@ export function AIDetection() {
         crop: cropArea,
         naturalWidth: imageLayout.naturalWidth,
         naturalHeight: imageLayout.naturalHeight,
+        imageId: uploadedImageId ?? undefined,
       });
 
       if (!detectionResults?.length) return;
@@ -302,6 +303,7 @@ export function AIDetection() {
         previewImage: preview,
         sourceFile,
         imageId: uploadedImageId,
+        detectionLogId: detection.logId,
       },
     });
   };

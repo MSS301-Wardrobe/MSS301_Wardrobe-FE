@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useWardrobe } from "../../../hooks/useWardrobe";
 import { useAI } from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
+import { markDetectionAdded } from "../../../services/adminDetectionService";
 import {
   mapAiStyleToFormStyle,
   translateBaseColor,
@@ -34,7 +35,13 @@ export function AddClothing() {
   const [searchParams] = useSearchParams();
   const initialZoneId = searchParams.get("zoneId");
   const location = useLocation();
-  const navState = location.state as { prefillDetection?: any; previewImage?: string; sourceFile?: File; imageId?: string } | null;
+  const navState = location.state as {
+    prefillDetection?: any;
+    previewImage?: string;
+    sourceFile?: File;
+    imageId?: string;
+    detectionLogId?: number;
+  } | null;
   const {
     clothingItemApi,
     categoryApi,
@@ -284,7 +291,7 @@ export function AddClothing() {
       }
 
       // 2. Lưu vật phẩm vào DB của Wardrobe Service
-      await clothingItemApi.create({
+      const created = await clothingItemApi.create({
         itemName: form.itemName,
         categoryId: form.categoryId || undefined,
         zoneId: form.zoneId || undefined,
@@ -293,6 +300,18 @@ export function AddClothing() {
         confidenceScore: form.confidenceScore,
         imageId: finalImageId,
       });
+
+      if (navState?.detectionLogId) {
+        try {
+          await markDetectionAdded(navState.detectionLogId, {
+            clothingItemId: created.itemId,
+            itemName: form.itemName,
+            imageId: finalImageId,
+          });
+        } catch {
+          // Không chặn luồng lưu tủ đồ nếu cập nhật lịch sử AI thất bại
+        }
+      }
 
       // 3. Confirm ảnh (status: DONE)
       if (finalImageId) {
