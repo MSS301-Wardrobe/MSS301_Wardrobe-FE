@@ -49,6 +49,17 @@ export function FriendGroups() {
 
   const defaultBg = "#FFEDD5";
   const defaultColor = "#EA580C";
+  const styleMap: Record<string, string> = {
+    MINIMAL: "Tối Giản",
+    CASUAL: "Thường Ngày",
+    OFFICE: "Công Sở",
+    ELEGANT: "Trang Trọng",
+    STREET: "Đường Phố",
+    BOHEMIAN: "Bohemian",
+    SPORTY: "Thể Thao",
+    VINTAGE: "Cổ Điển",
+  };
+
   const defaultStyles = ["Thời Trang", "Cộng Đồng"];
   const defaultColors = ["#EA580C", "#F97316", "#FB923C"];
 
@@ -229,7 +240,12 @@ export function FriendGroups() {
 
               {/* Style tags */}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                {defaultStyles.map((s) => (
+                {(group.primaryStyleLabels && group.primaryStyleLabels.length > 0 
+                  ? group.primaryStyleLabels 
+                  : group.primaryStyles && group.primaryStyles.length > 0
+                  ? group.primaryStyles.map(s => styleMap[s] || s)
+                  : defaultStyles
+                ).map((s) => (
                   <span key={s} style={{ background: defaultBg, color: defaultColor, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
                 ))}
               </div>
@@ -300,7 +316,12 @@ export function FriendGroups() {
                 </div>
                 <div style={{ padding: "14px 16px" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
-                    {defaultStyles.map((s) => (
+                    {(group.primaryStyleLabels && group.primaryStyleLabels.length > 0 
+                      ? group.primaryStyleLabels 
+                      : group.primaryStyles && group.primaryStyles.length > 0
+                      ? group.primaryStyles.map(s => styleMap[s] || s)
+                      : defaultStyles
+                    ).map((s) => (
                       <span key={s} style={{ background: defaultBg, color: defaultColor, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
                     ))}
                   </div>
