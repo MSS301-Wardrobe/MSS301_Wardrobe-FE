@@ -113,7 +113,13 @@ export function Dashboard() {
             <BarChart key="wardrobe-growth-bar" data={growthData} barSize={14}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+              <YAxis 
+                allowDecimals={false} 
+                domain={[0, (dataMax: number) => Math.max(dataMax, 5)]}
+                tick={{ fontSize: 11, fill: "#94A3B8" }} 
+                axisLine={false} 
+                tickLine={false} 
+              />
               <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #E2E8F0", fontSize: "0.8rem" }} />
               <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
               <Bar key="bar-items" dataKey="items" fill="#EA580C" radius={[4, 4, 0, 0]} name="Trang Phục Thêm" />

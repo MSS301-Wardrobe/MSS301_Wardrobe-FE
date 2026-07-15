@@ -2,7 +2,7 @@
  * dashboardService.ts
  * Dashboard data service. Wardrobe count uses real API; other stats remain mocked.
  */
-import { wardrobeApi, clothingItemApi } from "./wardrobeService";
+import { wardrobeApi, clothingItemApi, categoryApi } from "./wardrobeService";
 
 // ---------- Types ----------
 
@@ -79,27 +79,84 @@ async function fetchWardrobeStats(userId: string): Promise<Pick<DashboardStats, 
   };
 }
 
-async function fetchClothingDistribution(): Promise<ClothingDistribution[]> {
-  await delay(200);
-  return [
-    { name: "Áo", value: 72, color: "#EA580C" },
-    { name: "Quần", value: 54, color: "#F97316" },
-    { name: "Váy", value: 38, color: "#F59E0B" },
-    { name: "Áo Khoác", value: 45, color: "#10B981" },
-    { name: "Phụ Kiện", value: 38, color: "#EF4444" },
-  ];
+async function fetchClothingDistribution(clothesList?: any[]): Promise<ClothingDistribution[]> {
+  try {
+    const clothes = clothesList || await clothingItemApi.getAll();
+    const categories = await categoryApi.getAll();
+    
+    const countMap: Record<string, number> = {};
+    let uncatCount = 0;
+    
+    clothes.forEach(c => {
+      if (c.categoryId) {
+        const cat = categories.find(cat => cat.categoryId === c.categoryId);
+        if (cat && cat.categoryName) {
+          const name = cat.categoryName;
+          countMap[name] = (countMap[name] || 0) + 1;
+        } else {
+          uncatCount++;
+        }
+      } else {
+        uncatCount++;
+      }
+    });
+
+    const colors = ["#EA580C", "#F97316", "#F59E0B", "#10B981", "#EF4444", "#3B82F6", "#8B5CF6", "#EC4899"];
+    const result: ClothingDistribution[] = [];
+    let colorIndex = 0;
+
+    for (const [name, count] of Object.entries(countMap)) {
+      result.push({
+        name,
+        value: count,
+        color: colors[colorIndex % colors.length]
+      });
+      colorIndex++;
+    }
+
+    if (uncatCount > 0) {
+      result.push({
+        name: "Khác",
+        value: uncatCount,
+        color: "#94A3B8"
+      });
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Failed to fetch clothing distribution", error);
+    return [];
+  }
 }
 
-async function fetchGrowthData(): Promise<GrowthDataPoint[]> {
-  await delay(200);
-  return [
-    { month: "T1", items: 18, outfits: 12 },
-    { month: "T2", items: 22, outfits: 15 },
-    { month: "T3", items: 31, outfits: 20 },
-    { month: "T4", items: 28, outfits: 18 },
-    { month: "T5", items: 35, outfits: 24 },
-    { month: "T6", items: 42, outfits: 31 },
-  ];
+async function fetchGrowthData(clothesList?: any[]): Promise<GrowthDataPoint[]> {
+  try {
+    const clothes = clothesList || await clothingItemApi.getAll();
+    const now = new Date();
+    const result: GrowthDataPoint[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthLabel = `T${d.getMonth() + 1}`;
+
+      const itemsInMonth = clothes.filter(c => {
+        if (!c.createdAt) return false;
+        const createdAt = new Date(c.createdAt);
+        return createdAt.getMonth() === d.getMonth() && createdAt.getFullYear() === d.getFullYear();
+      }).length;
+
+      result.push({
+        month: monthLabel,
+        items: itemsInMonth,
+        outfits: 0, // Đã bỏ mock, set về 0 do chưa có API
+      });
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Failed to fetch growth data", error);
+    return [];
+  }
 }
 
 async function fetchRecentUploads(): Promise<RecentUpload[]> {
@@ -163,6 +220,13 @@ async function fetchRecommendations(): Promise<{ outfitsCreated: number; recomme
  * Replace each fetch function with a real API call when backend is ready.
  */
 export async function fetchDashboardData(userId: string): Promise<DashboardData> {
+  let clothes: any[] = [];
+  try {
+    clothes = await clothingItemApi.getAll();
+  } catch (error) {
+    console.error("Failed to fetch clothes for dashboard", error);
+  }
+
   const [
     wardrobeStats,
     clothingDistribution,
@@ -172,8 +236,8 @@ export async function fetchDashboardData(userId: string): Promise<DashboardData>
     recommendationResult,
   ] = await Promise.all([
     fetchWardrobeStats(userId),
-    fetchClothingDistribution(),
-    fetchGrowthData(),
+    fetchClothingDistribution(clothes),
+    fetchGrowthData(clothes),
     fetchRecentUploads(),
     fetchAiStats(),
     fetchRecommendations(),

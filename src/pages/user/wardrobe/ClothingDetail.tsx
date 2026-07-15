@@ -5,12 +5,7 @@ import type { ClothingItem, Category } from "../../../types/wardrobe";
 import { ArrowLeft, Heart, Edit2, Trash2, Share2, Tag, Info, Cpu } from "lucide-react";
 import { toast } from "sonner";
 
-const similarItems = [
-  { id: "3", name: "Áo Thun Nữ Casual", img: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=100&h=100&fit=crop" },
-  { id: "9", name: "Áo Trắng Tối Giản", img: "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=100&h=100&fit=crop" },
-  { id: "12", name: "Áo Vest Trắng Công Sở", img: "https://images.unsplash.com/photo-1700557477506-369b241cbe54?w=100&h=100&fit=crop" },
-  { id: "4", name: "Giày Thể Thao Trắng", img: "https://images.unsplash.com/photo-1544441893-675973e31985?w=100&h=100&fit=crop" },
-];
+
 
 export function ClothingDetail() {
   const { id } = useParams();
@@ -21,6 +16,7 @@ export function ClothingDetail() {
   const [itemData, setItemData] = useState<ClothingItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [similarItems, setSimilarItems] = useState<ClothingItem[]>([]);
 
   useEffect(() => {
     const fetchMeta = async () => {
@@ -39,6 +35,17 @@ export function ClothingDetail() {
       try {
         const data = await clothingItemApi.getById(id);
         setItemData(data);
+
+        // Lấy tất cả trang phục, lọc theo style AI nhận diện (giống với item hiện tại)
+        try {
+          const allItems = await clothingItemApi.getAll();
+          const similar = allItems.filter(
+            c => c.itemId !== id && c.style && data.style && c.style === data.style
+          );
+          setSimilarItems(similar.slice(0, 6)); // Tối đa 6 vật phẩm
+        } catch {
+          setSimilarItems([]);
+        }
       } catch (err) {
         toast.error("Không tìm thấy vật phẩm");
       } finally {
@@ -243,17 +250,24 @@ export function ClothingDetail() {
           </div>
 
           {/* Similar Items */}
-          <div style={{ background: "white", borderRadius: 20, padding: 20, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <h4 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 14, fontSize: "0.95rem" }}>Vật Phẩm Tương Tự Trong Tủ Đồ</h4>
-            <div style={{ display: "flex", gap: 12 }}>
-              {similarItems.map((si) => (
-                <div key={si.id} onClick={() => navigate(`/app/wardrobe/${si.id}`)} style={{ cursor: "pointer", textAlign: "center" }}>
-                  <img src={si.img} alt={si.name} style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", border: "1px solid #E2E8F0" }} />
-                  <p style={{ fontSize: "0.65rem", color: "#64748B", marginTop: 5, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{si.name}</p>
-                </div>
-              ))}
+          {similarItems.length > 0 && (
+            <div style={{ background: "white", borderRadius: 20, padding: 20, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <h4 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 4, fontSize: "0.95rem" }}>Vật Phẩm Tương Tự Trong Tủ Đồ</h4>
+              <p style={{ fontSize: "0.75rem", color: "#94A3B8", marginBottom: 14 }}>Cùng phong cách AI nhận diện: <span style={{ color: "#EA580C", fontWeight: 600 }}>{itemData.style}</span></p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                {similarItems.map((si) => (
+                  <div key={si.itemId} onClick={() => navigate(`/app/wardrobe/${si.itemId}`)} style={{ cursor: "pointer", textAlign: "center" }}>
+                    <img
+                      src={getImageUrl(si.imageId)}
+                      alt={si.itemName}
+                      style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", border: "1px solid #E2E8F0" }}
+                    />
+                    <p style={{ fontSize: "0.65rem", color: "#64748B", marginTop: 5, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{si.itemName}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
