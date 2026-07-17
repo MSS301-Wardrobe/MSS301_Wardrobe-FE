@@ -7,6 +7,8 @@ import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { useWardrobe } from "../../../hooks/useWardrobe";
 import type { Wardrobe } from "../../../types/wardrobe";
+import { useAuth } from "../../../hooks/useAuth";
+
 
 const COLORS = [
   { bg: "linear-gradient(135deg, #FFEDD5, #E0E7FF)", border: "#C7D2FE", accent: "#EA580C", icon: "#EA580C" },
@@ -25,14 +27,88 @@ const formatDate = (dateStr: string) => {
   }
 };
 
+const WARDROBE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 giờ
+
+interface WardrobeCache {
+  userId: string;
+  cachedAt: number;
+  data: Wardrobe[];
+}
+
+const getWardrobeCacheKey = (userId: string) =>
+  `wardrobes_cache_${userId}`;
+
+const saveWardrobeCache = (
+  userId: string,
+  wardrobes: Wardrobe[]
+) => {
+  const cache: WardrobeCache = {
+    userId,
+    cachedAt: Date.now(),
+    data: wardrobes,
+  };
+
+  localStorage.setItem(
+    getWardrobeCacheKey(userId),
+    JSON.stringify(cache)
+  );
+};
+
+const readWardrobeCache = (
+  userId: string
+): Wardrobe[] => {
+  const key = getWardrobeCacheKey(userId);
+
+  try {
+    const raw = localStorage.getItem(key);
+
+    if (!raw) {
+      return [];
+    }
+
+    const cache = JSON.parse(raw) as WardrobeCache;
+
+    // Cache không thuộc user đang đăng nhập.
+    if (cache.userId !== userId) {
+      localStorage.removeItem(key);
+      return [];
+    }
+
+    if (
+      !Array.isArray(cache.data) ||
+      typeof cache.cachedAt !== "number"
+    ) {
+      localStorage.removeItem(key);
+      return [];
+    }
+
+    const expired =
+      Date.now() - cache.cachedAt > WARDROBE_CACHE_TTL;
+
+    if (expired) {
+      localStorage.removeItem(key);
+      return [];
+    }
+
+    return cache.data;
+  } catch {
+    localStorage.removeItem(key);
+    return [];
+  }
+};
+
 export function WardrobeManagement() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const q = searchParams.get("q") || "";
   const { wardrobeApi } = useWardrobe();
-  
+  const { user, isLoading: authLoading } = useAuth();
+
+const currentUserId = user?.id;
+
   const [wardrobes, setWardrobes] = useState<Wardrobe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [serviceOffline, setServiceOffline] = useState(false);
 
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -50,27 +126,90 @@ export function WardrobeManagement() {
   // ─── Fetch ──────────────────────────────────────────────────────────────────
 
   const fetchWardrobes = async (keyword: string) => {
+    if (!currentUserId) {
+      setWardrobes([]);
+      setServiceOffline(false);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const data = keyword ? await wardrobeApi.search(keyword) : await wardrobeApi.getAll();
+      const data = keyword
+        ? await wardrobeApi.search(keyword)
+        : await wardrobeApi.getAll();
+
       setWardrobes(data);
+      setServiceOffline(false);
+
+      // Chỉ lưu danh sách đầy đủ, không lưu kết quả search.
+      if (!keyword) {
+        saveWardrobeCache(currentUserId, data);
+      }
     } catch (err: any) {
-      if (err?.response?.data?.errorCode === 'WARDROBE_NOT_FOUND' || err?.response?.status === 404) {
+      const status = err?.response?.status;
+      const errorCode = err?.response?.data?.errorCode;
+
+      if (
+        errorCode === "WARDROBE_NOT_FOUND" ||
+        status === 404
+      ) {
         setWardrobes([]);
+        setServiceOffline(false);
+        return;
+      }
+
+      setServiceOffline(true);
+
+      const cachedWardrobes =
+        readWardrobeCache(currentUserId);
+
+      if (keyword) {
+        const normalizedKeyword =
+          keyword.trim().toLowerCase();
+
+        setWardrobes(
+          cachedWardrobes.filter((wardrobe) =>
+            wardrobe.wardrobeName
+              .toLowerCase()
+              .includes(normalizedKeyword)
+          )
+        );
       } else {
-        toast.error("Không thể tải danh sách tủ đồ");
+        setWardrobes(cachedWardrobes);
+      }
+
+      if (cachedWardrobes.length > 0) {
+        toast.warning(
+          "Dịch vụ tủ đồ đang gián đoạn. Đang hiển thị dữ liệu đã lưu gần nhất."
+        );
+      } else {
+        toast.error(
+          "Dịch vụ tủ đồ đang gián đoạn và chưa có dữ liệu dự phòng."
+        );
       }
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchWardrobes(q);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [q]);
+ useEffect(() => {
+  console.log("[WARDROBE USER]", {
+    user,
+    currentUserId,
+  });
+
+  if (authLoading || !currentUserId) {
+    return;
+  }
+
+  const timer = window.setTimeout(() => {
+    void fetchWardrobes(q);
+  }, 300);
+
+  return () => window.clearTimeout(timer);
+}, [q, currentUserId, authLoading]);
 
   // ─── Create ──────────────────────────────────────────────────────────────────
 
@@ -140,18 +279,107 @@ export function WardrobeManagement() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
           {/* Title is already in Topbar */}
-          <p style={{ color: "#64748B", fontSize: "0.85rem", marginTop: 3 }}>
-            {loading ? "Đang tải..." : `${wardrobes.length} tủ đồ`}
+          <p
+            style={{
+              color: serviceOffline ? "#D97706" : "#64748B",
+              fontSize: "0.85rem",
+              marginTop: 3,
+            }}
+          >
+            {loading
+              ? "Đang tải..."
+              : serviceOffline
+                ? `${wardrobes.length} tủ đồ từ dữ liệu đã lưu`
+                : `${wardrobes.length} tủ đồ`}
           </p>
         </div>
         <button
           id="create-wardrobe-btn"
-          onClick={() => setCreateOpen(true)}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.875rem" }}
+          disabled={serviceOffline}
+          onClick={() => {
+            if (!serviceOffline) {
+              setCreateOpen(true);
+            }
+          }}
+          title={
+            serviceOffline
+              ? "Không thể tạo tủ mới khi dịch vụ đang tạm dừng"
+              : "Tạo tủ đồ mới"
+          }
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "10px 18px",
+            borderRadius: 12,
+            background: serviceOffline
+              ? "#E2E8F0"
+              : "linear-gradient(135deg, #EA580C, #F97316)",
+            color: serviceOffline ? "#94A3B8" : "white",
+            border: "none",
+            cursor: serviceOffline ? "not-allowed" : "pointer",
+            fontWeight: 700,
+            fontSize: "0.875rem",
+          }}
         >
-          <Plus size={15} /> Tạo Tủ Đồ Mới
+          <Plus size={15} />
+          {serviceOffline
+            ? "Dịch Vụ Tạm Dừng"
+            : "Tạo Tủ Đồ Mới"}
         </button>
       </div>
+      {!loading && serviceOffline && (
+        <div
+          style={{
+            padding: "14px 16px",
+            borderRadius: 14,
+            background: "#FFF7ED",
+            border: "1px solid #FDBA74",
+            color: "#9A3412",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "#FFEDD5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              fontWeight: 800,
+            }}
+          >
+            !
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontWeight: 700,
+                marginBottom: 4,
+              }}
+            >
+              Dịch vụ tủ đồ đang tạm gián đoạn
+            </p>
+
+            <p
+              style={{
+                fontSize: "0.84rem",
+                lineHeight: 1.5,
+                margin: 0,
+              }}
+            >
+              Dữ liệu của bạn vẫn an toàn. Hệ thống đang hiển thị dữ liệu
+              được lưu gần nhất. Tạm thời không thể tạo, sửa hoặc xóa tủ đồ.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (
@@ -162,7 +390,7 @@ export function WardrobeManagement() {
       )}
 
       {/* Empty */}
-      {!loading && wardrobes.length === 0 && (
+      {!loading && !serviceOffline && wardrobes.length === 0 && (
         <div style={{ textAlign: "center", padding: "64px 24px", background: "white", borderRadius: 20, border: "2px dashed #C7D2FE" }}>
           <Archive size={48} color="#C7D2FE" style={{ margin: "0 auto 16px" }} />
           <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Chưa có tủ đồ nào</h3>
@@ -174,6 +402,60 @@ export function WardrobeManagement() {
             style={{ padding: "10px 24px", borderRadius: 12, background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}
           >
             Tạo Ngay
+          </button>
+        </div>
+      )}
+
+      {!loading && serviceOffline && wardrobes.length === 0 && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "64px 24px",
+            background: "white",
+            borderRadius: 20,
+            border: "1px solid #FED7AA",
+          }}
+        >
+          <Archive
+            size={48}
+            color="#FDBA74"
+            style={{ margin: "0 auto 16px" }}
+          />
+
+          <h3
+            style={{
+              fontWeight: 700,
+              color: "#0F172A",
+              marginBottom: 8,
+            }}
+          >
+            Không thể tải dữ liệu tủ đồ
+          </h3>
+
+          <p
+            style={{
+              color: "#64748B",
+              fontSize: "0.9rem",
+              marginBottom: 20,
+            }}
+          >
+            Dịch vụ tủ đồ đang tạm gián đoạn và thiết bị chưa có dữ liệu
+            được lưu trước đó.
+          </p>
+
+          <button
+            onClick={() => fetchWardrobes(q)}
+            style={{
+              padding: "10px 24px",
+              borderRadius: 12,
+              background: "#0F172A",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 700,
+            }}
+          >
+            Thử Lại
           </button>
         </div>
       )}
@@ -235,9 +517,31 @@ export function WardrobeManagement() {
                     ) : (
                       <>
                         <button
-                          onClick={() => startEdit(w)}
-                          title="Đổi tên"
-                          style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.8)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          disabled={serviceOffline}
+                          onClick={() => {
+                            if (!serviceOffline) {
+                              startEdit(w);
+                            }
+                          }}
+                          title={
+                            serviceOffline
+                              ? "Dịch vụ đang tạm dừng"
+                              : "Đổi tên"
+                          }
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 8,
+                            background: "rgba(255,255,255,0.8)",
+                            border: "none",
+                            cursor: serviceOffline
+                              ? "not-allowed"
+                              : "pointer",
+                            opacity: serviceOffline ? 0.45 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
                         >
                           <Edit3 size={13} color="#64748B" />
                         </button>

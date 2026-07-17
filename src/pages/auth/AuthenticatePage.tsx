@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { authService } from "../../services/authService";
+import { useAuthContext } from "../../app/providers/AuthProvider";
+import type { RoleName, User } from "../../types/user";
 
 export function AuthenticatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { setUser } = useAuthContext();
 
   const hasProcessed = useRef(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Chống React StrictMode gọi callback hai lần trong môi trường dev
     if (hasProcessed.current) {
       return;
     }
@@ -20,51 +22,113 @@ export function AuthenticatePage() {
     const processGoogleLogin = async () => {
       const code = searchParams.get("code");
       const error = searchParams.get("error");
-      const errorDescription = searchParams.get("error_description");
+      const errorDescription =
+        searchParams.get("error_description");
 
       if (error) {
-        console.error("Google login error:", {
+        console.error("[GOOGLE LOGIN ERROR]", {
           error,
           errorDescription,
         });
 
+        setUser(null);
+
         setErrorMessage(
-          errorDescription || "Đăng nhập Google không thành công"
+          errorDescription ||
+            "Đăng nhập Google không thành công"
         );
 
         return;
       }
 
       if (!code) {
-        console.error("Không tìm thấy authorization code");
-        setErrorMessage("Không tìm thấy mã xác thực từ Keycloak");
+        console.error(
+          "[GOOGLE LOGIN] Không tìm thấy authorization code"
+        );
+
+        setUser(null);
+        setErrorMessage(
+          "Không tìm thấy mã xác thực từ Keycloak"
+        );
         return;
       }
 
       try {
-        // 1. Đổi authorization code lấy token và lưu HttpOnly cookie
+        // 1. Backend đổi code lấy token và lưu HttpOnly cookies.
         await authService.googleCallback(code);
 
-        // 2. Đồng bộ user Keycloak vào database
-        const user = await authService.syncCurrentUser();
+        // 2. Đồng bộ user Keycloak vào database.
+        await authService.syncCurrentUser();
 
-        // 3. Tải lại trang để AuthProvider gọi /users/me và nhận user mới
-        if (user.role === "ADMIN") {
-          window.location.replace("/admin/dashboard");
-        } else {
-          window.location.replace("/app/dashboard");
+        // 3. Lấy thông tin user chuẩn từ /users/me.
+        const data = await authService.me();
+
+        console.log("[GOOGLE CURRENT USER]", data);
+
+        const rawRole =
+          data.role ??
+          data.roles?.[0]?.roleName ??
+          "ROLE_USER";
+
+        const normalizedRole: RoleName =
+          rawRole === "ROLE_ADMIN" ||
+          rawRole === "ADMIN"
+            ? "ADMIN"
+            : "USER";
+
+        const userId =
+          data.userId ??
+          data.id ??
+          data.sub ??
+          "";
+
+        if (!userId) {
+          throw new Error(
+            "Không lấy được userId sau khi đăng nhập Google"
+          );
         }
-      } catch (error) {
-        console.error("Google callback processing failed:", error);
 
-        setErrorMessage(
-          "Không thể hoàn tất đăng nhập Google. Vui lòng thử lại."
+        const currentUser: User = {
+          id: userId,
+          email: data.email ?? "",
+          fullName:
+            data.fullName ??
+            data.name ??
+            "",
+          avatarUrl:
+            data.avatarUrl ?? undefined,
+          role: normalizedRole,
+        };
+
+        // Quan trọng: cập nhật AuthContext ngay.
+        setUser(currentUser);
+
+        navigate(
+          normalizedRole === "ADMIN"
+            ? "/admin/dashboard"
+            : "/app/dashboard",
+          { replace: true }
         );
+      } catch (error: any) {
+        console.error(
+          "[GOOGLE CALLBACK PROCESSING FAILED]",
+          error
+        );
+
+        setUser(null);
+
+        const message =
+          error?.response?.data?.message ||
+          error?.response?.data?.detail ||
+          error?.response?.data?.data?.message ||
+          "Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.";
+
+        setErrorMessage(message);
       }
     };
 
     void processGoogleLogin();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, setUser]);
 
   if (errorMessage) {
     return (
@@ -86,20 +150,35 @@ export function AuthenticatePage() {
             borderRadius: 16,
             background: "white",
             textAlign: "center",
-            boxShadow: "0 12px 32px rgba(15, 23, 42, 0.1)",
+            boxShadow:
+              "0 12px 32px rgba(15, 23, 42, 0.1)",
           }}
         >
-          <h2 style={{ color: "#DC2626", marginBottom: 12 }}>
+          <h2
+            style={{
+              color: "#DC2626",
+              marginBottom: 12,
+            }}
+          >
             Đăng nhập thất bại
           </h2>
 
-          <p style={{ color: "#64748B", marginBottom: 20 }}>
+          <p
+            style={{
+              color: "#64748B",
+              marginBottom: 20,
+            }}
+          >
             {errorMessage}
           </p>
 
           <button
             type="button"
-            onClick={() => navigate("/login", { replace: true })}
+            onClick={() =>
+              navigate("/login", {
+                replace: true,
+              })
+            }
             style={{
               padding: "11px 20px",
               border: "none",
@@ -129,7 +208,12 @@ export function AuthenticatePage() {
       }}
     >
       <div style={{ textAlign: "center" }}>
-        <h2 style={{ color: "#0F172A", marginBottom: 10 }}>
+        <h2
+          style={{
+            color: "#0F172A",
+            marginBottom: 10,
+          }}
+        >
           Đang đăng nhập
         </h2>
 

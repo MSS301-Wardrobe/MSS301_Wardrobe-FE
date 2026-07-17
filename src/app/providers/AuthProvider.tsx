@@ -23,9 +23,9 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  setUser: () => {},
-  logout: async () => {},
-  uploadAvatar: async () => {},
+  setUser: () => { },
+  logout: async () => { },
+  uploadAvatar: async () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -82,12 +82,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setUser]);
 
   const logout = useCallback(async () => {
+    const currentUserId = user?.id;
+
     try {
       await authService.logout();
+    } catch (error) {
+      console.error(
+        "Backend logout failed:",
+        error
+      );
     } finally {
+      if (currentUserId) {
+        localStorage.removeItem(
+          `wardrobes_cache_${currentUserId}`
+        );
+
+        localStorage.removeItem(
+          `wardrobe_zones_cache_${currentUserId}`
+        );
+      }
+
+      localStorage.removeItem("wardrobes_cache");
+      localStorage.removeItem("wardrobe_zones_cache");
+
+      sessionStorage.removeItem(
+        "ai_detection_image_id"
+      );
+
+      sessionStorage.removeItem(
+        "ai_detection_result"
+      );
+
       setUser(null);
     }
-  }, [setUser]);
+  }, [user?.id, setUser]);
 
   return (
     <AuthContext.Provider

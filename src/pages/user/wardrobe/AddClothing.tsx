@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { useWardrobe } from "../../../hooks/useWardrobe";
 import { useAI } from "../../../hooks/useAI";
 import { storageService } from "../../../services/storageService";
-import { markDetectionAdded } from "../../../services/adminDetectionService";
+import { requestAddClothing } from "../../../services/adminDetectionService";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   mapAiStyleToFormStyle,
   translateBaseColor,
@@ -28,13 +29,69 @@ const inputStyle: React.CSSProperties = {
 
 const colors = ["?en", "Tr?ng", "Xanh ??m", "Chm", "Tm", "??", "H?ng", "Cam", "Vng", "Xanh L", "Xanh Mng Kt", "Xm", "Nu", "Be", "Nhi?u Mu"];
 const styles = ["Trang Tr?ng", "Thanh L?ch", "Th??ng Ngy", "Th? Thao", "Ti?c Tng", "Du L?ch", "T?i Gi?n", "Cng S?"];
+const CACHE_TTL = 24 * 60 * 60 * 1000;
 
+interface CachePayload<T> {
+  cachedAt: number;
+  data: T;
+}
+
+const saveCache = <T,>(key: string, data: T) => {
+  const payload: CachePayload<T> = {
+    cachedAt: Date.now(),
+    data,
+  };
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(payload)
+  );
+};
+
+const readCache = <T,>(
+  key: string,
+  fallback: T
+): T => {
+  try {
+    const raw = localStorage.getItem(key);
+
+    if (!raw) {
+      return fallback;
+    }
+
+    const payload =
+      JSON.parse(raw) as CachePayload<T>;
+
+    if (
+      typeof payload.cachedAt !== "number" ||
+      payload.data === undefined
+    ) {
+      localStorage.removeItem(key);
+      return fallback;
+    }
+
+    const expired =
+      Date.now() - payload.cachedAt > CACHE_TTL;
+
+    if (expired) {
+      localStorage.removeItem(key);
+      return fallback;
+    }
+
+    return payload.data;
+  } catch {
+    localStorage.removeItem(key);
+    return fallback;
+  }
+};
 export function AddClothing() {
   const navigate = useNavigate();
   const { detect } = useAI();
   const [searchParams] = useSearchParams();
   const initialZoneId = searchParams.get("zoneId");
   const location = useLocation();
+  const { user, isLoading: authLoading } = useAuth();
+  const currentUserId = user?.id;
   const navState = location.state as {
     prefillDetection?: any;
     previewImage?: string;
@@ -72,6 +129,9 @@ export function AddClothing() {
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadedImageId, setUploadedImageId] = useState<string | null>(null);
+  const [detectionLogId, setDetectionLogId] = useState<number | null>(
+    navState?.detectionLogId ?? null
+  );
 
   // Create Wardrobe Modal
   const [createWardrobeOpen, setCreateWardrobeOpen] = useState(false);
@@ -88,6 +148,9 @@ export function AddClothing() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [wardrobes, setWardrobes] = useState<any[]>([]);
   const [zones, setZones] = useState<WardrobeZone[]>([]);
+
+  // doc cache khi wardrobe loi
+  const [wardrobeServiceOffline, setWardrobeServiceOffline] = useState(false);
 
   const [form, setForm] = useState({
     itemName: "",
@@ -136,27 +199,83 @@ export function AddClothing() {
   );
 
   useEffect(() => {
+    if (authLoading || !currentUserId) {
+      return;
+    }
+
     const fetchMeta = async () => {
       try {
-        const [cats, zns, wrdbs] = await Promise.all([
-          categoryApi.getAll(),
-          wardrobeZoneApi.getAll(),
-          wardrobeApi.getAll(),
-        ]);
-        const syncedCategories = await ensureAiCategoryCatalog(cats);
+        const [cats, zns, wrdbs] =
+          await Promise.all([
+            categoryApi.getAll(),
+            wardrobeZoneApi.getAll(),
+            wardrobeApi.getAll(),
+          ]);
+
+        const syncedCategories =
+          await ensureAiCategoryCatalog(cats);
+
         setCategories(syncedCategories);
         setZones(zns);
         setWardrobes(wrdbs);
-        if (initialZoneId) {
-          const foundZone = zns.find((z: WardrobeZone) => z.zoneId === initialZoneId);
-          if (foundZone) setForm(prev => ({ ...prev, wardrobeId: (foundZone as any).wardrobeId || '' }));
-        }
+        setWardrobeServiceOffline(false);
+
+        saveCache(
+          "wardrobe_categories_cache",
+          syncedCategories
+        );
+
+        saveCache(
+          `wardrobe_zones_cache_${currentUserId}`,
+          zns
+        );
+
+        saveCache(
+          `wardrobes_cache_${currentUserId}`,
+          wrdbs
+        );
       } catch {
-        toast.error("Không thể tải danh mục và ngăn kéo");
+        const cachedCategories =
+          readCache<Category[]>(
+            "wardrobe_categories_cache",
+            []
+          );
+
+        const cachedZones =
+          readCache<WardrobeZone[]>(
+            `wardrobe_zones_cache_${currentUserId}`,
+            []
+          );
+
+        const cachedWardrobes =
+          readCache<any[]>(
+            `wardrobes_cache_${currentUserId}`,
+            []
+          );
+
+        setCategories(cachedCategories);
+        setZones(cachedZones);
+        setWardrobes(cachedWardrobes);
+        setWardrobeServiceOffline(true);
+
+        if (
+          cachedCategories.length === 0 ||
+          cachedZones.length === 0 ||
+          cachedWardrobes.length === 0
+        ) {
+          toast.error(
+            "Wardrobe Service đang tạm dừng và chưa có dữ liệu đã lưu."
+          );
+        } else {
+          toast.warning(
+            "Wardrobe Service đang tạm dừng. Đang sử dụng dữ liệu lưu gần nhất."
+          );
+        }
       }
     };
-    fetchMeta();
-  }, []);
+
+    void fetchMeta();
+  }, [currentUserId, authLoading]);
 
 
   // Apply AI detection data from navigation state
@@ -212,9 +331,14 @@ export function AddClothing() {
 
       const primary = response.detections[0];
 
+
       if (!primary) {
         toast.error("Không phát hiện trang phục nào trong ảnh");
         return;
+      }
+
+      if (primary.logId) {
+        setDetectionLogId(primary.logId);
       }
 
       const categoryName = translateCategory(primary.class_name);
@@ -270,65 +394,109 @@ export function AddClothing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!form.itemName.trim()) {
       toast.error("Vui lòng nhập tên vật phẩm");
       return;
     }
+
     if (!form.zoneId) {
-      toast.error("Vui lòng chọn Tủ Đồ và Ngăn Kéo để lưu vật phẩm");
+      toast.error("Vui lòng chọn tủ đồ và ngăn kéo");
       return;
     }
+
+    if (!detectionLogId) {
+      toast.error(
+        "Không tìm thấy kết quả nhận diện AI. Vui lòng nhận diện lại ảnh."
+      );
+      return;
+    }
+
     setSubmitting(true);
+
     try {
-      let finalImageId: string | undefined = uploadedImageId || undefined;
+      let finalImageId: string | undefined =
+        uploadedImageId || undefined;
 
-      // 1. Upload ảnh lên Storage Service (nếu chưa upload, vd up thẳng từ AddClothing)
+      // Chỉ upload nếu ảnh chưa được Storage Service lưu trước đó.
       if (!finalImageId && selectedFile) {
-        toast.loading("Đang tải ảnh lên...", { id: "upload-toast" });
-        const uploadResult = await storageService.upload(selectedFile);
+        toast.loading("Đang tải ảnh lên...", {
+          id: "upload-toast",
+        });
+
+        const uploadResult =
+          await storageService.upload(selectedFile);
+
         finalImageId = uploadResult.id;
-        toast.success("Tải ảnh thành công!", { id: "upload-toast" });
+
+        toast.success("Tải ảnh thành công!", {
+          id: "upload-toast",
+        });
       }
 
-      // 2. Lưu vật phẩm vào DB của Wardrobe Service
-      const created = await clothingItemApi.create({
-        itemName: form.itemName,
-        categoryId: form.categoryId || undefined,
-        zoneId: form.zoneId || undefined,
-        dominantColor: form.dominantColor || undefined,
-        style: form.style || undefined,
-        confidenceScore: form.confidenceScore,
-        imageId: finalImageId,
-      });
+      if (!finalImageId) {
+        toast.error("Không tìm thấy ảnh để thêm vào tủ đồ");
+        return;
+      }
 
-      if (navState?.detectionLogId) {
-        try {
-          await markDetectionAdded(navState.detectionLogId, {
-            clothingItemId: created.itemId,
-            itemName: form.itemName,
-            imageId: finalImageId,
-          });
-        } catch {
-          // Không chặn luồng lưu tủ đồ nếu cập nhật lịch sử AI thất bại
+      // Không gọi wardrobe-service trực tiếp nữa.
+      // AI service ghi WAITING_WARDROBE và phát Kafka event.
+      const result = await requestAddClothing(
+        detectionLogId,
+        {
+          itemName: form.itemName.trim(),
+          categoryId: form.categoryId || undefined,
+          zoneId: form.zoneId,
+          dominantColor:
+            form.dominantColor || undefined,
+          style: form.style || undefined,
+          confidenceScore: form.confidenceScore,
+          imageId: finalImageId,
         }
+      );
+
+      if (
+        result.status === "WAITING_WARDROBE"
+      ) {
+        toast.success(
+          "Yêu cầu đã được tiếp nhận. Vật phẩm đang được thêm vào tủ đồ."
+        );
+      } else if (result.status === "ADDED") {
+        toast.success(
+          "Vật phẩm đã có trong tủ đồ."
+        );
+      } else {
+        toast.success(
+          result.message ||
+          "Yêu cầu đã được tiếp nhận."
+        );
       }
 
-      // 3. Confirm ảnh (status: DONE)
-      if (finalImageId) {
-        await storageService.confirmImage(finalImageId);
-      }
+      sessionStorage.removeItem(
+        "ai_detection_image_id"
+      );
+      sessionStorage.removeItem(
+        "ai_detection_result"
+      );
 
-      toast.success("Đã thêm vật phẩm vào tủ đồ!");
-      // Reset AI detection state sau khi lưu thành công
-      sessionStorage.removeItem("ai_detection_image_id");
-      sessionStorage.removeItem("ai_detection_result");
       setTimeout(() => {
-        if (initialZoneId) navigate(`/app/wardrobe/items?zoneId=${initialZoneId}`);
-        else navigate("/app/wardrobe");
+        if (initialZoneId) {
+          navigate(
+            `/app/wardrobe/items?zoneId=${initialZoneId}`
+          );
+        } else {
+          navigate("/app/wardrobe");
+        }
       }, 600);
     } catch (err: any) {
       toast.dismiss("upload-toast");
-      toast.error(err?.response?.data?.message ?? "Thêm thất bại, vui lòng thử lại");
+
+      const message =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "Không thể tiếp nhận yêu cầu. Vui lòng thử lại.";
+
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -339,7 +507,18 @@ export function AddClothing() {
     setCreatingWardrobe(true);
     try {
       const created = await wardrobeApi.create({ wardrobeName: createWardrobeName.trim() });
-      setWardrobes((prev) => [...prev, created]);
+      setWardrobes((prev) => {
+        const updated = [...prev, created];
+
+        if (currentUserId) {
+          saveCache(
+            `wardrobes_cache_${currentUserId}`,
+            updated
+          );
+        }
+
+        return updated;
+      });
       setForm(f => ({ ...f, wardrobeId: created.wardrobeId }));
       toast.success(`Tủ đồ "${created.wardrobeName}" đã được tạo!`);
       setCreateWardrobeOpen(false);
@@ -356,7 +535,18 @@ export function AddClothing() {
     setCreatingZone(true);
     try {
       const created = await wardrobeZoneApi.create({ wardrobeId: form.wardrobeId, zoneName: createZoneName.trim(), description: createZoneDesc.trim() });
-      setZones((prev) => [...prev, created]);
+      setZones((prev) => {
+        const updated = [...prev, created];
+
+        if (currentUserId) {
+          saveCache(
+            `wardrobe_zones_cache_${currentUserId}`,
+            updated
+          );
+        }
+
+        return updated;
+      });
       setForm(f => ({ ...f, zoneId: created.zoneId }));
       toast.success(`Ngăn kéo "${created.zoneName}" đã được tạo!`);
       setCreateZoneOpen(false);
@@ -531,10 +721,18 @@ export function AddClothing() {
                   {!initialZoneId && (
                     <button
                       type="button"
-                      onClick={() => setCreateWardrobeOpen(true)}
+                      disabled={wardrobeServiceOffline}
                       style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
+                      onClick={() => {
+                        if (!wardrobeServiceOffline) {
+                          setCreateWardrobeOpen(true);
+                        }
+                      }}
                     >
-                      <Plus size={16} /> Tạo Tủ Đồ
+                      <Plus size={16} />
+                      {wardrobeServiceOffline
+                        ? "Dịch vụ tạm dừng"
+                        : "Tạo Tủ Đồ"}
                     </button>
                   )}
                 </div>
@@ -558,10 +756,18 @@ export function AddClothing() {
                   {form.wardrobeId && !initialZoneId && (
                     <button
                       type="button"
-                      onClick={() => setCreateZoneOpen(true)}
+                      disabled={wardrobeServiceOffline}
                       style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
+                      onClick={() => {
+                        if (!wardrobeServiceOffline) {
+                          setCreateZoneOpen(true);
+                        }
+                      }}
                     >
-                      <Plus size={16} /> Tạo Ngăn Kéo
+                      <Plus size={16} />
+                      {wardrobeServiceOffline
+                        ? "Dịch vụ tạm dừng"
+                        : "Tạo ngăn kéo"}
                     </button>
                   )}
                 </div>
@@ -681,7 +887,7 @@ export function AddClothing() {
                 <button
                   onClick={handleCreateWardrobe}
                   disabled={creatingWardrobe}
-                  style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none", background: creatingWardrobe ? "#FDBA74" : "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 700, cursor: creatingWardrobe ? "default" : "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                  style={{ padding: "0 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #EA580C, #F97316)", color: "white", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}
                 >
                   {creatingWardrobe ? (
                     <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Đang tạo...</>
