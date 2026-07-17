@@ -23,26 +23,32 @@ export function useAuth() {
 
   // Demo accounts - used when backend is unavailable
   const DEMO_ACCOUNTS: Record<string, { password: string; role: "ADMIN" | "USER"; name: string }> = {
-    "demo@styleai.com":  { password: "demo123",  role: "USER",  name: "Demo User" },
+    "demo@styleai.com": { password: "demo123", role: "USER", name: "Demo User" },
     "admin@styleai.com": { password: "admin123", role: "ADMIN", name: "Admin Demo" },
-    "user@styleai.com":  { password: "user123",  role: "USER",  name: "Pham Duc Nguyen" },
+    "user@styleai.com": { password: "user123", role: "USER", name: "Pham Duc Nguyen" },
   };
 
   const loginMutation = useMutation({
     mutationFn: async (payload: LoginPayload) => {
       setUser(null);
-      return await authService.login(payload.email, payload.password);
 
-      // Try real backend first
       try {
-        return await authService.login(payload.email, payload.password);
+        return await authService.login(
+          payload.email,
+          payload.password
+        );
       } catch (err: any) {
-        // Fallback to demo mode if backend unavailable (network error or 5xx)
         const status = err?.response?.status;
         const isBackendDown = !status || status >= 500;
+
         if (isBackendDown) {
-          const demo = DEMO_ACCOUNTS[payload.email.toLowerCase()];
-          if (demo && demo.password === payload.password) {
+          const demo =
+            DEMO_ACCOUNTS[payload.email.toLowerCase()];
+
+          if (
+            demo &&
+            demo.password === payload.password
+          ) {
             return {
               id: "demo-001",
               email: payload.email,
@@ -52,6 +58,7 @@ export function useAuth() {
             } as any;
           }
         }
+
         throw err;
       }
     },

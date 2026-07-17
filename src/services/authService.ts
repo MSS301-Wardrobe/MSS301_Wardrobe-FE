@@ -1,10 +1,11 @@
 import { apiClient } from "./apiClient";
 import type { User } from "../types/user";
-import { ApiResponse } from "@/types/apiResonse";
+import type { ApiResponse } from "@/types/apiResonse";
 
 type LoginResponse = {
   message?: string;
   user?: User;
+  data?: User;
 };
 
 type VerifyForgotPasswordOtpResponse = {
@@ -16,45 +17,62 @@ type ResetPasswordPayload = {
   newPassword: string;
 };
 
-// Demo credentials — used when backend is not available
-const DEMO_USERS = [
-  { email: "admin@gmail.com", password: "Admin@123", role: "ADMIN", name: "Admin" },
-  { email: "user@example.com", password: "User@123", role: "USER", name: "Demo User" },
-];
-
 export const authService = {
   async login(email: string, password: string): Promise<User> {
     try {
-      const { data } = await apiClient.post<LoginResponse>("/users/auth/login", {
-        email,
-        password,
-      });
-
-      if (data?.user) return data.user;
-
-      return this.me();
-    } catch {
-      const demo = DEMO_USERS.find(
-        (u) =>
-          u.email.toLowerCase() === email.toLowerCase() &&
-          u.password === password
+      const response = await apiClient.post<LoginResponse>(
+        "/users/auth/login",
+        {
+          email: email.trim(),
+          password,
+        },
       );
 
-      if (demo) {
-        return {
-          id: "demo-user",
-          email: demo.email,
-          name: demo.name,
-          role: demo.role as "USER" | "ADMIN",
-        };
+      /*
+       * Trường hợp backend trả trực tiếp thông tin user:
+       * {
+       *   user: {...}
+       * }
+       */
+      if (response.data?.user) {
+        return response.data.user;
       }
 
-      throw new Error("Email hoặc mật khẩu không đúng");
+      /*
+       * Trường hợp backend dùng ApiResponse:
+       * {
+       *   code: 1000,
+       *   data: {...}
+       * }
+       */
+      if (response.data?.data) {
+        return response.data.data;
+      }
+
+      /*
+       * Nếu backend chỉ set HttpOnly cookie sau khi login thành công,
+       * mới gọi /users/me để lấy thông tin.
+       */
+      return await this.me();
+    } catch (error) {
+      /*
+       * Quan trọng:
+       * Không trả demo user.
+       * Không nuốt lỗi.
+       * Ném lỗi về useMutation để chạy onError.
+       */
+      throw error;
     }
   },
 
   async me(): Promise<User> {
-    const { data } = await apiClient.get<ApiResponse<User>>("/users/me");
+    const { data } =
+      await apiClient.get<ApiResponse<User>>("/users/me");
+
+    if (!data?.data) {
+      throw new Error("Không lấy được thông tin người dùng");
+    }
+
     return data.data;
   },
 
@@ -64,7 +82,11 @@ export const authService = {
     password: string;
     fullName: string;
   }) {
-    const { data } = await apiClient.post("/users/auth/register", payload);
+    const { data } = await apiClient.post(
+      "/users/auth/register",
+      payload,
+    );
+
     return data;
   },
 
@@ -72,22 +94,28 @@ export const authService = {
     email: string;
     otp: string;
   }) {
-    const { data } = await apiClient.post("/users/auth/confirm-register", payload);
+    const { data } = await apiClient.post(
+      "/users/auth/confirm-register",
+      payload,
+    );
+
     return data;
   },
 
   async resendCode(email: string) {
-    const { data } = await apiClient.post("/users/auth/resend-code", {
-      email,
-    });
+    const { data } = await apiClient.post(
+      "/users/auth/resend-code",
+      { email },
+    );
 
     return data;
   },
 
   async forgotPassword(email: string) {
-    const { data } = await apiClient.post("/users/auth/forgot-password", {
-      email,
-    });
+    const { data } = await apiClient.post(
+      "/users/auth/forgot-password",
+      { email },
+    );
 
     return data;
   },
@@ -96,16 +124,22 @@ export const authService = {
     email: string;
     otp: string;
   }): Promise<VerifyForgotPasswordOtpResponse> {
-    const { data } = await apiClient.post<ApiResponse<VerifyForgotPasswordOtpResponse>>(
+    const { data } = await apiClient.post<
+      ApiResponse<VerifyForgotPasswordOtpResponse>
+    >(
       "/users/auth/verify-forgot-password-otp",
-      payload
+      payload,
     );
 
     return data.data;
   },
 
   async resetPassword(payload: ResetPasswordPayload) {
-    const { data } = await apiClient.post("/users/auth/reset-password", payload);
+    const { data } = await apiClient.post(
+      "/users/auth/reset-password",
+      payload,
+    );
+
     return data;
   },
 
@@ -118,21 +152,21 @@ export const authService = {
   },
 
   async googleCallback(code: string): Promise<void> {
-  const redirectUri = `${window.location.origin}/authenticate`;
+    const redirectUri = `${window.location.origin}/authenticate`;
 
-  await apiClient.post("/users/auth/google/callback", {
-    code,
-    redirectUri,
-  });
-},
+    await apiClient.post("/users/auth/google/callback", {
+      code,
+      redirectUri,
+    });
+  },
 
-async syncCurrentUser(): Promise<User> {
-  const { data } = await apiClient.post<ApiResponse<User>>(
-    "/users/auth/me/sync"
-  );
+  async syncCurrentUser(): Promise<User> {
+    const { data } = await apiClient.post<ApiResponse<User>>(
+      "/users/auth/me/sync",
+    );
 
-  return data.data;
-},
+    return data.data;
+  },
 };
 
 export default authService;

@@ -77,3 +77,33 @@ export function getStorageImageUrl(imageId?: string | null): string | null {
   if (!imageId) return null;
   return `http://localhost:8080/api/v1/storage/files/${imageId}`;
 }
+
+export interface RequestAddClothingPayload {
+  itemName: string;
+  categoryId?: string;
+  zoneId: string;
+  dominantColor?: string;
+  style?: string;
+  confidenceScore?: number;
+  imageId?: string;
+}
+
+export const requestAddClothing = async (
+  logId: number,
+  payload: RequestAddClothingPayload
+) => {
+  const response = await apiClient.post(
+    `/ai/detection-logs/${logId}/request-add`,
+    {
+      item_name: payload.itemName,
+      category_id: payload.categoryId,
+      zone_id: payload.zoneId,
+      dominant_color: payload.dominantColor,
+      style: payload.style,
+      confidence_score: payload.confidenceScore,
+      image_id: payload.imageId,
+    }
+  );
+
+  return response.data;
+};

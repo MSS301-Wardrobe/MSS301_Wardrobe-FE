@@ -41,7 +41,7 @@ interface SidebarProps {
 
 export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
-  const { logout, user  } = useAuthContext();
+  const { logout, user } = useAuthContext();
 
   const displayName = user?.fullName || user?.name || "Người dùng";
   const displayEmail = user?.email || "";
@@ -56,17 +56,13 @@ export function UserSidebar({ collapsed, onToggle }: SidebarProps) {
     .toUpperCase();
 
   const handleLogout = async () => {
-    try {
-      await logout();
+    await logout();
 
-      toast.success("Đăng xuất thành công");
+    toast.success("Đăng xuất thành công");
 
-      navigate("/login", { replace: true });
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || err.message || "Đăng xuất thất bại",
-      );
-    }
+    navigate("/login", {
+      replace: true,
+    });
   };
 
   return (
