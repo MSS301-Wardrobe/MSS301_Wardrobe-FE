@@ -12,9 +12,12 @@ export const recommendationService = {
     return response.data.data;
   },
 
-  async generatePersonal(userId: string): Promise<Recommendation> {
+  async generatePersonal(userId: string, style?: string): Promise<Recommendation> {
     const response = await apiClient.get(`/recommendation/generate/personal`, {
-      params: { userId }
+      params: {
+        userId,
+        style
+      }
     });
     return response.data.data;
   },

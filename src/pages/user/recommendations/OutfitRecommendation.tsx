@@ -6,6 +6,7 @@ import { friendGroupService } from "../../../services/friendGroupService";
 import { useAuth } from "../../../hooks/useAuth";
 import type { Recommendation } from "../../../types/recommendation";
 import { OutfitGrid } from "@/components/common/OutfitGrid.tsx";
+import { userService } from "../../../services/userService";
 
 import {
   AlertDialog,
@@ -33,6 +34,9 @@ export function OutfitRecommendation() {
   const [showPreferenceAlert, setShowPreferenceAlert] = useState(false);
   const [showGroupAlert, setShowGroupAlert] = useState(false);
   const [myGroups, setMyGroups] = useState<any[]>([]);
+  const [showMissingClothesAlert, setShowMissingClothesAlert] = useState(false);
+  const [showStyleModal, setShowStyleModal] = useState(false);
+  const [myStyles, setMyStyles] = useState<string[]>([]);
 
   const userId = user?.id || user?.userId;
 
@@ -60,9 +64,37 @@ export function OutfitRecommendation() {
     }
   }, [userId]);
 
-  const handleGenerate = async (specificGroupId?: string) => {
+  const handleGenerate = async (specificGroupId?: string, specificStyle?: string) => {
     if (!userId) {
       alert("Vui lòng đăng nhập để sử dụng tính năng AI!");
+      return;
+    }
+
+    if (activeRecType === 'personal' && !specificStyle) {
+      try {
+        setIsGenerating(true);
+        const prefs = await userService.getPreferences();
+        const stylesArray = prefs.preferredStyles || [];
+
+        if (!stylesArray || stylesArray.length === 0) {
+          setIsGenerating(false);
+          setShowPreferenceAlert(true);
+          return;
+        }
+
+        if (stylesArray.length === 1) {
+          return handleGenerate(undefined, stylesArray[0]);
+        }
+
+        setMyStyles(stylesArray);
+        setShowStyleModal(true);
+      } catch (err) {
+        console.error("Lỗi lấy sở thích phong cách:", err);
+        setIsGenerating(false);
+        setShowPreferenceAlert(true);
+      } finally {
+        setIsGenerating(false);
+      }
       return;
     }
 
@@ -87,13 +119,18 @@ export function OutfitRecommendation() {
 
     try {
       setIsGenerating(true);
+      setShowStyleModal(false);
       setShowGroupModal(false);
 
       if (activeRecType === 'personal') {
-        const response = await recommendationService.generatePersonal(userId);
+        const response = await recommendationService.generatePersonal(userId, specificStyle);
         if (response?.outfit?.outfitName === "Chưa thiết lập phong cách cá nhân") {
           setIsGenerating(false);
           setShowPreferenceAlert(true);
+          return;
+        } else if (response?.outfit?.outfitName === "Thiếu trang phục phù hợp") {
+          setIsGenerating(false);
+          setShowMissingClothesAlert(true);
           return;
         }
       } else if (activeRecType === 'group' && specificGroupId) {
@@ -101,6 +138,10 @@ export function OutfitRecommendation() {
         if (response?.outfit?.outfitName === "Chưa tham gia nhóm bạn nào") {
           setIsGenerating(false);
           setShowGroupAlert(true);
+          return;
+        } else if (response?.outfit?.outfitName === "Thiếu trang phục phù hợp") {
+          setIsGenerating(false);
+          setShowMissingClothesAlert(true);
           return;
         }
       }
@@ -170,6 +211,33 @@ export function OutfitRecommendation() {
                       </button>
                   ))}
                 </div>
+              </div>
+            </div>
+        )}
+
+        {showStyleModal && (
+            <div style={{ position: "fixed", zIndex: 100, inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ background: "white", borderRadius: 20, padding: 24, width: "100%", maxWidth: 440, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <h3 style={{ fontWeight: 800, fontSize: "1.1rem", color: "#0F172A" }}>Chọn Phong Cách Gợi Ý</h3>
+                  <button onClick={() => setShowStyleModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8" }}><X size={20} /></button>
+                </div>
+                <p style={{ color: "#64748B", fontSize: "0.875rem", marginBottom: 20 }}>Hôm nay bạn muốn StyleAI thiết kế và lựa chọn trang phục theo phong cách nào?</p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "260px", overflowY: "auto" }}>
+                  {myStyles.map(styleName => (
+                      <button
+                          key={styleName}
+                          onClick={() => handleGenerate(undefined, styleName)}
+                          style={{ width: "100%", padding: "12px", textAlign: "left", borderRadius: 12, border: "1px solid #E2E8F0", background: "#F8FAFC", cursor: "pointer", fontWeight: 600, color: "#334155", textTransform: "capitalize", transition: "all 0.2s" }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "#FFF7ED"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "#F8FAFC"}
+                      >
+                        ✨ Phong cách {styleName}
+                      </button>
+                  ))}
+                </div>
+
               </div>
             </div>
         )}
@@ -279,6 +347,27 @@ export function OutfitRecommendation() {
                 navigate('/app/friend-groups');
               }}>
                 Tham gia nhóm ngay
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <AlertDialog open={showMissingClothesAlert} onOpenChange={setShowMissingClothesAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tủ Đồ Thiếu Trang Phục 👕👖</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tủ đồ của bạn hiện tại không có đủ các thành phần cơ bản (Cần ít nhất 1 Áo + 1 Quần/Chân Váy, hoặc 1 Đầm liền) để AI có thể phối ra một bộ đồ hoàn chỉnh. Vui lòng thêm quần áo mới vào tủ nhé!
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowMissingClothesAlert(false)}>
+                Để sau
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setShowMissingClothesAlert(false);
+                navigate('/app/wardrobe');
+              }}>
+                Đi đến Tủ đồ
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

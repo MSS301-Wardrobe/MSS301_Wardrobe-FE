@@ -5,6 +5,16 @@ import { toast } from "sonner";
 import { recommendationService } from "../../../services/recommendationService";
 import { useAuth } from "../../../hooks/useAuth";
 import { OutfitGrid } from "../../../components/common/OutfitGrid";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "../../../components/ui/alert-dialog";
 
 const events = [
   { id: "work", label: "Công Sở", icon: "💼", desc: "Văn Phòng & Kinh Doanh", color: "#EA580C", bg: "#FFEDD5" },
@@ -47,6 +57,7 @@ export function EventRecommendation() {
 
   const [dbRecommendations, setDbRecommendations] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showMissingClothesAlert, setShowMissingClothesAlert] = useState(false);
 
   const fetchRecommendations = async () => {
     if (!userId) return;
@@ -73,9 +84,15 @@ export function EventRecommendation() {
       let backendEvent = activeEvent;
       if (activeEvent === "work") backendEvent = "meeting";
 
-      await recommendationService.generateEvent(userId, backendEvent);
-      toast.success(`Đã cập nhật gợi ý cho dịp ${activeEventData.label}!`);
+      const response = await recommendationService.generateEvent(userId, backendEvent);
 
+      if (response?.outfit?.outfitName === "Thiếu trang phục phù hợp") {
+        setIsGenerating(false);
+        setShowMissingClothesAlert(true);
+        return;
+      }
+
+      toast.success(`Đã cập nhật gợi ý cho dịp ${activeEventData.label}!`);
       await fetchRecommendations();
     } catch (err) {
       toast.error("Lỗi khi tạo AI, vui lòng thử lại!");
@@ -299,6 +316,27 @@ export function EventRecommendation() {
               </div>
           )}
         </div>
+        <AlertDialog open={showMissingClothesAlert} onOpenChange={setShowMissingClothesAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Thiếu Trang Phục Cho Sự Kiện 🚨</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tủ đồ của bạn không có đủ trang phục phù hợp (Áo, Quần, Váy...) để AI có thể phối đồ đi <b>{activeEventData.label}</b>. Hãy chụp ảnh và thêm đồ vào tủ để AI có dữ liệu phân tích nhé!
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowMissingClothesAlert(false)}>
+                Để sau
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setShowMissingClothesAlert(false);
+                navigate('/app/wardrobe');
+              }}>
+                Thêm quần áo ngay
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
   );
 }

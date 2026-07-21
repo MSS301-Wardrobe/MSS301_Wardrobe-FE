@@ -3,6 +3,7 @@
  * Dashboard data service. Wardrobe count uses real API; other stats remain mocked.
  */
 import { wardrobeApi, clothingItemApi, categoryApi } from "./wardrobeService";
+import { recommendationService } from "./recommendationService";
 
 // ---------- Types ----------
 
@@ -185,11 +186,18 @@ async function fetchAiStats(): Promise<Pick<DashboardStats, "aiDetections"> & { 
   };
 }
 
-/** Recommendation Service mock */
-async function fetchRecommendations(): Promise<{ outfitsCreated: number; recommendations: OutfitRecommendation[] }> {
-  await delay(300);
+/** Recommendation Service */
+async function fetchRecommendations(userId: string): Promise<{ outfitsCreated: number; recommendations: OutfitRecommendation[] }> {
+  let outfitsCreated = 0;
+  try {
+    const data = await recommendationService.getAllRecommendations(userId);
+    outfitsCreated = Array.isArray(data) ? data.length : 0;
+  } catch (error) {
+    console.error("Lỗi lấy số lượng bộ đồ:", error);
+  }
+
   return {
-    outfitsCreated: 92,
+    outfitsCreated,
     recommendations: [
       {
         title: "Phong Cách Công Sở",
@@ -240,7 +248,7 @@ export async function fetchDashboardData(userId: string): Promise<DashboardData>
     fetchGrowthData(clothes),
     fetchRecentUploads(),
     fetchAiStats(),
-    fetchRecommendations(),
+    fetchRecommendations(userId),
   ]);
 
   return {
