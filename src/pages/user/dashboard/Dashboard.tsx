@@ -130,55 +130,7 @@ export function Dashboard() {
       </div>
 
       {/* Recent Uploads + AI Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 20 }}>
-        {/* Recent uploads */}
-        <div style={{ background: "white", borderRadius: 16, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div>
-              <h3 style={{ fontWeight: 700, color: "#0F172A", fontSize: "1rem" }}>Tải Lên Gần Đây</h3>
-              <p style={{ fontSize: "0.78rem", color: "#64748B", marginTop: 2 }}>Vật phẩm mới nhất trong tủ đồ của bạn</p>
-            </div>
-            <button onClick={() => navigate("/app/wardrobe")} style={{ fontSize: "0.8rem", color: "#EA580C", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Xem tất cả</button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {recentUploads.map((item) => (
-              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: "1px solid #F1F5F9", cursor: "pointer" }} onClick={() => navigate(`/app/wardrobe/${item.id}`)}>
-                <img src={item.img} alt={item.name} style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: "#0F172A", fontSize: "0.85rem" }}>{item.name}</p>
-                  <p style={{ fontSize: "0.75rem", color: "#64748B" }}>{item.category}</p>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: "0.7rem", color: "#94A3B8" }}>{item.time}</span>
-                  <Eye size={14} color="#94A3B8" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* AI Detection Stats */}
-        <div style={{ background: "white", borderRadius: 16, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-          <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 4, fontSize: "1rem" }}>Thống Kê Nhận Diện AI</h3>
-          <p style={{ fontSize: "0.78rem", color: "#64748B", marginBottom: 16 }}>Độ chính xác phân loại theo danh mục</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {aiAccuracyStats.map((s) => (
-              <div key={s.category}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "#374151" }}>{s.category}</span>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontSize: "0.75rem", color: "#64748B" }}>{s.count} vật phẩm</span>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#10B981" }}>{s.accuracy}%</span>
-                  </div>
-                </div>
-                <div style={{ background: "#F1F5F9", borderRadius: 100, height: 6 }}>
-                  <div style={{ width: `${s.accuracy}%`, background: "linear-gradient(90deg, #EA580C, #F97316)", borderRadius: 100, height: "100%", transition: "width 0.6s" }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      
 
       {/* Quick Actions */}
       <div style={{ background: "linear-gradient(135deg, #EA580C 0%, #EA580C 100%)", borderRadius: 16, padding: 24, color: "white" }}>
@@ -190,7 +142,7 @@ export function Dashboard() {
             { label: "Quét AI", icon: Cpu, path: "/app/ai-detection", desc: "Nhận diện trang phục bằng AI" },
             { label: "Gợi Ý Trang Phục", icon: Sparkles, path: "/app/recommendations", desc: "Tạo gợi ý bộ trang phục" },
             { label: "Trang Phục Sự Kiện", icon: Calendar, path: "/app/event-outfits", desc: "Mặc đẹp cho mọi dịp" },
-            { label: "Quản Lý Khu Vực", icon: Layers, path: "/app/wardrobe/zones", desc: "Tổ chức khu vực tủ đồ" },
+            { label: "Quản Lý Khu Vực", icon: Layers, path: "/app/wardrobe", desc: "Tổ chức khu vực tủ đồ" },
             { label: "Nhóm Bạn", icon: Users, path: "/app/friend-groups", desc: "Xem xu hướng phong cách nhóm" },
           ].map((action) => (
             <button
