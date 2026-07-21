@@ -16,13 +16,17 @@ import {
   getRecommendationHistory,
   getRecommendationHistoryDetail,
 } from "../../../services/adminRecommendationService";
+import { getStorageImageUrl } from "../../../services/adminDetectionService";
 import type { UserManagementResponse } from "../../../types/admin";
 import type {
+  RecommendationClothingItem,
+  RecommendationHistoryDetail,
   RecommendationHistoryItem,
   RecommendationHistorySort,
   RecommendationHistoryType,
+  RecommendationMemberOutfit,
 } from "../../../types/adminRecommendation";
-import type { Recommendation } from "../../../types/recommendation";
+import { OutfitGrid } from "@/components/common/OutfitGrid.tsx";
 
 const PAGE_SIZE = 10;
 
@@ -112,18 +116,164 @@ const actionButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
+function formatStyleLabel(style: string): string {
+  return style.charAt(0).toUpperCase() + style.slice(1);
+}
+
+function ClothingItemCard({ item }: { item: RecommendationClothingItem }) {
+  const imageUrl =
+    getStorageImageUrl(item.imageId) ||
+    "https://placehold.co/120x120/F8FAFC/94A3B8?text=No+image";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "10px 12px",
+        borderRadius: 10,
+        border: "1px solid #E2E8F0",
+        background: "#F8FAFC",
+      }}
+    >
+      <img
+        src={imageUrl}
+        alt={item.itemName || "Trang phục"}
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 8,
+          objectFit: "cover",
+          border: "1px solid #E2E8F0",
+          flexShrink: 0,
+        }}
+      />
+      <div style={{ fontSize: "0.85rem", color: "#334155" }}>
+        <strong>{item.itemName || "Trang phục"}</strong>
+        {item.dominantColor ? ` · ${item.dominantColor}` : ""}
+        {item.category?.categoryName ? ` · ${item.category.categoryName}` : ""}
+      </div>
+    </div>
+  );
+}
+
+function OutfitSection({
+  title,
+  clothingItems,
+}: {
+  title?: string;
+  clothingItems: RecommendationClothingItem[];
+}) {
+  return (
+    <section>
+      {title && (
+        <h4
+          style={{
+            margin: "0 0 10px",
+            fontSize: "0.82rem",
+            fontWeight: 700,
+            color: "#64748B",
+            textTransform: "uppercase",
+          }}
+        >
+          {title}
+        </h4>
+      )}
+      {clothingItems.length === 0 ? (
+        <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.85rem" }}>
+          Không có dữ liệu trang phục
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #E2E8F0" }}>
+            <OutfitGrid items={clothingItems} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {clothingItems.map((item) => (
+              <ClothingItemCard key={item.itemId} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MemberOutfitBlock({
+  member,
+  userMap,
+}: {
+  member: RecommendationMemberOutfit;
+  userMap: Map<string, UserManagementResponse>;
+}) {
+  const clothingItems = member.outfit?.clothingItems ?? [];
+  const score = Math.round((member.recommendationScore ?? 0) * 10);
+  const displayName = getUserName(member.userId, userMap) || member.fullName;
+
+  return (
+    <div
+      style={{
+        padding: 16,
+        borderRadius: 12,
+        border: "1px solid #E2E8F0",
+        background: member.creator ? "#FFF7ED" : "#F8FAFC",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.92rem" }}>
+          {displayName}
+          {member.creator && (
+            <span
+              style={{
+                marginLeft: 8,
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                color: "#C2410C",
+                background: "#FFEDD5",
+                padding: "2px 8px",
+                borderRadius: 999,
+              }}
+            >
+              Người tạo
+            </span>
+          )}
+        </div>
+        <span style={{ fontSize: "0.82rem", color: "#64748B", fontWeight: 600 }}>
+          {score}% phù hợp
+        </span>
+      </div>
+      <p style={{ margin: "0 0 12px", fontSize: "0.78rem", color: "#94A3B8" }}>
+        Trang phục đã chia sẻ trong nhóm
+      </p>
+      <OutfitSection clothingItems={clothingItems} />
+    </div>
+  );
+}
+
 function DetailModal({
   detail,
   userMap,
   onClose,
 }: {
-  detail: Recommendation;
+  detail: RecommendationHistoryDetail;
   userMap: Map<string, UserManagementResponse>;
   onClose: () => void;
 }) {
   const user = userMap.get(detail.userId);
   const clothingItems = detail.outfit?.clothingItems ?? [];
   const score = Math.round((detail.recommendationScore ?? 0) * 10);
+  const isGroup = detail.recommendationType === "group";
+  const members = detail.members ?? [];
 
   return (
     <div
@@ -143,7 +293,7 @@ function DetailModal({
         style={{
           background: "white",
           borderRadius: 16,
-          width: "min(640px, 100%)",
+          width: "min(760px, 100%)",
           maxHeight: "90vh",
           overflow: "auto",
           boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
@@ -202,39 +352,56 @@ function DetailModal({
               Thông tin gợi ý
             </h4>
             <div style={{ display: "grid", gap: 6, fontSize: "0.88rem", color: "#334155" }}>
+              <div><strong>Loại:</strong> {getTypeLabel(detail.recommendationType)}</div>
               <div><strong>Loại sự kiện:</strong> {detail.eventType || "—"}</div>
               <div><strong>Mô tả:</strong> {detail.outfit?.description || "—"}</div>
+              {isGroup && detail.groupName && (
+                <div><strong>Nhóm:</strong> {detail.groupName}</div>
+              )}
+              {isGroup && (detail.groupStyles?.length ?? 0) > 0 && (
+                <div>
+                  <strong>Phong cách nhóm:</strong>{" "}
+                  {detail.groupStyles!.map(formatStyleLabel).join(", ")}
+                </div>
+              )}
             </div>
           </section>
 
-          <section>
-            <h4 style={{ margin: "0 0 10px", fontSize: "0.82rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
-              Trang phục trong bộ ({clothingItems.length})
-            </h4>
-            {clothingItems.length === 0 ? (
-              <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.85rem" }}>Không có dữ liệu chi tiết</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {clothingItems.map((item) => (
-                  <div
-                    key={item.itemId}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 10,
-                      border: "1px solid #E2E8F0",
-                      background: "#F8FAFC",
-                      fontSize: "0.85rem",
-                      color: "#334155",
+          {isGroup ? (
+            <section>
+              <h4 style={{ margin: "0 0 12px", fontSize: "0.82rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
+                Trang phục theo thành viên ({members.length || 1})
+              </h4>
+              {members.length === 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <p style={{ margin: 0, color: "#94A3B8", fontSize: "0.85rem" }}>
+                    Gợi ý nhóm được tạo trước khi cập nhật — chỉ hiển thị outfit người tạo.
+                  </p>
+                  <MemberOutfitBlock
+                    userMap={userMap}
+                    member={{
+                      userId: detail.userId,
+                      fullName: getUserName(detail.userId, userMap),
+                      recommendationScore: detail.recommendationScore,
+                      outfit: detail.outfit,
+                      creator: true,
                     }}
-                  >
-                    <strong>{item.itemName || "Trang phục"}</strong>
-                    {item.dominantColor ? ` · ${item.dominantColor}` : ""}
-                    {item.category?.categoryName ? ` · ${item.category.categoryName}` : ""}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                  />
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {members.map((member) => (
+                    <MemberOutfitBlock key={member.userId} userMap={userMap} member={member} />
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : (
+            <OutfitSection
+              title={`Trang phục trong bộ (${clothingItems.length})`}
+              clothingItems={clothingItems}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -257,7 +424,7 @@ export function RecommendationLogs() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Recommendation | null>(null);
+  const [detail, setDetail] = useState<RecommendationHistoryDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [userMap, setUserMap] = useState<Map<string, UserManagementResponse>>(new Map());
 

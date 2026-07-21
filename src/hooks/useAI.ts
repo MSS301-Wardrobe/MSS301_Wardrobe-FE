@@ -6,6 +6,7 @@ import {
   AiUnauthorizedError,
   CropRegionEmptyError,
   LowConfidenceDetectionError,
+  type AIAnalyticsGranularity,
 } from "../services/aiService";
 import type { AIDetectionResult, AIDetectionViewResult, AIAnalysisResult } from "../types/ai";
 import type { NormalizedCrop } from "../utils/imageCrop";
@@ -65,13 +66,23 @@ export function useAI() {
   }
 
 
-  const getAnalytics = async (type: 'stats' | 'daily' | 'monthly' | 'categories' | 'recent') => {
+  const getAnalytics = async (
+    type: 'stats' | 'daily' | 'monthly' | 'categories' | 'recent',
+    granularity: AIAnalyticsGranularity = 'week',
+    options?: { page?: number; size?: number },
+  ) => {
     try {
-      if (type === 'stats') return await aiService.getStats();
-      if (type === 'daily') return await aiService.getDaily();
-      if (type === 'monthly') return await aiService.getMonthly();
-      if (type === 'categories') return await aiService.getCategories();
-      if (type === 'recent') return await aiService.getRecent();
+      if (type === 'stats') return await aiService.getStats(granularity);
+      if (type === 'daily') return await aiService.getDaily(granularity);
+      if (type === 'monthly') return await aiService.getMonthly(granularity);
+      if (type === 'categories') return await aiService.getCategories(granularity);
+      if (type === 'recent') {
+        return await aiService.getRecent(
+          granularity,
+          options?.page ?? 0,
+          options?.size ?? 10,
+        );
+      }
     } catch (error: unknown) {
       handleAuthError(error);
       throw error;

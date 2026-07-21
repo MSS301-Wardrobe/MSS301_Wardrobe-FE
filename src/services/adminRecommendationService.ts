@@ -1,10 +1,10 @@
 import { apiClient } from "./apiClient";
 import type {
+  RecommendationHistoryDetail,
   RecommendationHistoryPageResponse,
   RecommendationHistorySort,
   RecommendationHistoryType,
 } from "../types/adminRecommendation";
-import type { Recommendation } from "../types/recommendation";
 
 const BASE = "/recommendation/admin/history";
 
@@ -33,7 +33,7 @@ export async function getRecommendationHistory({
 
 export async function getRecommendationHistoryDetail(
   id: string,
-): Promise<Recommendation> {
-  const { data } = await apiClient.get<ApiResponse<Recommendation>>(`/recommendation/${id}`);
+): Promise<RecommendationHistoryDetail> {
+  const { data } = await apiClient.get<ApiResponse<RecommendationHistoryDetail>>(`${BASE}/${id}`);
   return data.data;
 }
