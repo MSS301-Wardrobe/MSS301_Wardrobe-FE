@@ -25,17 +25,17 @@ export const userService = {
 
   async getPreferences(): Promise<UserPreferences> {
     const { data } =
-      await apiClient.get<ApiResponse<UserPreferences>>(
-        "/users/me/preferences"
-      );
+        await apiClient.get<ApiResponse<UserPreferences>>(
+            "/users/style-preferences/me"
+        );
 
     return data.data;
   },
 
   async updatePreferences(payload: UserPreferences): Promise<UserPreferences> {
     const { data } = await apiClient.put<ApiResponse<UserPreferences>>(
-      "/users/me/preferences",
-      payload
+        "/users/style-preferences/me",
+        payload
     );
 
     return data.data;
