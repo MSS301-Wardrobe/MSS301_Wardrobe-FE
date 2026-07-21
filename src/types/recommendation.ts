@@ -7,6 +7,12 @@ export interface Outfit {
   img: string | null;
   items: number;
   tags: string[];
+  clothingItems?: Array<{
+    itemId: string;
+    itemName?: string;
+    dominantColor?: string;
+    category?: { categoryName?: string };
+  }>;
 }
 
 export interface Recommendation {

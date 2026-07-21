@@ -13,7 +13,7 @@ const navItems = [
   { icon: FolderTree, label: "Quản Lý Danh Mục", path: "/admin/categories" },
   { icon: Cpu, label: "Lịch Sử Nhận Diện AI", path: "/admin/ai-requests" },
   { icon: Sparkles, label: "Lịch Sử Gợi Ý", path: "/admin/recommendation-logs" },
-  { icon: Settings, label: "Cấu Hình Hệ Thống", path: "/admin/system-settings" },
+  { icon: Settings, label: "Quản lí hệ thống", path: "/admin/system-settings" },
 ];
 
 interface SidebarProps {

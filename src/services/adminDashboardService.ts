@@ -1,6 +1,8 @@
 import { apiClient } from "./apiClient";
 import type { SystemHealthResponse } from "./systemMonitoringService";
 
+export type DashboardGranularity = "day" | "week" | "month";
+
 export interface KpiMetric {
   total: number;
   thisWeek: number;
@@ -24,6 +26,7 @@ export interface MonthlyGrowthPoint {
 
 export interface AdminDashboardOverview {
   generatedAt: string;
+  granularity: DashboardGranularity;
   users: KpiMetric;
   clothingItems: KpiMetric;
   detections: KpiMetric;
@@ -34,9 +37,12 @@ export interface AdminDashboardOverview {
 }
 
 export const adminDashboardService = {
-  async getOverview(): Promise<AdminDashboardOverview> {
+  async getOverview(
+    granularity: DashboardGranularity = "week",
+  ): Promise<AdminDashboardOverview> {
     const { data } = await apiClient.get<AdminDashboardOverview>(
       "/admin/dashboard/overview",
+      { params: { granularity } },
     );
     return data;
   },
