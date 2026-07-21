@@ -21,7 +21,7 @@ const routeTitles: Record<string, string> = {
   "/admin/categories": "Quản Lý Danh Mục",
   "/admin/ai-requests": "Lịch Sử Nhận Diện AI",
   "/admin/recommendation-logs": "Lịch Sử Gợi Ý",
-  "/admin/system-settings": "Cấu Hình Hệ Thống",
+  "/admin/system-settings": "Quản lí hệ thống",
 };
 
 export function Topbar() {

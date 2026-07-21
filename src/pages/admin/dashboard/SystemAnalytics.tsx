@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { useState } from "react";
 import {
   Activity,
   Cpu,
   RefreshCw,
   Shirt,
   Sparkles,
-  TrendingDown,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -26,6 +26,7 @@ import {
 import {
   adminDashboardService,
   type AdminDashboardOverview,
+  type DashboardGranularity,
   type KpiMetric,
 } from "../../../services/adminDashboardService";
 import type {
@@ -37,14 +38,41 @@ function formatNumber(value: number): string {
   return value.toLocaleString("vi-VN");
 }
 
-function formatTrend(value: number): string {
+function formatPeriodChange(value: number, granularity: DashboardGranularity): string {
   const prefix = value > 0 ? "+" : "";
-  return `${prefix}${value.toFixed(1)}%`;
+  const suffix =
+    granularity === "day"
+      ? "hôm nay"
+      : granularity === "month"
+        ? "tháng này"
+        : "tuần này";
+  return `${prefix}${formatNumber(value)} ${suffix}`;
 }
 
-function formatWeekChange(value: number): string {
-  const prefix = value > 0 ? "+" : "";
-  return `${prefix}${formatNumber(value)} tuần này`;
+function periodChartTitle(granularity: DashboardGranularity): string {
+  if (granularity === "day") return "Hoạt Động Hôm Nay";
+  if (granularity === "month") return "Hoạt Động Trong Tháng";
+  return "Hoạt Động 7 Ngày Qua";
+}
+
+function formatGrowthMonthLabel(monthKey: string, fallback?: string): string {
+  if (monthKey?.includes("-")) {
+    const month = parseInt(monthKey.split("-")[1], 10);
+    if (!Number.isNaN(month)) {
+      return `Thg ${month}`;
+    }
+  }
+  return fallback ?? monthKey;
+}
+
+function periodChartSubtitle(granularity: DashboardGranularity): string {
+  if (granularity === "day") {
+    return "Người dùng mới, nhận diện và gợi ý theo từng giờ hôm nay";
+  }
+  if (granularity === "month") {
+    return "Người dùng mới, nhận diện và gợi ý theo từng ngày trong tháng";
+  }
+  return "Người dùng mới, nhận diện và gợi ý trong 7 ngày qua";
 }
 
 function formatCheckedAt(iso?: string): string {
@@ -132,11 +160,13 @@ type WidgetConfig = {
   bg: string;
 };
 
-function MetricWidget({ widget }: { widget: WidgetConfig }) {
-  const trend = widget.metric?.weekTrendPercent ?? 0;
-  const trendColor = trend >= 0 ? "#10B981" : "#EF4444";
-  const TrendIcon = trend >= 0 ? TrendingUp : TrendingDown;
-
+function MetricWidget({
+  widget,
+  granularity,
+}: {
+  widget: WidgetConfig;
+  granularity: DashboardGranularity;
+}) {
   return (
     <div
       style={{
@@ -169,38 +199,21 @@ function MetricWidget({ widget }: { widget: WidgetConfig }) {
             {formatNumber(widget.metric?.total ?? 0)}
           </p>
           <p style={{ fontSize: "0.72rem", color: "#64748B", marginTop: 4 }}>
-            {formatWeekChange(widget.metric?.thisWeek ?? 0)}
+            {formatPeriodChange(widget.metric?.thisWeek ?? 0, granularity)}
           </p>
         </div>
-        <div>
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              background: widget.bg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 6,
-            }}
-          >
-            <widget.icon size={20} color={widget.color} />
-          </div>
-          <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              gap: 4,
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: trendColor,
-            }}
-          >
-            <TrendIcon size={14} />
-            {formatTrend(trend)}
-          </span>
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            background: widget.bg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <widget.icon size={20} color={widget.color} />
         </div>
       </div>
     </div>
@@ -208,16 +221,24 @@ function MetricWidget({ widget }: { widget: WidgetConfig }) {
 }
 
 export function SystemAnalytics() {
+  const [granularity, setGranularity] = useState<DashboardGranularity>("week");
+
   const { data, isLoading, isError, error, isFetching, refetch } = useQuery<
     AdminDashboardOverview,
     Error
   >({
-    queryKey: ["admin-dashboard-overview"],
-    queryFn: () => adminDashboardService.getOverview(),
+    queryKey: ["admin-dashboard-overview", granularity],
+    queryFn: () => adminDashboardService.getOverview(granularity),
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     retry: 1,
   });
+
+  const granularityOptions: { id: DashboardGranularity; label: string }[] = [
+    { id: "day", label: "Ngày" },
+    { id: "week", label: "Tuần" },
+    { id: "month", label: "Tháng" },
+  ];
 
   const widgets: WidgetConfig[] = [
     {
@@ -251,7 +272,10 @@ export function SystemAnalytics() {
   ];
 
   const dailyUsage = data?.dailyActivity ?? [];
-  const monthlyGrowth = data?.monthlyGrowth ?? [];
+  const monthlyGrowth = (data?.monthlyGrowth ?? []).map((point) => ({
+    ...point,
+    monthLabel: formatGrowthMonthLabel(point.month, point.monthLabel),
+  }));
   const systemHealth = buildHealthMetrics(data?.systemHealth);
   const overallStatus = data?.systemHealth?.overallStatus;
   const axiosError = error as AxiosError | undefined;
@@ -397,6 +421,28 @@ export function SystemAnalytics() {
         </div>
       )}
 
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {granularityOptions.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => setGranularity(option.id)}
+            style={{
+              border: "1px solid #CBD5E1",
+              background: granularity === option.id ? "#F97316" : "#FFFFFF",
+              color: granularity === option.id ? "#FFFFFF" : "#64748B",
+              borderRadius: 999,
+              padding: "8px 16px",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
       <div
         style={{
           display: "grid",
@@ -405,7 +451,11 @@ export function SystemAnalytics() {
         }}
       >
         {widgets.map((widget) => (
-          <MetricWidget key={widget.label} widget={widget} />
+          <MetricWidget
+            key={widget.label}
+            widget={widget}
+            granularity={granularity}
+          />
         ))}
       </div>
 
@@ -433,10 +483,10 @@ export function SystemAnalytics() {
               fontSize: "1rem",
             }}
           >
-            Hoạt Động Hàng Ngày
+            {periodChartTitle(granularity)}
           </h3>
           <p style={{ fontSize: "0.78rem", color: "#64748B", marginBottom: 16 }}>
-            Người dùng mới, nhận diện và gợi ý trong 7 ngày qua
+            {periodChartSubtitle(granularity)}
           </p>
           <ResponsiveContainer width="100%" height={230}>
             <AreaChart data={dailyUsage}>
@@ -445,6 +495,10 @@ export function SystemAnalytics() {
                   <stop offset="5%" stopColor="#EA580C" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
                 </linearGradient>
+                <linearGradient id="detectGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis
@@ -452,6 +506,7 @@ export function SystemAnalytics() {
                 tick={{ fontSize: 11, fill: "#94A3B8" }}
                 axisLine={false}
                 tickLine={false}
+                interval={granularity === "day" ? 2 : 0}
               />
               <YAxis
                 tick={{ fontSize: 10, fill: "#94A3B8" }}
@@ -473,6 +528,15 @@ export function SystemAnalytics() {
                 strokeWidth={2}
                 fill="url(#usersGrad)"
                 name="Người Dùng Mới"
+                dot={false}
+              />
+              <Area
+                type="monotone"
+                dataKey="detections"
+                stroke="#10B981"
+                strokeWidth={2}
+                fill="url(#detectGrad)"
+                name="Nhận Diện"
                 dot={false}
               />
               <Area
@@ -599,9 +663,9 @@ export function SystemAnalytics() {
         <p style={{ fontSize: "0.78rem", color: "#64748B", marginBottom: 16 }}>
           Người dùng mới và vật phẩm được thêm trong 6 tháng
         </p>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={monthlyGrowth} barSize={18}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={monthlyGrowth} barGap={4} barCategoryGap="20%">
+            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
             <XAxis
               dataKey="monthLabel"
               tick={{ fontSize: 11, fill: "#94A3B8" }}
@@ -609,17 +673,11 @@ export function SystemAnalytics() {
               tickLine={false}
             />
             <YAxis
-              yAxisId="users"
+              allowDecimals={false}
               tick={{ fontSize: 10, fill: "#94A3B8" }}
               axisLine={false}
               tickLine={false}
-            />
-            <YAxis
-              yAxisId="items"
-              orientation="right"
-              tick={{ fontSize: 10, fill: "#94A3B8" }}
-              axisLine={false}
-              tickLine={false}
+              tickFormatter={(value) => formatNumber(value)}
             />
             <Tooltip
               contentStyle={{
@@ -627,21 +685,26 @@ export function SystemAnalytics() {
                 border: "1px solid #E2E8F0",
                 fontSize: "0.78rem",
               }}
+              formatter={(value: number, name: string) => [
+                formatNumber(value),
+                name,
+              ]}
+              labelFormatter={(label) => `Tháng: ${label}`}
             />
             <Legend wrapperStyle={{ fontSize: "0.72rem" }} />
             <Bar
-              yAxisId="users"
               dataKey="users"
               fill="#EA580C"
               radius={[4, 4, 0, 0]}
               name="Người Dùng Mới"
+              maxBarSize={28}
             />
             <Bar
-              yAxisId="items"
               dataKey="items"
-              fill="#F97316"
+              fill="#2563EB"
               radius={[4, 4, 0, 0]}
               name="Vật Phẩm"
+              maxBarSize={28}
             />
           </BarChart>
         </ResponsiveContainer>
