@@ -13,6 +13,8 @@ export interface FriendGroup {
   primaryStyles?: string[] | null;
   /** Nhãn tiếng Việt (e.g. ["Tối Giản", "Công Sở"]) */
   primaryStyleLabels?: string[] | null;
+  /** Bảng màu đặc trưng — gom từ favoriteColors thành viên */
+  colorPalette?: string[];
 }
 
 export interface CreateFriendGroupRequest {

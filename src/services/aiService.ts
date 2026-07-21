@@ -273,26 +273,34 @@ export const aiService = {
     return data;
   },
 
-  async getStats(): Promise<any> {
-    const { data } = await apiClient.get('/ai/analytics/stats');
+  async getStats(granularity: AIAnalyticsGranularity = "week"): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/stats', { params: { granularity } });
     return data;
   },
-  async getDaily(): Promise<any> {
-    const { data } = await apiClient.get('/ai/analytics/daily');
+  async getDaily(granularity: AIAnalyticsGranularity = "week"): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/daily', { params: { granularity } });
     return data;
   },
-  async getMonthly(): Promise<any> {
-    const { data } = await apiClient.get('/ai/analytics/monthly');
+  async getMonthly(granularity: AIAnalyticsGranularity = "week"): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/monthly', { params: { granularity } });
     return data;
   },
-  async getCategories(): Promise<any> {
-    const { data } = await apiClient.get('/ai/analytics/categories');
+  async getCategories(granularity: AIAnalyticsGranularity = "week"): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/categories', { params: { granularity } });
     return data;
   },
-  async getRecent(): Promise<any> {
-    const { data } = await apiClient.get('/ai/analytics/recent');
+  async getRecent(
+    granularity: AIAnalyticsGranularity = "week",
+    page = 0,
+    size = 10,
+  ): Promise<any> {
+    const { data } = await apiClient.get('/ai/analytics/recent', {
+      params: { granularity, page, size },
+    });
     return data;
   },
 };
+
+export type AIAnalyticsGranularity = "day" | "week" | "month";
 
 export default aiService;

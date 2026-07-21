@@ -18,6 +18,11 @@ import {
   friendGroupService,
   type FriendGroup,
 } from "../../../services/friendGroupService";
+import {
+  getGroupBannerBackground,
+  GroupColorPalette,
+  hasFavoriteColors,
+} from "../../../components/common/GroupColorPalette";
 
 
 export function FriendGroups() {
@@ -61,7 +66,9 @@ export function FriendGroups() {
   };
 
   const defaultStyles = ["Thời Trang", "Cộng Đồng"];
-  const defaultColors = ["#EA580C", "#F97316", "#FB923C"];
+  const userHasFavoriteColors = hasFavoriteColors(preferences?.favoriteColors);
+
+  const goToPreferences = () => navigate("/app/preferences");
 
   const handleJoin = async (id: string, name: string) => {
     try {
@@ -251,12 +258,15 @@ export function FriendGroups() {
               </div>
 
               {/* Color palette + activity */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", gap: 5 }}>
-                  {defaultColors.map((c) => (
-                    <div key={c} style={{ width: 18, height: 18, borderRadius: "50%", background: c, border: "1.5px solid #E2E8F0" }} />
-                  ))}
-                </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                <GroupColorPalette
+                  colorPalette={group.colorPalette}
+                  userHasFavoriteColors={userHasFavoriteColors}
+                  isMemberContext
+                  onConfigureColors={goToPreferences}
+                  dotSize={18}
+                  compact={(group.colorPalette?.length ?? 0) === 0}
+                />
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: "0.7rem", color: "#94A3B8" }}>
                     Tạo lúc {group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "gần đây"}
@@ -296,7 +306,7 @@ export function FriendGroups() {
                     style={{
                       width: "100%",
                       height: 130,
-                      background: "linear-gradient(135deg, #EA580C, #F97316)",
+                      background: getGroupBannerBackground(group.colorPalette),
                     }}
                   />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.6), transparent)" }} />
@@ -325,10 +335,14 @@ export function FriendGroups() {
                       <span key={s} style={{ background: defaultBg, color: defaultColor, borderRadius: 20, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>{s}</span>
                     ))}
                   </div>
-                  <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
-                    {defaultColors.map((c) => (
-                      <div key={c} style={{ width: 16, height: 16, borderRadius: "50%", background: c, border: "1.5px solid #E2E8F0" }} />
-                    ))}
+                  <div style={{ marginBottom: 12 }}>
+                    <GroupColorPalette
+                      colorPalette={group.colorPalette}
+                      userHasFavoriteColors={userHasFavoriteColors}
+                      isMemberContext={false}
+                      dotSize={16}
+                      compact={(group.colorPalette?.length ?? 0) === 0}
+                    />
                   </div>
                   <button
                     onClick={() => handleJoin(group.groupId, group.groupName)}

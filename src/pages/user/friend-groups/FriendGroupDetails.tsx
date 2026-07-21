@@ -37,6 +37,11 @@ import { storageService } from "@/services/storageService";
 import { ShareOutfitModal } from "@/components/common/ShareOutfitModal";
 import type { SharedClothingItem } from "@/types/wardrobe";
 import { useAuthContext } from "@/app/providers/AuthProvider";
+import { useUser } from "@/hooks/useUser";
+import {
+  GroupColorPalette,
+  hasFavoriteColors,
+} from "@/components/common/GroupColorPalette";
 
 
 
@@ -94,6 +99,8 @@ export function FriendGroupDetails() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuthContext();
+  const { preferences } = useUser();
+  const userHasFavoriteColors = hasFavoriteColors(preferences?.favoriteColors);
   const currentUserId = currentUser?.id ?? "";
   const [activeTab, setActiveTab] = useState<
     "overview" | "members" | "trends" | "influence"
@@ -562,14 +569,13 @@ export function FriendGroupDetails() {
           {/* Shared Colors */}
           <div style={{ background: "white", borderRadius: 18, padding: 24, border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <h3 style={{ fontWeight: 700, color: "#0F172A", marginBottom: 16, fontSize: "0.95rem" }}>Bảng Màu Nhóm</h3>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {(group.colorPalette ?? []).map((c) => (
-                <div key={c} style={{ textAlign: "center" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: c, border: "1.5px solid #E2E8F0", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }} />
-                  <p style={{ fontSize: "0.6rem", color: "#94A3B8", marginTop: 4 }}>{c}</p>
-                </div>
-              ))}
-            </div>
+            <GroupColorPalette
+              colorPalette={group.colorPalette}
+              userHasFavoriteColors={userHasFavoriteColors}
+              isMemberContext
+              onConfigureColors={() => navigate("/app/preferences")}
+              dotSize={40}
+            />
           </div>
 
           {/* Quick member preview */}
@@ -1027,29 +1033,17 @@ export function FriendGroupDetails() {
             </div>
           )}
 
-          {/* Màu sắc nhóm nếu có */}
-          {(group.colorPalette ?? []).length > 0 && (
-            <div style={{ background: "white", borderRadius: 18, padding: "18px 22px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0F172A", marginBottom: 12 }}>Bảng Màu Đặc Trưng Nhóm</p>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {(group.colorPalette ?? []).map((color) => (
-                  <div
-                    key={color}
-                    title={color}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 10,
-                      background: color,
-                      border: "2px solid white",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                      cursor: "default",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Màu sắc nhóm */}
+          <div style={{ background: "white", borderRadius: 18, padding: "18px 22px", border: "1px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0F172A", marginBottom: 12 }}>Bảng Màu Đặc Trưng Nhóm</p>
+            <GroupColorPalette
+              colorPalette={group.colorPalette}
+              userHasFavoriteColors={userHasFavoriteColors}
+              isMemberContext
+              onConfigureColors={() => navigate("/app/preferences")}
+              dotSize={36}
+            />
+          </div>
         </div>
       )}
 
